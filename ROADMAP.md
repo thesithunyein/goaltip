@@ -30,7 +30,9 @@ methods; and the Next.js surface now wires them in:
 
 1. ✅ **Bitcoin / TON / Tron** — address, balance, send + USD value are live in the
    dashboard, chain switcher, and send dialog (per-family address validation).
-2. **Activity + status monitoring** — the engine's status polling, in the app layer (next).
+2. ✅ **DeFi — Lend · Swap · Bridge** — Aave V3, Velora, and USDT0 are live in a
+   DeFi dialog on the dashboard (Comlink-driven; EVM chains).
+3. **Activity + status monitoring** — the engine's status polling, in the app layer (next).
 3. **Lightning (Spark)** — `@tetherto/wdk-wallet-spark` instant BTC payments
    (shared bundler-shim work tracked in the extension roadmap).
 

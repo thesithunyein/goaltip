@@ -128,6 +128,8 @@ Then open <http://localhost:3000>, create a wallet, and you're in. See [`docs/SE
 | **TON** (mainnet) | ✅ v5r1 address, balance, **send** (TonCenter) |
 | **Tron** (mainnet) | ✅ address, balance, **send** (TronGrid) |
 | **USD fiat values** | ✅ via CoinGecko pricing client |
+| **DeFi: Aave lend · Velora swap · USDT0 bridge** | ✅ live in the dashboard DeFi dialog (Comlink) |
+| **ERC-4337 gasless · MoonPay on-ramp** | ✅ in the engine; config-driven (see extension for the same UI pattern) |
 | **USDt / XAUt tokens** | 🚧 engine ships balances + transfers; UI surfacing next |
 | **Lightning (Spark)** | 🚧 roadmap (engine bundler-shim work; see [ROADMAP.md](./ROADMAP.md)) |
 
