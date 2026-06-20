@@ -18,7 +18,7 @@ function short (addr: string) {
 export function Dashboard () {
   const {
     chainId, setChainId, accountIndex, setAccountIndex,
-    address, addressLoading, balance, balanceLoading, refreshBalance, lock
+    address, addressLoading, balance, balanceLoading, usdValue, refreshBalance, lock
   } = useWallet()
   const [dialog, setDialog] = useState<'none' | 'receive' | 'send'>('none')
   const [copied, setCopied] = useState(false)
@@ -54,6 +54,7 @@ export function Dashboard () {
               ? <Skeleton style={{ width: 160, height: 38 }} />
               : <>{formatAmount(balance, chain.decimals)} <span style={{ fontSize: 18, color: 'var(--text-secondary, #b3a79f)' }}>{chain.symbol}</span></>}
           </div>
+          {usdValue && <div style={{ fontSize: 14, color: 'var(--text-secondary, #b3a79f)', marginTop: -4 }}>≈ {usdValue}</div>}
           <button onClick={copy} style={addrBtn} title="Copy address">
             {addressLoading || !address ? 'deriving address…' : copied ? 'Copied ✓' : `${short(address)} · copy`}
           </button>

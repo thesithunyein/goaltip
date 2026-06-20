@@ -161,7 +161,7 @@ Framework-specific notes are in [`docs/INTEGRATION.md`](./docs/INTEGRATION.md).
 ## Roadmap
 
 📍 **Full phased roadmap: [`ROADMAP.md`](./ROADMAP.md).** It shows what ships today
-(worklet architecture, EVM + Solana, onboarding/send/receive/activity) and how the
+(worklet architecture, EVM + Solana + Bitcoin + TON + Tron, onboarding/send/receive/activity + USD values) and how the
 **shared `wdk-web-core` engine** unlocks Bitcoin, tokens, Lightning (Spark),
 account abstraction, TON/Tron, in-wallet DeFi, and fiat pricing across this
 template and the other WDK surfaces — one engine, many products.

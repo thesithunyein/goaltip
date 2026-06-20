@@ -19,19 +19,18 @@
   that boots the worklet and generates a mnemonic through the real UI.
 - `docs/ARCHITECTURE.md` (the M1 deliverable), setup/integration/demo docs, media.
 
-## ⏳ Phase 2 — Surface the engine's multi-asset depth in the UI
+## ✅ Phase 2 — Multi-asset depth surfaced in the UI (SHIPPED)
 
 The shared engine in this repo (`packages/wdk-web-core`) is at **full parity with
 the browser extension**: it ships **EVM, Solana, Bitcoin (BIP-84), TON (v5r1), and
 Tron** address/balance/send, **USDt/XAUt token balances + transfers**, and
 **real-time transaction status** — all built, bundled, and covered by the same 100
 engine tests. The template's worklet already exposes every one of these worker
-methods; the remaining work is **wiring them into the Next.js surface**:
+methods; and the Next.js surface now wires them in:
 
-1. **Bitcoin / TON / Tron + token assets** — surface the engine's already-shipped
-   BTC/TON/Tron and ERC-20 capabilities in the dashboard and send flow (the
-   extension's popup does this today; the same hooks port directly).
-2. **Activity + status monitoring** — the engine's status polling, in the app layer.
+1. ✅ **Bitcoin / TON / Tron** — address, balance, send + USD value are live in the
+   dashboard, chain switcher, and send dialog (per-family address validation).
+2. **Activity + status monitoring** — the engine's status polling, in the app layer (next).
 3. **Lightning (Spark)** — `@tetherto/wdk-wallet-spark` instant BTC payments
    (shared bundler-shim work tracked in the extension roadmap).
 

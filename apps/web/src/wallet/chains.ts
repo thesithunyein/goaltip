@@ -7,7 +7,7 @@
  */
 import type { ReactNode } from 'react'
 
-export type ChainFamily = 'evm' | 'solana'
+export type ChainFamily = 'evm' | 'solana' | 'bitcoin' | 'ton' | 'tron'
 
 export interface ChainInfo {
   readonly id: string
@@ -26,7 +26,11 @@ export const CHAINS: readonly ChainInfo[] = [
   { id: 'polygon-mainnet', name: 'Polygon', symbol: 'POL', family: 'evm', decimals: 18, explorer: 'https://polygonscan.com' },
   { id: 'arbitrum-mainnet', name: 'Arbitrum', symbol: 'ETH', family: 'evm', decimals: 18, explorer: 'https://arbiscan.io' },
   { id: 'solana-mainnet', name: 'Solana', symbol: 'SOL', family: 'solana', decimals: 9, explorer: 'https://explorer.solana.com' },
+  { id: 'bitcoin-mainnet', name: 'Bitcoin', symbol: 'BTC', family: 'bitcoin', decimals: 8, explorer: 'https://mempool.space' },
+  { id: 'ton-mainnet', name: 'TON', symbol: 'TON', family: 'ton', decimals: 9, explorer: 'https://tonviewer.com' },
+  { id: 'tron-mainnet', name: 'Tron', symbol: 'TRX', family: 'tron', decimals: 6, explorer: 'https://tronscan.org' },
   { id: 'sepolia-testnet', name: 'Sepolia', symbol: 'ETH', family: 'evm', testnet: true, decimals: 18, explorer: 'https://sepolia.etherscan.io' },
+  { id: 'bitcoin-testnet', name: 'Bitcoin Testnet', symbol: 'tBTC', family: 'bitcoin', testnet: true, decimals: 8, explorer: 'https://mempool.space/testnet' },
   { id: 'plasma-testnet', name: 'Plasma Testnet', symbol: 'XPL', family: 'evm', testnet: true, decimals: 18, explorer: 'https://testnet.plasmascan.to' },
   { id: 'solana-devnet', name: 'Solana Devnet', symbol: 'SOL', family: 'solana', testnet: true, decimals: 9, explorer: 'https://explorer.solana.com' }
 ]
@@ -41,8 +45,24 @@ export function getChain (id: string): ChainInfo {
   return chain
 }
 
+export function familyOf (id: string): ChainFamily {
+  return getChain(id).family
+}
+
 export function isSolana (id: string): boolean {
   return getChain(id).family === 'solana'
+}
+
+export function isBitcoin (id: string): boolean {
+  return getChain(id).family === 'bitcoin'
+}
+
+export function isTon (id: string): boolean {
+  return getChain(id).family === 'ton'
+}
+
+export function isTron (id: string): boolean {
+  return getChain(id).family === 'tron'
 }
 
 /** Builds the option list consumed by wdk-ui's <ChainSelector />. */
