@@ -8,6 +8,7 @@ import { BrandHeader } from './brand-header'
 import { ReceiveDialog } from './receive-dialog'
 import { SendDialog } from './send-dialog'
 import { DefiDialog } from './defi-dialog'
+import { BuyDialog } from './buy-dialog'
 import { Activity } from './activity'
 
 const OPTIONS = chainOptions((id) => <NetworkIcon chain={id} size={16} />)
@@ -21,7 +22,7 @@ export function Dashboard () {
     chainId, setChainId, accountIndex, setAccountIndex,
     address, addressLoading, balance, balanceLoading, usdValue, refreshBalance, lock
   } = useWallet()
-  const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'defi'>('none')
+  const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'defi' | 'buy'>('none')
   const [copied, setCopied] = useState(false)
   const chain = getChain(chainId)
 
@@ -64,11 +65,16 @@ export function Dashboard () {
             <Button onClick={() => setDialog('send')} variant="secondary" disabled={!address} style={{ flex: 1 }}>Send</Button>
             <Button onClick={() => void refreshBalance()} variant="outline" size="icon" title="Refresh">↻</Button>
           </div>
-          {familyOf(chainId) === 'evm' && (
-            <Button onClick={() => setDialog('defi')} variant="secondary" disabled={!address} style={{ width: '100%', marginTop: 8 }}>
-              DeFi — Lend · Swap · Bridge
+          <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+            {familyOf(chainId) === 'evm' && (
+              <Button onClick={() => setDialog('defi')} variant="secondary" disabled={!address} style={{ flex: 1 }}>
+                DeFi
+              </Button>
+            )}
+            <Button onClick={() => setDialog('buy')} variant="secondary" disabled={!address} style={{ flex: 1 }}>
+              Buy crypto
             </Button>
-          )}
+          </div>
         </Card>
 
         <Activity />
@@ -81,6 +87,7 @@ export function Dashboard () {
       {dialog === 'receive' && address && <ReceiveDialog address={address} chainId={chainId} onClose={() => setDialog('none')} />}
       {dialog === 'send' && address && <SendDialog chainId={chainId} onClose={() => setDialog('none')} />}
       {dialog === 'defi' && address && <DefiDialog chainId={chainId} accountIndex={accountIndex} onClose={() => setDialog('none')} />}
+      {dialog === 'buy' && address && <BuyDialog chainId={chainId} address={address} onClose={() => setDialog('none')} />}
     </main>
   )
 }

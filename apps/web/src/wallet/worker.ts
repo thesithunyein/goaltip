@@ -15,7 +15,41 @@ import * as Comlink from 'comlink'
 import { WalletWorker } from '@wdk-starter/wdk-web-core/worker'
 import { createHttpRpcAdapter } from '@wdk-starter/wdk-web-core'
 
-const instance = new WalletWorker({ rpcAdapter: createHttpRpcAdapter() })
+// Public EVM RPCs (also the ERC-4337 smart-account provider). Override the main
+// ones with NEXT_PUBLIC_*_RPC_URL env vars (Next inlines these at build).
+const RPC_URLS: Record<string, string> = {
+  ethereum: process.env.NEXT_PUBLIC_ETH_RPC_URL ?? 'https://ethereum-rpc.publicnode.com',
+  'polygon-mainnet': process.env.NEXT_PUBLIC_POLYGON_RPC_URL ?? 'https://polygon-bor-rpc.publicnode.com',
+  'arbitrum-mainnet': process.env.NEXT_PUBLIC_ARBITRUM_RPC_URL ?? 'https://arb1.arbitrum.io/rpc',
+  'plasma-mainnet': 'https://rpc.plasma.to'
+}
+
+// MoonPay on-ramp — activates from the app's own publishable key (template
+// standard; nothing hard-coded). Absent key => the Buy view shows a notice.
+const moonpayApiKey = process.env.NEXT_PUBLIC_MOONPAY_API_KEY
+const moonpayConfig = moonpayApiKey
+  ? {
+      apiKey: moonpayApiKey,
+      environment: (process.env.NEXT_PUBLIC_MOONPAY_ENV === 'production' ? 'production' : 'sandbox') as 'production' | 'sandbox',
+      ...(process.env.NEXT_PUBLIC_MOONPAY_SIGN_URL ? { signUrl: process.env.NEXT_PUBLIC_MOONPAY_SIGN_URL } : {})
+    }
+  : undefined
+
+// ERC-4337 smart accounts — activates from the app's own bundler (+ optional paymaster).
+const bundlerUrl = process.env.NEXT_PUBLIC_BUNDLER_URL
+const erc4337Config = bundlerUrl
+  ? {
+      bundlerUrl,
+      ...(process.env.NEXT_PUBLIC_PAYMASTER_URL ? { paymasterUrl: process.env.NEXT_PUBLIC_PAYMASTER_URL } : {}),
+      providerFor: (chain: string) => RPC_URLS[chain]
+    }
+  : undefined
+
+const instance = new WalletWorker({
+  rpcAdapter: createHttpRpcAdapter(),
+  ...(moonpayConfig ? { moonpayConfig } : {}),
+  ...(erc4337Config ? { erc4337Config } : {})
+})
 
 // Only expose in an actual worker context (guards SSR / test imports).
 const g = globalThis as unknown as { postMessage?: unknown }

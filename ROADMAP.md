@@ -33,7 +33,9 @@ methods; and the Next.js surface now wires them in:
 2. ✅ **DeFi — Lend · Swap · Bridge** — Aave V3, Velora, and USDT0 are live in a
    DeFi dialog on the dashboard (Comlink-driven; EVM chains).
 3. **Activity + status monitoring** — the engine's status polling, in the app layer (next).
-3. **Lightning (Spark)** — `@tetherto/wdk-wallet-spark` instant BTC payments
+3. ✅ **Gasless (ERC-4337) + MoonPay on-ramp** — live in the app, config-driven
+   (set `NEXT_PUBLIC_BUNDLER_URL` / `NEXT_PUBLIC_MOONPAY_API_KEY`).
+4. **Lightning (Spark)** — `@tetherto/wdk-wallet-spark` instant BTC payments
    (shared bundler-shim work tracked in the extension roadmap).
 
 ## ⏳ Phase 3 — Next.js-native concerns

@@ -35,7 +35,7 @@ const BRIDGE_ROUTES: Record<string, { targetChain: string, targetName: string, u
   'arbitrum-mainnet': { targetChain: 'ethereum', targetName: 'Ethereum', usdt: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', oft: '0x14E4A1B13bf7F943c8ff7C51fb60FA964A298D92' }
 }
 
-type Tab = 'lending' | 'swap' | 'bridge'
+type Tab = 'lending' | 'swap' | 'bridge' | 'gasless'
 const ACTIONS = ['supply', 'withdraw', 'borrow', 'repay'] as const
 
 export function DefiDialog ({ chainId, accountIndex, onClose }: { chainId: string, accountIndex: number, onClose: () => void }) {
@@ -48,13 +48,14 @@ export function DefiDialog ({ chainId, accountIndex, onClose }: { chainId: strin
       {supported && (
         <>
           <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-            {(['lending', 'swap', 'bridge'] as Tab[]).map((t) => (
-              <Button key={t} size="sm" variant={tab === t ? 'primary' : 'secondary'} onClick={() => setTab(t)} style={{ flex: 1, textTransform: 'capitalize' }}>{t}</Button>
+            {(['lending', 'swap', 'bridge', 'gasless'] as Tab[]).map((t) => (
+              <Button key={t} size="sm" variant={tab === t ? 'primary' : 'secondary'} onClick={() => setTab(t)} style={{ flex: 1, textTransform: 'capitalize', fontSize: 12 }}>{t}</Button>
             ))}
           </div>
           {tab === 'lending' && <Lending chainId={chainId} accountIndex={accountIndex} />}
           {tab === 'swap' && <Swap chainId={chainId} accountIndex={accountIndex} />}
           {tab === 'bridge' && <Bridge chainId={chainId} accountIndex={accountIndex} />}
+          {tab === 'gasless' && <Gasless chainId={chainId} accountIndex={accountIndex} />}
         </>
       )}
     </Modal>
@@ -204,6 +205,64 @@ function Bridge ({ chainId, accountIndex }: { chainId: string, accountIndex: num
       {hash ? <Done hash={hash} /> : quote
         ? <Button onClick={run} disabled={busy} style={{ width: '100%' }}>{busy ? 'Bridging…' : 'Confirm bridge'}</Button>
         : <Button onClick={getQuote} disabled={busy} style={{ width: '100%' }}>{busy ? 'Quoting…' : 'Get quote'}</Button>}
+    </div>
+  )
+}
+
+function Gasless ({ chainId, accountIndex }: { chainId: string, accountIndex: number }) {
+  const [config, setConfig] = useState<'checking' | 'on' | 'off'>('checking')
+  const [smartAddr, setSmartAddr] = useState<string | null>(null)
+  const [smartBal, setSmartBal] = useState<bigint | null>(null)
+  const [to, setTo] = useState('')
+  const [amount, setAmount] = useState('')
+  const { busy, setBusy, error, setError, hash, setHash } = useTxState()
+
+  useEffect(() => {
+    let off = false
+    void (async () => {
+      try {
+        const api = getWalletApi()
+        const ok = await api.erc4337_isConfigured()
+        if (off) return
+        if (!ok) { setConfig('off'); return }
+        setConfig('on')
+        const addr = await api.erc4337_getAddress(chainId as never, accountIndex)
+        if (!off) setSmartAddr(addr)
+        const bal = await api.erc4337_getBalance(chainId as never, accountIndex)
+        if (!off) setSmartBal(bal)
+      } catch (e) { if (!off) setError(e instanceof Error ? e.message : 'Failed to load smart account') }
+    })()
+    return () => { off = true }
+  }, [chainId, accountIndex, setError])
+
+  if (config === 'checking') return <p style={pill}>Checking…</p>
+  if (config === 'off') {
+    return <p style={note}>Gasless smart accounts are ready to enable. Set <code>NEXT_PUBLIC_BUNDLER_URL</code> (+ optional <code>NEXT_PUBLIC_PAYMASTER_URL</code>) and restart — the integration is fully wired.</p>
+  }
+
+  async function run () {
+    setError(null)
+    if (!/^0x[0-9a-fA-F]{40}$/.test(to.trim())) { setError('Enter a valid recipient address.'); return }
+    let base: bigint
+    try { base = parseAmount(amount, 18) } catch { setError('Bad amount'); return }
+    setBusy(true)
+    try {
+      const r = await getWalletApi().erc4337_sendTransaction(chainId as never, accountIndex, to.trim(), base, undefined)
+      setHash(r.hash)
+    } catch (e) { setError(e instanceof Error ? e.message : 'Failed') } finally { setBusy(false) }
+  }
+
+  return (
+    <div style={col}>
+      <div style={pill}>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary, #b3a79f)' }}>Smart-account address</div>
+        <code style={{ fontSize: 12, wordBreak: 'break-all' }}>{smartAddr ?? 'deriving…'}</code>
+        {smartBal !== null && <div style={{ fontSize: 13, marginTop: 4 }}>Balance: {formatAmount(smartBal, 18)}</div>}
+      </div>
+      <Input value={to} onChange={(e) => setTo(e.target.value)} placeholder="Recipient 0x…" />
+      <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount (native)" inputMode="decimal" />
+      {error && <p style={err}>{error}</p>}
+      {hash ? <Done hash={hash} /> : <Button onClick={run} disabled={busy} style={{ width: '100%' }}>{busy ? 'Submitting…' : 'Send gasless'}</Button>}
     </div>
   )
 }
