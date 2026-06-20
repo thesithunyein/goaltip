@@ -34,6 +34,40 @@ import {
   ensureChainRegistered,
   isSupportedChainId,
 } from '../chains/index.js';
+import {
+  createAaveProtocol,
+  normalizeActionResult,
+  normalizeAccountData,
+  type AaveAccountData,
+  type AaveActionResult,
+} from '../protocols/aave.js';
+import {
+  createVeloraProtocol,
+  normalizeQuote as normalizeVeloraQuote,
+  normalizeSwapResult as normalizeVeloraSwap,
+  type VeloraQuote,
+  type VeloraSwapResult,
+} from '../protocols/velora.js';
+import {
+  createUsdt0Protocol,
+  normalizeUsdt0Quote,
+  normalizeUsdt0Result,
+  type ApprovableEvmAccount,
+  type Usdt0Quote,
+  type Usdt0BridgeResult,
+} from '../protocols/usdt0.js';
+import {
+  createMoonPayProtocol,
+  normalizeBuyQuote,
+  type MoonPayConfig,
+  type MoonPayBuyQuote,
+} from '../protocols/moonpay.js';
+import {
+  createErc4337Manager,
+  gasConfig,
+  normalizeErc4337Result,
+  type Erc4337SendResult,
+} from '../protocols/erc4337.js';
 import type { RpcAdapter, TransactionStatus } from '../adapters/index.js';
 import { CoingeckoPricingClient } from '@tetherto/wdk-pricing-coingecko-http';
 import type {
@@ -53,6 +87,25 @@ export interface WalletWorkerOptions {
   readonly vault?: WebCryptoVault;
   /** Optional RPC adapter for rpc_getBalance. If omitted, rpc_getBalance throws. */
   readonly rpcAdapter?: RpcAdapter;
+  /**
+   * Optional MoonPay on-ramp config (app-supplied publishable key + environment).
+   * If omitted, moonpay_* methods report "not configured" — the integration is
+   * present and ready; only the app's own key is missing.
+   */
+  readonly moonpayConfig?: MoonPayConfig;
+  /**
+   * Optional ERC-4337 config (app-supplied bundler/paymaster URLs + a per-chain
+   * RPC provider resolver). If omitted, erc4337_* methods report "not
+   * configured" — the smart-account integration is present and ready.
+   */
+  readonly erc4337Config?: Erc4337WorkerConfig;
+}
+
+export interface Erc4337WorkerConfig {
+  readonly bundlerUrl: string;
+  readonly paymasterUrl?: string;
+  /** Resolves the RPC provider URL for a chain (reuses the wallet's RPC config). */
+  readonly providerFor: (chain: string) => string | undefined;
 }
 
 /** Symbol → CoinGecko id for USD pricing. Small by design; extend as assets are added. */
@@ -73,11 +126,22 @@ function getPricingClient(): CoingeckoPricingClient {
 export class WalletWorker implements Pick<WalletWorkerApi, 'vault_hasStored' | 'vault_store' | 'vault_load' | 'vault_clear' | 'account_getEvmAddress' | 'account_getSolanaAddress' | 'account_signMessage' | 'account_signTypedData' | 'account_signSolanaMessage' | 'account_sendTransaction' | 'account_sendSolanaTransaction' | 'account_getBtcAddress' | 'account_getBtcBalance' | 'account_sendBtcTransaction' | 'account_getTonAddress' | 'account_getTonBalance' | 'account_sendTonTransaction' | 'account_getTronAddress' | 'account_getTronBalance' | 'account_sendTronTransaction' | 'rpc_getBalance' | 'rpc_getTokenBalance' | 'rpc_getTransactionStatus' | 'pricing_getUsdPrice' | 'bip39_generateMnemonic' | 'bip39_validateMnemonic'> {
   private readonly vault: WebCryptoVault;
   private readonly rpcAdapter: RpcAdapter | null;
+  private readonly moonpayConfig: MoonPayConfig | null;
+  private readonly erc4337Config: Erc4337WorkerConfig | null;
   private wdk: WdkManager | null = null;
+  /**
+   * Retained decrypted mnemonic, set on vault_load and cleared on lock/clear.
+   * Needed to construct an ERC-4337 smart-account manager on demand. It is the
+   * same secret WdkManager already holds, in the same in-memory worklet — the
+   * trust boundary is unchanged.
+   */
+  private _mnemonic: string | null = null;
 
   constructor(options: WalletWorkerOptions = {}) {
     this.vault = options.vault ?? createWebCryptoVault();
     this.rpcAdapter = options.rpcAdapter ?? null;
+    this.moonpayConfig = options.moonpayConfig ?? null;
+    this.erc4337Config = options.erc4337Config ?? null;
   }
 
   /**
@@ -117,6 +181,7 @@ export class WalletWorker implements Pick<WalletWorkerApi, 'vault_hasStored' | '
       if (WdkManager.isValidSeed(mnemonic)) {
         this.wdk?.dispose();
         this.wdk = new WdkManager(mnemonic);
+        this._mnemonic = mnemonic; // retained for on-demand ERC-4337 manager construction
       }
     } catch {
       // Silent - contract honors returning the bytes regardless.
@@ -127,6 +192,7 @@ export class WalletWorker implements Pick<WalletWorkerApi, 'vault_hasStored' | '
   async vault_clear(): Promise<void> {
     this.wdk?.dispose();
     this.wdk = null;
+    this._mnemonic = null;
     await this.vault.clear();
   }
 
@@ -150,6 +216,7 @@ export class WalletWorker implements Pick<WalletWorkerApi, 'vault_hasStored' | '
   async lock(): Promise<void> {
     this.wdk?.dispose();
     this.wdk = null;
+    this._mnemonic = null;
   }
 
   /**
@@ -499,6 +566,175 @@ export class WalletWorker implements Pick<WalletWorkerApi, 'vault_hasStored' | '
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Builds the Aave V3 protocol bound to the EVM account at (chain, index).
+   * The account holds the key and never leaves the worklet. Uses a plain
+   * WalletAccountEvm over the configured RPC — no bundler/paymaster required.
+   */
+  private async _aave(chain: EvmChainId, index: number) {
+    if (!isSupportedChainId(chain)) {
+      throw new Error('Unsupported chain (no loader registered): ' + chain);
+    }
+    const wdk = this._requireWdk();
+    await ensureChainRegistered(wdk, chain);
+    const account = await wdk.getAccount(chain, index);
+    return createAaveProtocol(account);
+  }
+
+  /** Aave V3 user snapshot (collateral, debt, borrow capacity, health factor). */
+  async aave_getAccountData(chain: EvmChainId, index: number): Promise<AaveAccountData> {
+    const aave = await this._aave(chain, index);
+    return normalizeAccountData(await aave.getAccountData());
+  }
+
+  /** Quotes the gas/fee for an Aave action without broadcasting. */
+  async aave_quote(chain: EvmChainId, index: number, action: 'supply' | 'withdraw' | 'borrow' | 'repay', token: string, amount: bigint): Promise<bigint> {
+    const aave = await this._aave(chain, index);
+    const fn = { supply: aave.quoteSupply, withdraw: aave.quoteWithdraw, borrow: aave.quoteBorrow, repay: aave.quoteRepay }[action];
+    const { fee } = await fn.call(aave, { token, amount });
+    return typeof fee === 'bigint' ? fee : BigInt(fee ?? 0);
+  }
+
+  /** Supplies `amount` of `token` to the Aave V3 pool. */
+  async aave_supply(chain: EvmChainId, index: number, token: string, amount: bigint): Promise<AaveActionResult> {
+    const aave = await this._aave(chain, index);
+    return normalizeActionResult(await aave.supply({ token, amount }));
+  }
+
+  /** Withdraws `amount` of `token` from the Aave V3 pool. */
+  async aave_withdraw(chain: EvmChainId, index: number, token: string, amount: bigint): Promise<AaveActionResult> {
+    const aave = await this._aave(chain, index);
+    return normalizeActionResult(await aave.withdraw({ token, amount }));
+  }
+
+  /** Borrows `amount` of `token` against supplied collateral. */
+  async aave_borrow(chain: EvmChainId, index: number, token: string, amount: bigint): Promise<AaveActionResult> {
+    const aave = await this._aave(chain, index);
+    return normalizeActionResult(await aave.borrow({ token, amount }));
+  }
+
+  /** Repays `amount` of borrowed `token`. */
+  async aave_repay(chain: EvmChainId, index: number, token: string, amount: bigint): Promise<AaveActionResult> {
+    const aave = await this._aave(chain, index);
+    return normalizeActionResult(await aave.repay({ token, amount }));
+  }
+
+  /** Builds the Velora swap protocol bound to the keyed EVM account in the worklet. */
+  private async _velora(chain: EvmChainId, index: number) {
+    if (!isSupportedChainId(chain)) {
+      throw new Error('Unsupported chain (no loader registered): ' + chain);
+    }
+    const wdk = this._requireWdk();
+    await ensureChainRegistered(wdk, chain);
+    const account = await wdk.getAccount(chain, index);
+    return createVeloraProtocol(account);
+  }
+
+  /** Quotes a tokenIn→tokenOut swap (exact-in) without broadcasting. */
+  async velora_quoteSwap(chain: EvmChainId, index: number, tokenIn: string, tokenOut: string, tokenInAmount: bigint): Promise<VeloraQuote> {
+    const v = await this._velora(chain, index);
+    return normalizeVeloraQuote(await v.quoteSwap({ tokenIn, tokenOut, tokenInAmount }));
+  }
+
+  /** Executes a swap. Provide exactly one of tokenInAmount (sell) or tokenOutAmount (buy). */
+  async velora_swap(chain: EvmChainId, index: number, tokenIn: string, tokenOut: string, tokenInAmount?: bigint, tokenOutAmount?: bigint): Promise<VeloraSwapResult> {
+    const v = await this._velora(chain, index);
+    return normalizeVeloraSwap(await v.swap({
+      tokenIn,
+      tokenOut,
+      ...(tokenInAmount !== undefined ? { tokenInAmount } : {}),
+      ...(tokenOutAmount !== undefined ? { tokenOutAmount } : {}),
+    }));
+  }
+
+  /** Quotes the native fee to bridge `amount` of `token` from `chain` to `targetChain` via USDT0. */
+  async usdt0_quoteBridge(chain: EvmChainId, index: number, targetChain: string, recipient: string, token: string, amount: bigint, oftContractAddress: string): Promise<Usdt0Quote> {
+    if (!isSupportedChainId(chain)) throw new Error('Unsupported chain (no loader registered): ' + chain);
+    const wdk = this._requireWdk();
+    await ensureChainRegistered(wdk, chain);
+    const account = await wdk.getAccount(chain, index);
+    const bridge = createUsdt0Protocol(account);
+    return normalizeUsdt0Quote(await bridge.quoteBridge({ targetChain, recipient, token, amount, oftContractAddress }));
+  }
+
+  /** Approves the OFT spender then bridges `amount` of `token` to `targetChain` via USDT0. */
+  async usdt0_bridge(chain: EvmChainId, index: number, targetChain: string, recipient: string, token: string, amount: bigint, oftContractAddress: string): Promise<Usdt0BridgeResult> {
+    if (!isSupportedChainId(chain)) throw new Error('Unsupported chain (no loader registered): ' + chain);
+    const wdk = this._requireWdk();
+    await ensureChainRegistered(wdk, chain);
+    const account = await wdk.getAccount(chain, index);
+    const approval = await (account as unknown as ApprovableEvmAccount).approve({ token, spender: oftContractAddress, amount });
+    const approveHash = typeof approval === 'string' ? approval : (approval && typeof approval === 'object' && 'hash' in approval ? String(approval.hash) : undefined);
+    const bridge = createUsdt0Protocol(account);
+    const result = await bridge.bridge({ targetChain, recipient, token, amount, oftContractAddress });
+    return normalizeUsdt0Result(result, approveHash);
+  }
+
+  /** Whether a MoonPay on-ramp key is configured by the host app. */
+  async moonpay_isConfigured(): Promise<boolean> {
+    return Boolean(this.moonpayConfig?.apiKey);
+  }
+
+  /** Quotes a fiat→crypto buy. Returns null if MoonPay isn't configured. */
+  async moonpay_quoteBuy(fiatCurrency: string, cryptoAsset: string, fiatAmount: number): Promise<MoonPayBuyQuote | null> {
+    if (!this.moonpayConfig?.apiKey) return null;
+    const mp = createMoonPayProtocol(this.moonpayConfig);
+    return normalizeBuyQuote(await mp.quoteBuy({ fiatCurrency, cryptoAsset, baseCurrencyAmount: fiatAmount }));
+  }
+
+  /** Generates a MoonPay buy-widget URL for `recipient`. Throws if not configured. */
+  async moonpay_buy(fiatCurrency: string, cryptoAsset: string, fiatAmount: number, recipient: string): Promise<string> {
+    if (!this.moonpayConfig?.apiKey) {
+      throw new Error('MoonPay is not configured. Set VITE_MOONPAY_API_KEY (publishable key) to enable the on-ramp.');
+    }
+    const mp = createMoonPayProtocol(this.moonpayConfig);
+    const { buyUrl } = await mp.buy({ fiatCurrency, cryptoAsset, baseCurrencyAmount: fiatAmount, walletAddress: recipient });
+    return buyUrl;
+  }
+
+  /** Whether an ERC-4337 bundler is configured by the host app. */
+  async erc4337_isConfigured(): Promise<boolean> {
+    return Boolean(this.erc4337Config?.bundlerUrl);
+  }
+
+  /** Builds an ERC-4337 smart account at (chain, index) from the retained seed. */
+  private async _smartAccount(chain: EvmChainId, index: number) {
+    const cfg = this.erc4337Config;
+    if (!cfg?.bundlerUrl) {
+      throw new Error('ERC-4337 is not configured. Set VITE_BUNDLER_URL (and optionally VITE_PAYMASTER_URL) to enable smart accounts.');
+    }
+    if (!this._mnemonic) throw new Error('WalletWorker: locked. Call vault_load(password) first.');
+    const providerUrl = cfg.providerFor(chain);
+    if (!providerUrl) throw new Error('No RPC provider configured for chain: ' + chain);
+    const manager = createErc4337Manager(this._mnemonic, providerUrl, { bundlerUrl: cfg.bundlerUrl, ...(cfg.paymasterUrl ? { paymasterUrl: cfg.paymasterUrl } : {}) });
+    return manager.getAccount(index);
+  }
+
+  /** The counterfactual smart-account address at (chain, index). */
+  async erc4337_getAddress(chain: EvmChainId, index: number): Promise<string> {
+    const account = await this._smartAccount(chain, index);
+    return account.getAddress();
+  }
+
+  /** The smart account's native balance (wei). */
+  async erc4337_getBalance(chain: EvmChainId, index: number): Promise<bigint> {
+    const account = await this._smartAccount(chain, index);
+    return BigInt(await account.getBalance());
+  }
+
+  /** Quotes the gas fee for a gasless send (pays in `paymasterToken` if given). */
+  async erc4337_quoteSend(chain: EvmChainId, index: number, to: string, value: bigint, paymasterToken?: string): Promise<bigint> {
+    const account = await this._smartAccount(chain, index);
+    const raw = await account.quoteSendTransaction({ to, value }, gasConfig(paymasterToken));
+    return normalizeErc4337Result(raw).fee;
+  }
+
+  /** Sends a gasless native transfer as a UserOperation via the bundler. */
+  async erc4337_sendTransaction(chain: EvmChainId, index: number, to: string, value: bigint, paymasterToken?: string): Promise<Erc4337SendResult> {
+    const account = await this._smartAccount(chain, index);
+    return normalizeErc4337Result(await account.sendTransaction({ to, value }, gasConfig(paymasterToken)));
   }
 
   /**
