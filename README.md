@@ -33,10 +33,11 @@ This template is the missing reference. It is a **real, working, self-custodial 
 
 - 🔐 **Self-custodial vault** — BIP-39 generate / import / validate, encrypted at rest with **AES-256-GCM + PBKDF2-SHA-512 (600k)** in IndexedDB.
 - 🧵 **Worklet security** — WDK runs in a Web Worker; the UI talks to it over a typed Comlink bridge and can never read a key.
-- ⛓️ **Multi-chain** — Plasma, Ethereum, Polygon, Arbitrum, Solana (+ testnets), each with one-line registry extensibility.
+- ⛓️ **Multi-chain** — EVM (Plasma, Ethereum, Polygon, Arbitrum + testnets), **Solana**, **Bitcoin** (BIP-84), **TON** (v5r1), and **Tron** — each with one-line registry extensibility.
 - 👛 **Multi-account** — standard BIP-44 derivation; switch accounts in the UI.
-- 💸 **Send & Receive** — receive with QR + copy; send with address + amount validation, review, and explorer links (EVM).
+- 💸 **Send & Receive** — receive with QR + copy; send with **per-family address validation** (EVM/Solana/Bitcoin/TON/Tron), review, and explorer links.
 - 📜 **Activity** — live status for transactions you submit, ready to extend with the **WDK Indexer API** for full history.
+- 💵 **Fiat values** — native balances shown in **USD** via the WDK CoinGecko pricing client.
 - 🎨 **Polished UX** — onboarding, unlock, and dashboard built from the `wdk-ui` component library with a themable design system.
 - 🔁 **Lock / reset** — manual lock; reset restores from recovery phrase.
 
@@ -122,9 +123,13 @@ Then open <http://localhost:3000>, create a wallet, and you're in. See [`docs/SE
 | | Status |
 |---|---|
 | **Plasma, Ethereum, Polygon, Arbitrum** | ✅ derivation, signing, balances, send/receive |
-| **Solana** (mainnet / devnet) | ✅ derivation, address, balances · send on the roadmap |
-| **USDt / XAUt tokens** | 🚧 roadmap (indexer + token adapter; engine already builds EIP-3009 transfers) |
-| **Bitcoin / Lightning (Spark)** | 🚧 roadmap (via WDK bitcoin/spark wallet packages) |
+| **Solana** (mainnet / devnet) | ✅ derivation, address, balances, **send** |
+| **Bitcoin** (mainnet / testnet) | ✅ BIP-84 address, balance, **send** (Blockbook) |
+| **TON** (mainnet) | ✅ v5r1 address, balance, **send** (TonCenter) |
+| **Tron** (mainnet) | ✅ address, balance, **send** (TronGrid) |
+| **USD fiat values** | ✅ via CoinGecko pricing client |
+| **USDt / XAUt tokens** | 🚧 engine ships balances + transfers; UI surfacing next |
+| **Lightning (Spark)** | 🚧 roadmap (engine bundler-shim work; see [ROADMAP.md](./ROADMAP.md)) |
 
 The template is transparent about implemented vs. planned scope. Adding a chain is a single entry in `apps/web/src/wallet/chains.ts` plus a loader in `wdk-web-core`.
 
