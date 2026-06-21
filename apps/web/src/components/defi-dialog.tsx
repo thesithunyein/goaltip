@@ -40,7 +40,17 @@ const ACTIONS = ['supply', 'withdraw', 'borrow', 'repay'] as const
 
 export function DefiDialog ({ chainId, accountIndex, onClose }: { chainId: string, accountIndex: number, onClose: () => void }) {
   const [tab, setTab] = useState<Tab>('lending')
+  const [gaslessAvailable, setGaslessAvailable] = useState(false)
+  const [gasless, setGasless] = useState(false)
   const supported = Boolean(AAVE_TOKENS[chainId])
+
+  useEffect(() => {
+    let off = false
+    void (async () => {
+      try { const ok = await getWalletApi().erc4337_isConfigured(); if (!off) setGaslessAvailable(ok) } catch { /* not configured */ }
+    })()
+    return () => { off = true }
+  }, [])
 
   return (
     <Modal title="DeFi" onClose={onClose}>
@@ -52,9 +62,15 @@ export function DefiDialog ({ chainId, accountIndex, onClose }: { chainId: strin
               <Button key={t} size="sm" variant={tab === t ? 'primary' : 'secondary'} onClick={() => setTab(t)} style={{ flex: 1, textTransform: 'capitalize', fontSize: 12 }}>{t}</Button>
             ))}
           </div>
-          {tab === 'lending' && <Lending chainId={chainId} accountIndex={accountIndex} />}
-          {tab === 'swap' && <Swap chainId={chainId} accountIndex={accountIndex} />}
-          {tab === 'bridge' && <Bridge chainId={chainId} accountIndex={accountIndex} />}
+          {gaslessAvailable && tab !== 'gasless' && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, marginBottom: 12 }}>
+              <input type="checkbox" checked={gasless} onChange={(e) => setGasless(e.target.checked)} />
+              ⚡ Gasless (run via the smart account — pay no native gas)
+            </label>
+          )}
+          {tab === 'lending' && <Lending chainId={chainId} accountIndex={accountIndex} gasless={gasless} />}
+          {tab === 'swap' && <Swap chainId={chainId} accountIndex={accountIndex} gasless={gasless} />}
+          {tab === 'bridge' && <Bridge chainId={chainId} accountIndex={accountIndex} gasless={gasless} />}
           {tab === 'gasless' && <Gasless chainId={chainId} accountIndex={accountIndex} />}
         </>
       )}
@@ -69,7 +85,7 @@ function useTxState () {
   return { busy, setBusy, error, setError, hash, setHash }
 }
 
-function Lending ({ chainId, accountIndex }: { chainId: string, accountIndex: number }) {
+function Lending ({ chainId, accountIndex, gasless }: { chainId: string, accountIndex: number, gasless: boolean }) {
   const tokens = AAVE_TOKENS[chainId]!
   const [action, setAction] = useState<typeof ACTIONS[number]>('supply')
   const [tokenIdx, setTokenIdx] = useState(0)
@@ -98,7 +114,7 @@ function Lending ({ chainId, accountIndex }: { chainId: string, accountIndex: nu
     try {
       const api = getWalletApi()
       const fn = { supply: api.aave_supply, withdraw: api.aave_withdraw, borrow: api.aave_borrow, repay: api.aave_repay }[action]
-      const r = await fn(chainId as never, accountIndex, token.address, base)
+      const r = await fn(chainId as never, accountIndex, token.address, base, gasless)
       setHash(r.hash)
     } catch (e) { setError(e instanceof Error ? e.message : 'Failed') } finally { setBusy(false) }
   }
@@ -115,7 +131,7 @@ function Lending ({ chainId, accountIndex }: { chainId: string, accountIndex: nu
   )
 }
 
-function Swap ({ chainId, accountIndex }: { chainId: string, accountIndex: number }) {
+function Swap ({ chainId, accountIndex, gasless }: { chainId: string, accountIndex: number, gasless: boolean }) {
   const tokens = SWAP_TOKENS[chainId]!
   const [inIdx, setInIdx] = useState(0)
   const [outIdx, setOutIdx] = useState(1)
@@ -139,7 +155,7 @@ function Swap ({ chainId, accountIndex }: { chainId: string, accountIndex: numbe
     setBusy(true); setError(null)
     try {
       const base = parseAmount(amount, tIn.decimals)
-      const r = await getWalletApi().velora_swap(chainId as never, accountIndex, tIn.address, tOut.address, base, undefined)
+      const r = await getWalletApi().velora_swap(chainId as never, accountIndex, tIn.address, tOut.address, base, undefined, gasless)
       setHash(r.hash)
     } catch (e) { setError(e instanceof Error ? e.message : 'Swap failed') } finally { setBusy(false) }
   }
@@ -158,7 +174,7 @@ function Swap ({ chainId, accountIndex }: { chainId: string, accountIndex: numbe
   )
 }
 
-function Bridge ({ chainId, accountIndex }: { chainId: string, accountIndex: number }) {
+function Bridge ({ chainId, accountIndex, gasless }: { chainId: string, accountIndex: number, gasless: boolean }) {
   const { address } = useWallet()
   const route = BRIDGE_ROUTES[chainId]
   const [amount, setAmount] = useState('')
@@ -190,7 +206,7 @@ function Bridge ({ chainId, accountIndex }: { chainId: string, accountIndex: num
     const v = validate(); if (!v) return
     setBusy(true)
     try {
-      const r = await getWalletApi().usdt0_bridge(chainId as never, accountIndex, route!.targetChain, v.to, route!.usdt, v.base, route!.oft)
+      const r = await getWalletApi().usdt0_bridge(chainId as never, accountIndex, route!.targetChain, v.to, route!.usdt, v.base, route!.oft, gasless)
       setHash(r.hash)
     } catch (e) { setError(e instanceof Error ? e.message : 'Bridge failed') } finally { setBusy(false) }
   }
