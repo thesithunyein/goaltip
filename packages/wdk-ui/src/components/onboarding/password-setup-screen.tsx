@@ -21,7 +21,7 @@
  * Source: ADR-002 (vault), Doc 32 Part II inventory.
  */
 
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent, type JSX } from 'react';
 import { Button } from '../../primitives/button.js';
 import { Label } from '../../primitives/label.js';
 import { PasswordInput } from '../unlock/password-input.js';

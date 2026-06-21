@@ -38,7 +38,7 @@
  * Nested providers: innermost provider wins (standard React context semantics).
  */
 
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, type JSX, type ReactNode } from 'react';
 import { DEFAULT_WDK_BRAND, type BrandConfig } from './brand-config.js';
 
 const BrandContext = createContext<BrandConfig>(DEFAULT_WDK_BRAND);

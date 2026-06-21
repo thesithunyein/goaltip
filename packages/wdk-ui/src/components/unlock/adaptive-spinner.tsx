@@ -29,7 +29,7 @@
  * popup-tight layouts without dominating the surface.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 
 export interface AdaptiveSpinnerProps {
   readonly pending: boolean;

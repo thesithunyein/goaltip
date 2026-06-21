@@ -23,7 +23,7 @@
  * UI toggle in Settings, not just a code-level API.
  */
 
-import { useRef, type ChangeEvent, type CSSProperties } from 'react';
+import { useRef, type ChangeEvent, type CSSProperties, type JSX } from 'react';
 import { type BrandConfig } from './brand-config.js';
 
 export interface BrandPickerProps {

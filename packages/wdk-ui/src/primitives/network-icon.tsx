@@ -16,7 +16,7 @@
  * chain id and a stable hashed-to-hue background. Better than empty space.
  */
 
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties, JSX, ReactNode } from 'react';
 import { NetworkIcon as DynamicNetworkIcon } from '@web3icons/react/dynamic';
 
 // Chain id -> web3icons network slug. See networks.json in the library.

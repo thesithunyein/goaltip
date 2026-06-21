@@ -20,7 +20,7 @@
  * an optional <Label> rendered by the parent (UnlockScreen does this).
  */
 
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
 import { Input } from '../../primitives/input.js';
 
 export interface PasswordInputProps {

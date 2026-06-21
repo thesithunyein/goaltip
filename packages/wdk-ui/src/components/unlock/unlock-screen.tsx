@@ -33,7 +33,7 @@
  * Source: ADR-002 (Vault), ADR-006 (No Persistent Unlock), Doc 32 Part II.
  */
 
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type JSX } from 'react';
 import { Button } from '../../primitives/button.js';
 import { Label } from '../../primitives/label.js';
 import { PasswordInput } from './password-input.js';

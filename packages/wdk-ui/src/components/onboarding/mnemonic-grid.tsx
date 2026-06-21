@@ -37,7 +37,7 @@
  * browser autofill databases or OS spellcheck cloud services.
  */
 
-import { useRef, useState, type ClipboardEvent } from 'react';
+import { useRef, useState, type ClipboardEvent, type JSX } from 'react';
 
 export interface MnemonicGridProps {
   /** Number of word boxes to render. Default 12. */

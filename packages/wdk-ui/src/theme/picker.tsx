@@ -19,7 +19,7 @@
  * Source: docs/phase-1/doc32-addendum-theme-expansion-phantom-patterns.md (Doc 33)
  */
 
-import { type CSSProperties } from 'react';
+import { type CSSProperties, type JSX } from 'react';
 import { type WdkTheme, type WdkThemeRadius, type WdkMode } from './types.js';
 import { Button } from '../primitives/button.js';
 

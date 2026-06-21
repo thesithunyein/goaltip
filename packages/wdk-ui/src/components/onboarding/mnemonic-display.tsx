@@ -27,7 +27,7 @@
  * checkbox-gated copy). Doc 32 Part II inventory.
  */
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type JSX } from 'react';
 import { Button } from '../../primitives/button.js';
 
 export interface MnemonicDisplayProps {

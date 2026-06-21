@@ -5,7 +5,7 @@
  * fallback for unknown tokens. The library matches by lowercased symbol.
  */
 
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties, JSX, ReactNode } from 'react';
 import { TokenIcon as DynamicTokenIcon } from '@web3icons/react/dynamic';
 
 export interface TokenIconProps {

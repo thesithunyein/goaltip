@@ -16,7 +16,7 @@
  * Source: B1b chain UI surface.
  */
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type JSX, type ReactNode } from 'react';
 
 export interface ChainOption<T extends string> {
   readonly id: T;

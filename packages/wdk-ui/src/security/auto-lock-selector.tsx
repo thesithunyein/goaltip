@@ -15,7 +15,7 @@
  * Source: B1c configurable auto-lock delay.
  */
 
-import { type CSSProperties, type ChangeEvent } from 'react';
+import { type CSSProperties, type ChangeEvent, type JSX } from 'react';
 
 export interface AutoLockOption {
   readonly value: number;

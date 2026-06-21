@@ -21,7 +21,7 @@
  * Source: Doc 33 Part III Pattern A (onboarding mandatory verification).
  */
 
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent, type JSX } from 'react';
 import { Button } from '../../primitives/button.js';
 import { Input } from '../../primitives/input.js';
 import { Label } from '../../primitives/label.js';
