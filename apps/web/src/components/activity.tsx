@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { Card } from '@wdk-starter/wdk-ui'
-import { useWallet } from '@/wallet/wallet-provider'
+import { useWallet, type TxRecord } from '@/wallet/wallet-provider'
 import { formatAmount, getChain } from '@/wallet/chains'
+import { TxDetail } from './tx-detail'
 
 function short (addr: string) {
   return addr.length > 14 ? `${addr.slice(0, 8)}…${addr.slice(-6)}` : addr
@@ -10,6 +12,7 @@ function short (addr: string) {
 
 export function Activity () {
   const { transactions } = useWallet()
+  const [selected, setSelected] = useState<TxRecord | null>(null)
 
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -30,7 +33,15 @@ export function Activity () {
               {transactions.map((tx) => {
                 const chain = getChain(tx.chainId)
                 return (
-                  <li key={tx.hash} style={row}>
+                  <li
+                    key={tx.hash}
+                    style={row}
+                    onClick={() => setSelected(tx)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelected(tx) }}
+                    title="View transaction details"
+                  >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <span style={{ fontSize: 14 }}>Sent to {short(tx.to)}</span>
                       <span style={{ fontSize: 12, color: 'var(--text-secondary, #b3a79f)' }}>
@@ -39,9 +50,7 @@ export function Activity () {
                     </div>
                     <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <span style={{ fontSize: 14 }}>-{formatAmount(BigInt(tx.amount), chain.decimals)} {tx.symbol}</span>
-                      {chain.explorer
-                        ? <a href={`${chain.explorer}/tx/${tx.hash}`} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>view ↗</a>
-                        : <span style={{ fontSize: 12, color: 'var(--text-secondary, #b3a79f)' }}>{tx.status}</span>}
+                      <span style={{ fontSize: 12, color: 'var(--text-secondary, #b3a79f)' }}>details ›</span>
                     </div>
                   </li>
                 )
@@ -49,11 +58,13 @@ export function Activity () {
             </ul>
           </Card>
           )}
+      {selected && <TxDetail tx={selected} onClose={() => setSelected(null)} />}
     </section>
   )
 }
 
 const row: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  padding: '12px 16px', borderBottom: '1px solid var(--border-subtle, var(--border))'
+  padding: '12px 16px', borderBottom: '1px solid var(--border-subtle, var(--border))',
+  cursor: 'pointer'
 }

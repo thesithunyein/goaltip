@@ -5,6 +5,7 @@ import { Button, Input } from '@wdk-starter/wdk-ui'
 import { Modal } from './modal'
 import { useWallet } from '@/wallet/wallet-provider'
 import { getChain, familyOf, parseAmount, type ChainFamily } from '@/wallet/chains'
+import { crossVmSignpost, FAMILY_LABEL } from '@/wallet/bridge'
 
 const EVM_ADDRESS = /^0x[0-9a-fA-F]{40}$/
 const SOLANA_ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
@@ -38,9 +39,17 @@ export function SendDialog ({ chainId, onClose }: { chainId: string, onClose: ()
   const [phase, setPhase] = useState<'form' | 'sending' | 'sent'>('form')
   const [hash, setHash] = useState('')
 
+  // If the pasted address belongs to a different network family, point the user
+  // at the right bridge instead of letting them broadcast into a black hole.
+  const signpost = crossVmSignpost(family, to)
+
   async function submit () {
     setError(null)
-    if (!ADDRESS_RE[family].test(to.trim())) { setError('Enter a valid recipient address.'); return }
+    if (!ADDRESS_RE[family].test(to.trim())) {
+      // The cross-VM signpost (shown above the field) already explains the fix.
+      setError(signpost ? `This is a ${FAMILY_LABEL[signpost.detected]} address — bridge first, don’t send it on ${FAMILY_LABEL[family]}.` : 'Enter a valid recipient address.')
+      return
+    }
     let amountBase: bigint
     try {
       amountBase = parseAmount(amount, chain.decimals)
@@ -69,6 +78,19 @@ export function SendDialog ({ chainId, onClose }: { chainId: string, onClose: ()
             <span style={labelText}>Recipient address</span>
             <Input value={to} onChange={(e) => setTo(e.target.value)} placeholder={PLACEHOLDER[family]} />
           </label>
+          {signpost && (
+            <div style={signpostBox} role="note">
+              <strong style={{ fontSize: 13 }}>That looks like a {FAMILY_LABEL[signpost.detected]} address.</strong>
+              <span style={{ fontSize: 12 }}>
+                You’re sending {chain.symbol} on {FAMILY_LABEL[family]}. Funds can’t cross networks directly — {signpost.note}
+              </span>
+              {signpost.url && (
+                <a href={signpost.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, fontWeight: 600 }}>
+                  Open {signpost.provider} ↗
+                </a>
+              )}
+            </div>
+          )}
           <label style={field}>
             <span style={labelText}>Amount ({chain.symbol})</span>
             <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.0" inputMode="decimal" />
@@ -99,3 +121,9 @@ export function SendDialog ({ chainId, onClose }: { chainId: string, onClose: ()
 const field: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6 }
 const labelText: React.CSSProperties = { fontSize: 13, color: 'var(--text-secondary, #b3a79f)' }
 const errorText: React.CSSProperties = { margin: 0, color: 'var(--color-error, #ef4444)', fontSize: 13 }
+const signpostBox: React.CSSProperties = {
+  display: 'flex', flexDirection: 'column', gap: 4,
+  padding: '10px 12px', borderRadius: 'var(--radius-md, 10px)',
+  background: 'var(--bg-elevated-2, rgba(244,100,47,0.08))',
+  border: '1px solid var(--color-warning, rgba(244,100,47,0.4))'
+}

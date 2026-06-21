@@ -1,10 +1,13 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { ServiceWorkerRegister } from '@/components/service-worker-register'
 
 export const metadata: Metadata = {
   title: 'WDK Wallet Template',
   description: 'A self-custodial multi-chain wallet template built on Tether WDK and Next.js.',
-  icons: { icon: '/favicon.ico' }
+  applicationName: 'WDK Wallet',
+  icons: { icon: '/favicon.ico', apple: '/wdk-mark.png' },
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'WDK Wallet' }
 }
 
 export const viewport: Viewport = {
@@ -16,7 +19,10 @@ export const viewport: Viewport = {
 export default function RootLayout ({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <ServiceWorkerRegister />
+      </body>
     </html>
   )
 }

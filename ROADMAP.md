@@ -38,13 +38,19 @@ methods; and the Next.js surface now wires them in:
 4. **Lightning (Spark)** — `@tetherto/wdk-wallet-spark` instant BTC payments
    (shared bundler-shim work tracked in the extension roadmap).
 
-## ⏳ Phase 3 — Next.js-native concerns
+## ✅ Phase 3 — Next.js-native concerns (mostly shipped)
 
-4. **SSR/edge boundaries** — document and harden the worklet/SSR split (the engine
-   is client-only by design); App Router patterns for wallet-gated routes.
-5. **Account abstraction** — `@tetherto/wdk-wallet-evm-erc-4337` gasless smart
-   accounts; **TON/Tron** account families.
-6. **Fiat values** — balances in USD via `@tetherto/wdk-pricing-*`.
+4. ✅ **PWA** — installable: `app/manifest.ts` (web manifest) + a security-conscious
+   app-shell service worker (`public/sw.js`) that caches **only** immutable
+   `/_next/static/*` build assets and icons — never HTML, RPC, or any wallet data.
+5. ✅ **Cross-VM bridge signpost** (ADR-005) — pasting a recipient address from a
+   different network family in Send detects it and points the user at the right
+   bridge (Wormhole for EVM↔Solana, etc.) instead of letting funds cross into a
+   black hole (`wallet/bridge.ts`).
+6. ✅ **Transaction detail view** — click any activity row for a detail modal
+   (amount, parties, status, time, copyable hash, explorer link).
+7. **SSR/edge boundaries** — document and harden the worklet/SSR split (the engine
+   is client-only by design); App Router patterns for wallet-gated routes. *(open)*
 
 ## ⏳ Phase 4 — DeFi & distribution
 
@@ -62,10 +68,18 @@ advance together.
 
 ## Customization & presentation follow-ups
 
-- **Runtime theme/brand picker UI** — the template ships a fixed theme by design, but the `wdk-ui` picker components (`ThemePicker`, `BrandPicker`, `useThemePicker`, `useBrandPicker`) are available to wire into a Settings route for end-user customization (the extension demonstrates the pattern). Code-level theming + branding already work today (see `docs/CUSTOMIZATION.md`).
+- ✅ **Runtime theme/brand picker UI** — done. A gear-button **Appearance panel**
+  (`AppearanceProvider` + `AppearanceDialog`) wires the `wdk-ui` pickers
+  (`ThemePicker`, `BrandPicker`, `useThemePicker`, `useBrandPicker`,
+  `useCustomPrimary`) into the app, with an any-hex primary override — all
+  persisted to localStorage. Code-level theming still works (see `docs/CUSTOMIZATION.md`).
 - **Capture screenshots** of the DeFi dialog (Lend/Swap/Bridge/Gasless) + Buy, and add to `media/screenshots/` + README (needs RPC-wired headless capture).
 
 
 ## Security / dependency follow-ups
 
-- **Next.js 15 + React 19 migration** — dependency-audit bumped Next to 14.2.35 (clears the critical Middleware auth-bypass + the 14.x DoS advisories) and patched the dev-tooling tree (vitest/axios/vite/ws) via pnpm overrides; the build is green and 459 tests pass. Five **Next.js** highs remain that are patched only in **Next 15** (Server-Component DoS, SSRF, middleware/proxy bypass — all server-side, low real impact for this client-rendered static wallet). Upgrading needs React 19, which currently breaks `wdk-ui` types (its `ReactNode`-typed component props don’t match React 19’s changed `ReactNode`); tracked as a scoped migration (retype `wdk-ui` for React 19, then bump).
+- ✅ **Next.js 15 + React 19 migration** — done. Upgraded to Next 15.5.16 + React 19
+  and rebuilt `wdk-ui` against React 19 (the 14 `JSX.Element` annotations now import
+  the JSX type from 'react'). Cleared all five Next.js highs plus the postcss
+  moderate; audit is down to a single unfixable low (`elliptic`). Production build
+  green, 462 tests pass.
