@@ -15,7 +15,7 @@
     "@wdk-starter/wdk-web-core": "workspace:*",
     "buffer": "6.0.3",
     "comlink": "4.4.1",
-    "next": "14.2.15",
+    "next": "14.2.35",
     "process": "0.11.10",
     "qrcode": "1.5.4",
     "react": "18.3.1",

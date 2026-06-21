@@ -64,3 +64,8 @@ advance together.
 
 - **Runtime theme/brand picker UI** — the template ships a fixed theme by design, but the `wdk-ui` picker components (`ThemePicker`, `BrandPicker`, `useThemePicker`, `useBrandPicker`) are available to wire into a Settings route for end-user customization (the extension demonstrates the pattern). Code-level theming + branding already work today (see `docs/CUSTOMIZATION.md`).
 - **Capture screenshots** of the DeFi dialog (Lend/Swap/Bridge/Gasless) + Buy, and add to `media/screenshots/` + README (needs RPC-wired headless capture).
+
+
+## Security / dependency follow-ups
+
+- **Next.js 15 + React 19 migration** — dependency-audit bumped Next to 14.2.35 (clears the critical Middleware auth-bypass + the 14.x DoS advisories) and patched the dev-tooling tree (vitest/axios/vite/ws) via pnpm overrides; the build is green and 459 tests pass. Five **Next.js** highs remain that are patched only in **Next 15** (Server-Component DoS, SSRF, middleware/proxy bypass — all server-side, low real impact for this client-rendered static wallet). Upgrading needs React 19, which currently breaks `wdk-ui` types (its `ReactNode`-typed component props don’t match React 19’s changed `ReactNode`); tracked as a scoped migration (retype `wdk-ui` for React 19, then bump).
