@@ -1,4 +1,10 @@
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+// Repo root (two levels up from apps/web). fileURLToPath works on all Node 18+
+// (import.meta.dirname is only Node 20.11+).
+const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 
 /**
  * The WDK engine (@tetherto/wdk + sodium-javascript + bip39) runs inside a Web
@@ -13,6 +19,9 @@ import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
  */
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Pin the workspace root so Next doesn't mis-infer it from a stray parent
+  // lockfile (e.g. a package-lock.json in the user's home dir).
+  outputFileTracingRoot: repoRoot,
   reactStrictMode: true,
   transpilePackages: ['@wdk-starter/wdk-ui', '@wdk-starter/wdk-web-core'],
   webpack (config, { isServer, webpack }) {
