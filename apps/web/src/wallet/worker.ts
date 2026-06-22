@@ -46,7 +46,10 @@ const erc4337Config = bundlerUrl
   : undefined
 
 const instance = new WalletWorker({
-  rpcAdapter: createHttpRpcAdapter(),
+  // Wire the per-chain RPC URLs (incl. NEXT_PUBLIC_*_RPC_URL overrides) into the
+  // adapter — otherwise balance reads fall back to each chain's baked-in public
+  // default and a dev's configured endpoint is ignored.
+  rpcAdapter: createHttpRpcAdapter({ rpcUrls: RPC_URLS }),
   ...(moonpayConfig ? { moonpayConfig } : {}),
   ...(erc4337Config ? { erc4337Config } : {})
 })
