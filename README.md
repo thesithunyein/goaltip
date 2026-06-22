@@ -10,7 +10,7 @@ Reference implementation for the Tether WDK **Template Wallet** bounty — exten
 
 [![CI](https://github.com/plinkdev1/wdk-wallet-template/actions/workflows/ci.yml/badge.svg)](https://github.com/plinkdev1/wdk-wallet-template/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F4642F.svg)](./LICENSE)
-[![Next.js 14](https://img.shields.io/badge/Next.js-14-000.svg)](https://nextjs.org)
+[![Next.js 15](https://img.shields.io/badge/Next.js-15-000.svg)](https://nextjs.org)
 [![Worklet](https://img.shields.io/badge/keys-in%20a%20Web%20Worker-1f6feb.svg)](#architecture)
 
 </div>
@@ -151,7 +151,7 @@ Framework-specific notes are in [`docs/INTEGRATION.md`](./docs/INTEGRATION.md).
 ## Quality
 
 - **Strict TypeScript** across the app and both packages.
-- **`pnpm typecheck`** and **`pnpm test`** (the shared packages carry 446 passing tests) run in CI on every push, followed by a full `next build`.
+- **`pnpm typecheck`** and **`pnpm test`** (the shared packages carry 504 passing tests) run in CI on every push, followed by a full `next build`.
 - The worklet is runtime-verified: a headless smoke test boots the worker, derives, and generates a mnemonic through the real UI.
 
 ---
