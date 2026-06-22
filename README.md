@@ -53,7 +53,11 @@ This template is the missing reference. It is a **real, working, self-custodial 
 |:--:|:--:|:--:|
 | ![Receive](./media/screenshots/07-receive.png) | ![Send](./media/screenshots/08-send.png) | ![Chains](./media/screenshots/06-chain-selector.png) |
 
-**▶ Demo video:** [`media/demo/wdk-wallet-template-demo.webm`](./media/demo/wdk-wallet-template-demo.webm) — a full walkthrough (onboarding → dashboard → multi-chain → send/receive). Click **Download** / **Raw** on GitHub to view. The shot-by-shot script is in [`docs/DEMO.md`](./docs/DEMO.md).
+**▶ Demo video** — a real screen recording of the running app: set up → create wallet → reveal the 12-word recovery phrase → verify it → dashboard (live on-chain balance) → receive QR.
+
+<video src="https://github.com/plinkdev1/wdk-wallet-template/raw/main/media/demo/wdk-wallet-template-demo.webm" controls muted></video>
+
+> Player not loading (e.g. before the repo is public)? **Download the raw `.webm`:** [`media/demo/wdk-wallet-template-demo.webm`](./media/demo/wdk-wallet-template-demo.webm) (or click **Raw** on the file page). Walkthrough script: [`docs/DEMO.md`](./docs/DEMO.md).
 
 > Screenshots are captured from the running app via headless Chromium against a throwaway test wallet (no real funds).
 
