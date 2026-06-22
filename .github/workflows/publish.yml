@@ -1,0 +1,42 @@
+# Publishes @wdk-starter/wdk-web-core to npm (from packages/wdk-web-core).
+#
+# ── One-time setup (npm 2FA) ────────────────────────────────────────────────
+# Git pushes/PRs do NOT publish to npm — only this workflow does, on a Release.
+# Because your npm account has 2FA, CI must use an *automation token*:
+#   1. npmjs.com → Access Tokens → Generate New Token → "Automation"
+#      (bypasses the 2FA OTP prompt).
+#   2. GitHub repo → Settings → Secrets and variables → Actions →
+#      New repository secret → name: NPM_TOKEN.
+#   3. If the @wdk-starter org enforces 2FA, set it to "Require two-factor
+#      authentication or automation tokens".
+#
+# ── Releasing ───────────────────────────────────────────────────────────────
+# Bump "version" in packages/wdk-web-core/package.json, commit, then publish a
+# GitHub Release (or run manually). prepublishOnly rebuilds dist before sending.
+name: Publish wdk-web-core to npm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # prepublishOnly (clean + tsc build) runs in the package dir before send.
+      - name: Publish
+        working-directory: packages/wdk-web-core
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
