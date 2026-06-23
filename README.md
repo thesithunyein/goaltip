@@ -1,6 +1,9 @@
 <div align="center">
 
-<img src="./brand/01-master-mark/wdk-master-mark-256.png" alt="WDK Wallet" width="120" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./brand/template-lockup-ondark.png" />
+  <img src="./brand/template-lockup-onlight.png" alt="WDK · Template Wallet" width="420" />
+</picture>
 
 # WDK Wallet Template — Next.js
 
