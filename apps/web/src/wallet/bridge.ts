@@ -9,14 +9,7 @@
  * not move funds (bridging happens in the dedicated provider's UI).
  */
 import type { ChainFamily } from './chains'
-
-const ADDRESS_RE: Record<ChainFamily, RegExp> = {
-  evm: /^0x[0-9a-fA-F]{40}$/,
-  solana: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
-  bitcoin: /^(bc1|tb1)[0-9ac-hj-np-z]{11,87}$|^[123mn2][a-km-zA-HJ-NP-Z1-9]{25,39}$/,
-  ton: /^[A-Za-z0-9_-]{48}$|^-?\d:[0-9a-fA-F]{64}$/,
-  tron: /^T[1-9A-HJ-NP-Za-km-z]{33}$/
-}
+import { validateAddress, detectPaymentFamily } from '@wdk-starter/wdk-web-core/payments'
 
 export const FAMILY_LABEL: Record<ChainFamily, string> = {
   evm: 'EVM',
@@ -26,23 +19,21 @@ export const FAMILY_LABEL: Record<ChainFamily, string> = {
   tron: 'Tron'
 }
 
-/** Does `addr` look valid for `family`? */
+/** Does `addr` validate for `family`? (engine, checksum-aware) */
 export function isAddressForFamily (addr: string, family: ChainFamily): boolean {
-  return ADDRESS_RE[family].test(addr.trim())
+  return validateAddress(family, addr.trim()).valid
 }
 
+const BRIDGEABLE: readonly ChainFamily[] = ['evm', 'solana', 'bitcoin', 'ton', 'tron']
+
 /**
- * Best-effort detection of which family a pasted address belongs to. Returns the
- * first family whose format matches, or null. (EVM/Tron/TON can overlap loosely;
- * the send flow only uses this as a hint when the address fails the active
- * family's check, so a close guess is fine.)
+ * Best-effort detection of which family a pasted address belongs to, via the
+ * shared engine detector (checksum-aware). Spark / Lightning targets are not
+ * bridgeable families here, so they map to null.
  */
 export function detectAddressFamily (addr: string): ChainFamily | null {
-  const a = addr.trim()
-  for (const family of ['evm', 'tron', 'ton', 'bitcoin', 'solana'] as ChainFamily[]) {
-    if (ADDRESS_RE[family].test(a)) return family
-  }
-  return null
+  const fam = detectPaymentFamily(addr.trim())
+  return fam !== null && (BRIDGEABLE as readonly string[]).includes(fam) ? (fam as ChainFamily) : null
 }
 
 export interface BridgeSignpost {

@@ -6,19 +6,14 @@ import { Modal } from './modal'
 import { useWallet } from '@/wallet/wallet-provider'
 import { getChain, familyOf, parseAmount, type ChainFamily } from '@/wallet/chains'
 import { crossVmSignpost, FAMILY_LABEL } from '@/wallet/bridge'
+import { validateAddress, parsePaymentUri } from '@wdk-starter/wdk-web-core/payments'
 
-const EVM_ADDRESS = /^0x[0-9a-fA-F]{40}$/
-const SOLANA_ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
-const BTC_ADDRESS = /^(bc1|tb1)[0-9ac-hj-np-z]{11,87}$|^[123mn2][a-km-zA-HJ-NP-Z1-9]{25,39}$/
-const TON_ADDRESS = /^[A-Za-z0-9_-]{48}$|^-?\d:[0-9a-fA-F]{64}$/
-const TRON_ADDRESS = /^T[1-9A-HJ-NP-Za-km-z]{33}$/
-
-const ADDRESS_RE: Record<ChainFamily, RegExp> = {
-  evm: EVM_ADDRESS,
-  solana: SOLANA_ADDRESS,
-  bitcoin: BTC_ADDRESS,
-  ton: TON_ADDRESS,
-  tron: TRON_ADDRESS
+/** Formats a base-unit bigint back into a decimal string (to prefill an amount from a payment URI). */
+function formatBaseToDecimal (base: bigint, decimals: number): string {
+  const divisor = 10n ** BigInt(decimals)
+  const whole = base / divisor
+  const frac = (base % divisor).toString().padStart(decimals, '0').replace(/0+$/, '')
+  return frac ? `${whole}.${frac}` : whole.toString()
 }
 
 const PLACEHOLDER: Record<ChainFamily, string> = {
@@ -43,11 +38,29 @@ export function SendDialog ({ chainId, onClose }: { chainId: string, onClose: ()
   // at the right bridge instead of letting them broadcast into a black hole.
   const signpost = crossVmSignpost(family, to)
 
+  // Paste-aware recipient: a BIP-21 (bitcoin:) or EIP-681 (ethereum:) payment URI
+  // fills the address and, when present, the amount — a scanned/copied request "just works".
+  function onRecipientChange (raw: string) {
+    const parsed = parsePaymentUri(raw.trim())
+    if (parsed && parsed.scheme === 'bip21' && family === 'bitcoin') {
+      setTo(parsed.address)
+      if (parsed.satoshis !== undefined) setAmount(formatBaseToDecimal(parsed.satoshis, 8))
+      return
+    }
+    if (parsed && parsed.scheme === 'eip681' && family === 'evm') {
+      setTo(parsed.address)
+      if (parsed.wei !== undefined) setAmount(formatBaseToDecimal(parsed.wei, 18))
+      return
+    }
+    setTo(raw)
+  }
+
   async function submit () {
     setError(null)
-    if (!ADDRESS_RE[family].test(to.trim())) {
+    const check = validateAddress(family, to.trim())
+    if (!check.valid) {
       // The cross-VM signpost (shown above the field) already explains the fix.
-      setError(signpost ? `This is a ${FAMILY_LABEL[signpost.detected]} address — bridge first, don’t send it on ${FAMILY_LABEL[family]}.` : 'Enter a valid recipient address.')
+      setError(signpost ? `This is a ${FAMILY_LABEL[signpost.detected]} address — bridge first, don’t send it on ${FAMILY_LABEL[family]}.` : (check.reason ? `Enter a valid recipient address — ${check.reason}.` : 'Enter a valid recipient address.'))
       return
     }
     let amountBase: bigint
@@ -76,7 +89,7 @@ export function SendDialog ({ chainId, onClose }: { chainId: string, onClose: ()
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <label style={field}>
             <span style={labelText}>Recipient address</span>
-            <Input value={to} onChange={(e) => setTo(e.target.value)} placeholder={PLACEHOLDER[family]} />
+            <Input value={to} onChange={(e) => onRecipientChange(e.target.value)} placeholder={PLACEHOLDER[family]} />
           </label>
           {signpost && (
             <div style={signpostBox} role="note">
