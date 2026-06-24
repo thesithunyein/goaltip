@@ -35,23 +35,25 @@ methods; and the Next.js surface now wires them in:
 3. **Activity + status monitoring** — the engine's status polling, in the app layer (next).
 3. ✅ **Gasless (ERC-4337) + MoonPay on-ramp** — live in the app, config-driven
    (set `NEXT_PUBLIC_BUNDLER_URL` / `NEXT_PUBLIC_MOONPAY_API_KEY`).
-4. **Lightning (Spark)** — `@tetherto/wdk-wallet-spark` instant BTC payments
-   (shared bundler-shim work tracked in the extension roadmap).
-   - ✅ **Engine groundwork shipped** — the shared `wdk-web-core` now exports a
-     payment-target module (per-family address validation + BIP-21/EIP-681/**BOLT11**
-     parsing: `validateAddress`, `parsePaymentUri`, `decodeBolt11`), with 30 tests
-     and no new dependency. BOLT11 decode is what the Lightning send/receive UI consumes.
-   - ✅ **Engine wiring shipped** — on-demand Spark manager + worker methods
-     (`account_*Spark*`, `lightning_createInvoice` / `lightning_payInvoice`) in
-     `protocols/spark.ts`, lazy + decoupled; the SDK is an app-provided optional
-     dependency, so the app installs/bundles it (shared bundler-shim work).
-   - ✅ **Bundling solved + UI shipped** — the `@noble/hashes` v1↔v2 conflict is
-     resolved (`pnpm.packageExtensions` pins `wdk-wallet-btc` → v1; Spark keeps v2),
-     so Bitcoin + Spark coexist in one bundle (Next.js + crxjs/MV3, verified). A
-     **⚡ Lightning dialog** is live on the dashboard — create/pay BOLT11 invoices
-     (QR + copy + local `decodeBolt11` preview) and view the Spark address/balance,
-     all over the worklet. *(Extension MV3 UI follows once the MV3 runtime
-     `import()` path is confirmed in-browser — F-MV3-04.)*
+4. ✅ **Spark (Bitcoin L2) + Lightning** — `@tetherto/wdk-wallet-spark`, shipped
+   end-to-end on both the template and the extension.
+   - ✅ **Engine groundwork** — the shared `wdk-web-core` exports a payment-target
+     module (per-family address validation + BIP-21/EIP-681/**BOLT11** parsing:
+     `validateAddress`, `parsePaymentUri`, `decodeBolt11`), no new dependency.
+   - ✅ **Full native L2 engine surface** — on-demand Spark manager + worker methods:
+     `account_getSparkAddress` / `account_getSparkBalance` / `account_sendSparkTransaction`
+     (Spark↔Spark), `account_getSparkDepositAddress` (fund from Bitcoin L1),
+     `account_quoteSparkWithdraw` / `account_sparkWithdraw` (cooperative exit to BTC,
+     Fast/Med/Slow + fee quote), and `lightning_createInvoice` / `lightning_payInvoice`
+     (BOLT11). Lazy-loaded into its own chunk.
+   - ✅ **Bundling solved** — the `@noble/hashes` v1↔v2 conflict is resolved
+     (`pnpm.packageExtensions` pins `wdk-wallet-btc` → v1; Spark keeps v2), so Bitcoin
+     L1 + Spark coexist in one bundle (Next.js + crxjs/MV3, verified).
+   - ✅ **Branded UI shipped** — a two-tab **Spark** dialog on the dashboard: a Spark
+     tab (Receive · Send · Deposit-from-BTC · Withdraw-to-BTC) and a Lightning tab
+     (BOLT11 receive/pay), with the Spark logo, all over the worklet. The extension
+     ships the same surface as a popup view; on the MV3 service worker the lazy
+     `import()` restriction (F-MV3-04) is surfaced as a clear connect-error.
 
 ## ✅ Phase 3 — Next.js-native concerns (mostly shipped)
 

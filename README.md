@@ -139,7 +139,7 @@ Then open <http://localhost:3000>, create a wallet, and you're in. See [`docs/SE
 | **USD fiat values** | ✅ via CoinGecko pricing client |
 | **DeFi: Aave lend · Velora swap · USDT0 bridge** | ✅ live in the dashboard DeFi dialog (Comlink) |
 | **ERC-4337 gasless · MoonPay on-ramp** | ✅ in the engine; config-driven (see extension for the same UI pattern) |
-| **USDt / XAUt tokens** | 🚧 engine ships balances + transfers; UI surfacing next |
+| **USDt / XAUt tokens** | ✅ balances on the dashboard (per EVM chain) + tap-to-send via ERC-20 `transfer()` |
 | **Spark (Bitcoin L2) + Lightning** | ✅ live in the dashboard **Spark** dialog — address, balance, Spark↔Spark send, fund-from-Bitcoin deposit, withdraw to BTC (cooperative exit), BOLT11 receive/pay |
 
 The template is transparent about implemented vs. planned scope. Adding a chain is a single entry in `apps/web/src/wallet/chains.ts` plus a loader in `wdk-web-core`.

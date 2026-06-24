@@ -4,7 +4,10 @@ import { useState } from 'react'
 import { Button, Input } from '@wdk-starter/wdk-ui'
 import { Modal } from './modal'
 import { useWallet } from '@/wallet/wallet-provider'
+import { getWalletApi } from '@/wallet/wallet-client'
 import { getChain, familyOf, parseAmount, type ChainFamily } from '@/wallet/chains'
+import { encodeErc20Transfer } from '@/wallet/erc20'
+import type { TokenInfo } from '@/wallet/tokens'
 import { crossVmSignpost, FAMILY_LABEL } from '@/wallet/bridge'
 import { validateAddress, parsePaymentUri } from '@wdk-starter/wdk-web-core/payments'
 
@@ -24,10 +27,14 @@ const PLACEHOLDER: Record<ChainFamily, string> = {
   tron: 'T… address'
 }
 
-export function SendDialog ({ chainId, onClose }: { chainId: string, onClose: () => void }) {
-  const { send, balance } = useWallet()
+export function SendDialog ({ chainId, token, onClose }: { chainId: string, token?: TokenInfo | null, onClose: () => void }) {
+  const { send, balance, accountIndex } = useWallet()
   const chain = getChain(chainId)
   const family = familyOf(chainId)
+  // In token mode the amount/label use the token's units, and the send goes out
+  // as an ERC-20 transfer() to the token contract rather than a native transfer.
+  const symbol = token ? token.symbol : chain.symbol
+  const decimals = token ? token.decimals : chain.decimals
   const [to, setTo] = useState('')
   const [amount, setAmount] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -47,7 +54,7 @@ export function SendDialog ({ chainId, onClose }: { chainId: string, onClose: ()
       if (parsed.satoshis !== undefined) setAmount(formatBaseToDecimal(parsed.satoshis, 8))
       return
     }
-    if (parsed && parsed.scheme === 'eip681' && family === 'evm') {
+    if (parsed && parsed.scheme === 'eip681' && family === 'evm' && !token) {
       setTo(parsed.address)
       if (parsed.wei !== undefined) setAmount(formatBaseToDecimal(parsed.wei, 18))
       return
@@ -65,17 +72,21 @@ export function SendDialog ({ chainId, onClose }: { chainId: string, onClose: ()
     }
     let amountBase: bigint
     try {
-      amountBase = parseAmount(amount, chain.decimals)
+      amountBase = parseAmount(amount, decimals)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Invalid amount.'); return
     }
     if (amountBase <= 0n) { setError('Amount must be greater than zero.'); return }
-    if (balance !== undefined && amountBase > balance) { setError('Insufficient balance.'); return }
+    // The native `balance` doesn't bound a token transfer, so only check it for native sends.
+    if (!token && balance !== undefined && amountBase > balance) { setError('Insufficient balance.'); return }
 
     setPhase('sending')
     try {
-      const txHash = await send(to.trim(), amountBase)
-      setHash(txHash)
+      // ERC-20: call the token contract with transfer() calldata, value 0. Native: the provider's send().
+      const txHash = token
+        ? await getWalletApi().account_sendTransaction(chainId as never, accountIndex, { to: token.address, value: 0n, data: encodeErc20Transfer(to.trim(), amountBase) })
+        : await send(to.trim(), amountBase)
+      setHash(txHash as string)
       setPhase('sent')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Transaction failed.')
@@ -84,7 +95,7 @@ export function SendDialog ({ chainId, onClose }: { chainId: string, onClose: ()
   }
 
   return (
-    <Modal title={`Send ${chain.symbol}`} onClose={onClose}>
+    <Modal title={`Send ${symbol}`} onClose={onClose}>
       {phase !== 'sent' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <label style={field}>
@@ -95,7 +106,7 @@ export function SendDialog ({ chainId, onClose }: { chainId: string, onClose: ()
             <div style={signpostBox} role="note">
               <strong style={{ fontSize: 13 }}>That looks like a {FAMILY_LABEL[signpost.detected]} address.</strong>
               <span style={{ fontSize: 12 }}>
-                You’re sending {chain.symbol} on {FAMILY_LABEL[family]}. Funds can’t cross networks directly — {signpost.note}
+                You’re sending {symbol} on {FAMILY_LABEL[family]}. Funds can’t cross networks directly — {signpost.note}
               </span>
               {signpost.url && (
                 <a href={signpost.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, fontWeight: 600 }}>
@@ -105,7 +116,7 @@ export function SendDialog ({ chainId, onClose }: { chainId: string, onClose: ()
             </div>
           )}
           <label style={field}>
-            <span style={labelText}>Amount ({chain.symbol})</span>
+            <span style={labelText}>Amount ({symbol})</span>
             <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.0" inputMode="decimal" />
           </label>
           {error && <p style={errorText}>{error}</p>}

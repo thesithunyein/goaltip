@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { Button, Card, ChainSelector, NetworkIcon, Skeleton, TokenIcon } from '@wdk-starter/wdk-ui'
 import { useWallet } from '@/wallet/wallet-provider'
 import { chainOptions, formatAmount, getChain, familyOf } from '@/wallet/chains'
+import type { TokenInfo } from '@/wallet/tokens'
 import { BrandHeader } from './brand-header'
 import { ReceiveDialog } from './receive-dialog'
 import { SendDialog } from './send-dialog'
+import { TokenList } from './token-list'
 import { DefiDialog } from './defi-dialog'
 import { BuyDialog } from './buy-dialog'
 import { SparkDialog } from './spark-dialog'
@@ -26,6 +28,8 @@ export function Dashboard () {
     address, addressLoading, balance, balanceLoading, usdValue, refreshBalance, lock
   } = useWallet()
   const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'defi' | 'buy' | 'spark'>('none')
+  /** When set, the Send dialog sends this ERC-20 token instead of the native asset. */
+  const [sendToken, setSendToken] = useState<TokenInfo | null>(null)
   const [copied, setCopied] = useState(false)
   const { open: appearanceOpen, setOpen: setAppearanceOpen } = useAppearance()
   const chain = getChain(chainId)
@@ -69,7 +73,7 @@ export function Dashboard () {
           </button>
           <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
             <Button onClick={() => setDialog('receive')} disabled={!address} style={{ flex: 1 }}>Receive</Button>
-            <Button onClick={() => setDialog('send')} variant="secondary" disabled={!address} style={{ flex: 1 }}>Send</Button>
+            <Button onClick={() => { setSendToken(null); setDialog('send') }} variant="secondary" disabled={!address} style={{ flex: 1 }}>Send</Button>
             <Button onClick={() => void refreshBalance()} variant="outline" size="icon" title="Refresh">↻</Button>
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
@@ -89,6 +93,10 @@ export function Dashboard () {
           </div>
         </Card>
 
+        {familyOf(chainId) === 'evm' && address && (
+          <TokenList chainId={chainId} address={address} onSend={(token) => { setSendToken(token); setDialog('send') }} />
+        )}
+
         <Activity />
 
         <footer style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary, #b3a79f)', marginTop: 8 }}>
@@ -97,7 +105,7 @@ export function Dashboard () {
       </div>
 
       {dialog === 'receive' && address && <ReceiveDialog address={address} chainId={chainId} onClose={() => setDialog('none')} />}
-      {dialog === 'send' && address && <SendDialog chainId={chainId} onClose={() => setDialog('none')} />}
+      {dialog === 'send' && address && <SendDialog chainId={chainId} token={sendToken} onClose={() => setDialog('none')} />}
       {dialog === 'defi' && address && <DefiDialog chainId={chainId} accountIndex={accountIndex} onClose={() => setDialog('none')} />}
       {dialog === 'buy' && address && <BuyDialog chainId={chainId} address={address} onClose={() => setDialog('none')} />}
       {dialog === 'spark' && address && <SparkDialog accountIndex={accountIndex} onClose={() => setDialog('none')} />}
