@@ -9,6 +9,7 @@ import { ReceiveDialog } from './receive-dialog'
 import { SendDialog } from './send-dialog'
 import { DefiDialog } from './defi-dialog'
 import { BuyDialog } from './buy-dialog'
+import { LightningDialog } from './lightning-dialog'
 import { Activity } from './activity'
 import { AppearanceDialog } from './appearance-dialog'
 import { useAppearance } from './appearance-provider'
@@ -24,7 +25,7 @@ export function Dashboard () {
     chainId, setChainId, accountIndex, setAccountIndex,
     address, addressLoading, balance, balanceLoading, usdValue, refreshBalance, lock
   } = useWallet()
-  const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'defi' | 'buy'>('none')
+  const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'defi' | 'buy' | 'lightning'>('none')
   const [copied, setCopied] = useState(false)
   const { open: appearanceOpen, setOpen: setAppearanceOpen } = useAppearance()
   const chain = getChain(chainId)
@@ -80,6 +81,9 @@ export function Dashboard () {
             <Button onClick={() => setDialog('buy')} variant="secondary" disabled={!address} style={{ flex: 1 }}>
               Buy crypto
             </Button>
+            <Button onClick={() => setDialog('lightning')} variant="secondary" disabled={!address} style={{ flex: 1 }}>
+              ⚡ Lightning
+            </Button>
           </div>
         </Card>
 
@@ -94,6 +98,7 @@ export function Dashboard () {
       {dialog === 'send' && address && <SendDialog chainId={chainId} onClose={() => setDialog('none')} />}
       {dialog === 'defi' && address && <DefiDialog chainId={chainId} accountIndex={accountIndex} onClose={() => setDialog('none')} />}
       {dialog === 'buy' && address && <BuyDialog chainId={chainId} address={address} onClose={() => setDialog('none')} />}
+      {dialog === 'lightning' && address && <LightningDialog accountIndex={accountIndex} onClose={() => setDialog('none')} />}
       {appearanceOpen && <AppearanceDialog />}
     </main>
   )

@@ -45,6 +45,13 @@ methods; and the Next.js surface now wires them in:
      (`account_*Spark*`, `lightning_createInvoice` / `lightning_payInvoice`) in
      `protocols/spark.ts`, lazy + decoupled; the SDK is an app-provided optional
      dependency, so the app installs/bundles it (shared bundler-shim work).
+   - ✅ **Bundling solved + UI shipped** — the `@noble/hashes` v1↔v2 conflict is
+     resolved (`pnpm.packageExtensions` pins `wdk-wallet-btc` → v1; Spark keeps v2),
+     so Bitcoin + Spark coexist in one bundle (Next.js + crxjs/MV3, verified). A
+     **⚡ Lightning dialog** is live on the dashboard — create/pay BOLT11 invoices
+     (QR + copy + local `decodeBolt11` preview) and view the Spark address/balance,
+     all over the worklet. *(Extension MV3 UI follows once the MV3 runtime
+     `import()` path is confirmed in-browser — F-MV3-04.)*
 
 ## ✅ Phase 3 — Next.js-native concerns (mostly shipped)
 
