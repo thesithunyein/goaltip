@@ -73,10 +73,14 @@ const hashBtn: React.CSSProperties = {
   background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, padding: 0
 }
 function statusPill (status: TxRecord['status']): React.CSSProperties {
-  const ok = status === 'submitted'
+  const color = status === 'success'
+    ? 'var(--color-success, #16a34a)'
+    : status === 'failed'
+      ? 'var(--color-error, #ef4444)'
+      : 'var(--text-secondary, #b3a79f)' // pending
   return {
     display: 'inline-block', marginTop: 6, fontSize: 12, padding: '2px 10px', borderRadius: 999,
-    color: ok ? 'var(--color-success, #16a34a)' : 'var(--color-error, #ef4444)',
+    color,
     background: 'var(--bg-elevated-2, rgba(255,255,255,0.05))'
   }
 }

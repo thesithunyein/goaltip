@@ -13,7 +13,13 @@ export interface TxRecord {
   readonly amount: string
   readonly symbol: string
   readonly ts: number
-  readonly status: 'submitted' | 'failed'
+  /**
+   * Live status. Starts 'pending' on broadcast; for chains whose RPC adapter
+   * supports it (EVM, Solana) a background poll advances it to 'success' /
+   * 'failed'. Other families stay 'pending' (honest — we broadcast and await
+   * confirmation; the explorer link is the source of truth).
+   */
+  readonly status: 'pending' | 'success' | 'failed'
 }
 
 export interface WalletContextValue {
@@ -202,12 +208,49 @@ export function WalletProvider ({ children }: { children: React.ReactNode }) {
       amount: amountBase.toString(),
       symbol: chain.symbol,
       ts: Date.now(),
-      status: 'submitted'
+      status: 'pending'
     }
     setTransactions((prev) => [record, ...prev])
     void refreshBalance()
     return hash as string
   }, [api, chainId, accountIndex, refreshBalance])
+
+  // Live status: poll broadcast txs whose RPC adapter supports a status read
+  // (EVM, Solana) until they settle. Bounded by tx age and a round cap so a
+  // stuck/unsupported tx is never polled forever; other families stay 'pending'
+  // (honest — the explorer link is the source of truth).
+  useEffect(() => {
+    if (phase !== 'unlocked') return
+    const POLLABLE = new Set<string>(['evm', 'solana'])
+    const MAX_AGE_MS = 10 * 60 * 1000
+    const since = Date.now()
+    const pending = transactions.filter(
+      (t) => t.status === 'pending' && POLLABLE.has(familyOf(t.chainId)) && since - t.ts < MAX_AGE_MS
+    )
+    if (pending.length === 0) return
+    let cancelled = false
+    const poll = async () => {
+      for (const tx of pending) {
+        try {
+          const st = await api().rpc_getTransactionStatus(tx.chainId as never, tx.hash)
+          if (cancelled) return
+          if (st === 'success' || st === 'failed') {
+            setTransactions((prev) => prev.map((t) => (t.hash === tx.hash ? { ...t, status: st } : t)))
+          }
+        } catch {
+          // Adapter/chain may not support status — leave pending.
+        }
+      }
+    }
+    void poll()
+    let rounds = 0
+    const id = setInterval(() => {
+      rounds += 1
+      if (rounds > 60) { clearInterval(id); return } // ~5 min cap
+      void poll()
+    }, 5000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [transactions, phase, api])
 
   const value = useMemo<WalletContextValue>(() => ({
     phase,

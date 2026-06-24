@@ -10,6 +10,20 @@ function short (addr: string) {
   return addr.length > 14 ? `${addr.slice(0, 8)}…${addr.slice(-6)}` : addr
 }
 
+const STATUS_LABEL: Record<TxRecord['status'], string> = {
+  pending: 'pending',
+  success: 'confirmed',
+  failed: 'failed'
+}
+
+function statusColor (status: TxRecord['status']): string {
+  return status === 'success'
+    ? 'var(--color-success, #16a34a)'
+    : status === 'failed'
+      ? 'var(--color-error, #ef4444)'
+      : 'var(--text-secondary, #b3a79f)'
+}
+
 export function Activity () {
   const { transactions } = useWallet()
   const [selected, setSelected] = useState<TxRecord | null>(null)
@@ -50,7 +64,10 @@ export function Activity () {
                     </div>
                     <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <span style={{ fontSize: 14 }}>-{formatAmount(BigInt(tx.amount), chain.decimals)} {tx.symbol}</span>
-                      <span style={{ fontSize: 12, color: 'var(--text-secondary, #b3a79f)' }}>details ›</span>
+                      <span style={{ fontSize: 12, color: statusColor(tx.status), display: 'inline-flex', alignItems: 'center', gap: 5, justifyContent: 'flex-end' }}>
+                        <span aria-hidden style={{ width: 6, height: 6, borderRadius: 999, background: statusColor(tx.status), display: 'inline-block' }} />
+                        {STATUS_LABEL[tx.status]} · details ›
+                      </span>
                     </div>
                   </li>
                 )

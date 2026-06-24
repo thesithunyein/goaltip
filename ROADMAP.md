@@ -32,7 +32,10 @@ methods; and the Next.js surface now wires them in:
    dashboard, chain switcher, and send dialog (per-family address validation).
 2. ✅ **DeFi — Lend · Swap · Bridge** — Aave V3, Velora, and USDT0 are live in a
    DeFi dialog on the dashboard (Comlink-driven; EVM chains).
-3. **Activity + status monitoring** — the engine's status polling, in the app layer (next).
+3. ✅ **Activity + status monitoring** — broadcast txs show **live status** (pending →
+   confirmed/failed) in the Activity list and detail view, via a bounded poll of the
+   engine's `rpc_getTransactionStatus` (EVM/Solana; other families stay pending with the
+   explorer as source of truth).
 3. ✅ **Gasless (ERC-4337) + MoonPay on-ramp** — live in the app, config-driven
    (set `NEXT_PUBLIC_BUNDLER_URL` / `NEXT_PUBLIC_MOONPAY_API_KEY`).
 4. ✅ **Spark (Bitcoin L2) + Lightning** — `@tetherto/wdk-wallet-spark`, shipped
