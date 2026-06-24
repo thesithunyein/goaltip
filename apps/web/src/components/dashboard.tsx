@@ -9,7 +9,7 @@ import { ReceiveDialog } from './receive-dialog'
 import { SendDialog } from './send-dialog'
 import { DefiDialog } from './defi-dialog'
 import { BuyDialog } from './buy-dialog'
-import { LightningDialog } from './lightning-dialog'
+import { SparkDialog } from './spark-dialog'
 import { Activity } from './activity'
 import { AppearanceDialog } from './appearance-dialog'
 import { useAppearance } from './appearance-provider'
@@ -25,7 +25,7 @@ export function Dashboard () {
     chainId, setChainId, accountIndex, setAccountIndex,
     address, addressLoading, balance, balanceLoading, usdValue, refreshBalance, lock
   } = useWallet()
-  const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'defi' | 'buy' | 'lightning'>('none')
+  const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'defi' | 'buy' | 'spark'>('none')
   const [copied, setCopied] = useState(false)
   const { open: appearanceOpen, setOpen: setAppearanceOpen } = useAppearance()
   const chain = getChain(chainId)
@@ -81,8 +81,10 @@ export function Dashboard () {
             <Button onClick={() => setDialog('buy')} variant="secondary" disabled={!address} style={{ flex: 1 }}>
               Buy crypto
             </Button>
-            <Button onClick={() => setDialog('lightning')} variant="secondary" disabled={!address} style={{ flex: 1 }}>
-              ⚡ Lightning
+            <Button onClick={() => setDialog('spark')} variant="secondary" disabled={!address} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/spark.svg" alt="" width={16} height={16} style={{ borderRadius: 4 }} />
+              Spark
             </Button>
           </div>
         </Card>
@@ -98,7 +100,7 @@ export function Dashboard () {
       {dialog === 'send' && address && <SendDialog chainId={chainId} onClose={() => setDialog('none')} />}
       {dialog === 'defi' && address && <DefiDialog chainId={chainId} accountIndex={accountIndex} onClose={() => setDialog('none')} />}
       {dialog === 'buy' && address && <BuyDialog chainId={chainId} address={address} onClose={() => setDialog('none')} />}
-      {dialog === 'lightning' && address && <LightningDialog accountIndex={accountIndex} onClose={() => setDialog('none')} />}
+      {dialog === 'spark' && address && <SparkDialog accountIndex={accountIndex} onClose={() => setDialog('none')} />}
       {appearanceOpen && <AppearanceDialog />}
     </main>
   )
