@@ -1,27 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Card } from '@wdk-starter/wdk-ui'
+import { Card, StatusPill } from '@wdk-starter/wdk-ui'
 import { useWallet, type TxRecord } from '@/wallet/wallet-provider'
 import { formatAmount, getChain } from '@/wallet/chains'
 import { TxDetail } from './tx-detail'
 
 function short (addr: string) {
   return addr.length > 14 ? `${addr.slice(0, 8)}…${addr.slice(-6)}` : addr
-}
-
-const STATUS_LABEL: Record<TxRecord['status'], string> = {
-  pending: 'pending',
-  success: 'confirmed',
-  failed: 'failed'
-}
-
-function statusColor (status: TxRecord['status']): string {
-  return status === 'success'
-    ? 'var(--color-success, #16a34a)'
-    : status === 'failed'
-      ? 'var(--color-error, #ef4444)'
-      : 'var(--text-secondary, #b3a79f)'
 }
 
 export function Activity () {
@@ -64,9 +50,9 @@ export function Activity () {
                     </div>
                     <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <span style={{ fontSize: 14 }}>-{formatAmount(BigInt(tx.amount), chain.decimals)} {tx.symbol}</span>
-                      <span style={{ fontSize: 12, color: statusColor(tx.status), display: 'inline-flex', alignItems: 'center', gap: 5, justifyContent: 'flex-end' }}>
-                        <span aria-hidden style={{ width: 6, height: 6, borderRadius: 999, background: statusColor(tx.status), display: 'inline-block' }} />
-                        {STATUS_LABEL[tx.status]} · details ›
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
+                        <StatusPill status={tx.status} size="sm" />
+                        <span style={{ fontSize: 12, color: 'var(--text-secondary, #b3a79f)' }}>details ›</span>
                       </span>
                     </div>
                   </li>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { StatusPill } from '@wdk-starter/wdk-ui'
 import { Modal } from './modal'
 import { getChain, formatAmount } from '@/wallet/chains'
 import type { TxRecord } from '@/wallet/wallet-provider'
@@ -23,7 +24,7 @@ export function TxDetail ({ tx, onClose }: { tx: TxRecord, onClose: () => void }
           <div style={{ fontSize: 28, fontWeight: 700 }}>
             -{formatAmount(BigInt(tx.amount), chain.decimals)} {tx.symbol}
           </div>
-          <span style={statusPill(tx.status)}>{tx.status}</span>
+          <div style={{ marginTop: 8 }}><StatusPill status={tx.status} /></div>
         </div>
 
         <Row label="Network" value={`${chain.name}${chain.testnet ? ' · testnet' : ''}`} />
@@ -71,16 +72,4 @@ const rowStyle: React.CSSProperties = {
 }
 const hashBtn: React.CSSProperties = {
   background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, padding: 0
-}
-function statusPill (status: TxRecord['status']): React.CSSProperties {
-  const color = status === 'success'
-    ? 'var(--color-success, #16a34a)'
-    : status === 'failed'
-      ? 'var(--color-error, #ef4444)'
-      : 'var(--text-secondary, #b3a79f)' // pending
-  return {
-    display: 'inline-block', marginTop: 6, fontSize: 12, padding: '2px 10px', borderRadius: 999,
-    color,
-    background: 'var(--bg-elevated-2, rgba(255,255,255,0.05))'
-  }
 }
