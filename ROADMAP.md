@@ -117,3 +117,17 @@ advance together.
   the JSX type from 'react'). Cleared all five Next.js highs plus the postcss
   moderate; audit is down to a single unfixable low (`elliptic`). Production build
   green, 462 tests pass.
+
+## Pro-wallet build (per the Design PRD)
+
+Sequencing the template up to a pro-wallet bar (Phantom/Coinbase/Rainbow-class)
+on the already-pro engine. Phase 1 cornerstone shipped; the rest is incremental.
+
+- ✅ **Token logos everywhere** — shared `TokenChip` (logo + symbol) in every
+  selector (DeFi Lend/Swap/Bridge, Buy); the dashboard token rows + balance card
+  already show real marks. Ready for any token.
+- ✅ **Navigation shell (Phase 1)** — the single-page "modal soup" is now a real
+  tabbed IA: a shared `wdk-ui` `TabBar` primitive drives a **Home · Activity ·
+  Settings** `WalletShell`. Home keeps the balance + token list + action cluster;
+  Activity and Settings are first-class destinations. (Next: dedicated Swap /
+  Earn / Bridge screens, AmountInput, ReviewSheet/SuccessScreen, asset detail.)

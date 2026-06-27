@@ -12,9 +12,6 @@ import { TokenList } from './token-list'
 import { DefiDialog } from './defi-dialog'
 import { BuyDialog } from './buy-dialog'
 import { SparkDialog } from './spark-dialog'
-import { Activity } from './activity'
-import { AppearanceDialog } from './appearance-dialog'
-import { useAppearance } from './appearance-provider'
 
 const OPTIONS = chainOptions((id) => <NetworkIcon chain={id} size={16} />)
 
@@ -25,13 +22,12 @@ function short (addr: string) {
 export function Dashboard () {
   const {
     chainId, setChainId, accountIndex, setAccountIndex,
-    address, addressLoading, balance, balanceLoading, usdValue, refreshBalance, lock
+    address, addressLoading, balance, balanceLoading, usdValue, refreshBalance
   } = useWallet()
   const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'defi' | 'buy' | 'spark'>('none')
   /** When set, the Send dialog sends this ERC-20 token instead of the native asset. */
   const [sendToken, setSendToken] = useState<TokenInfo | null>(null)
   const [copied, setCopied] = useState(false)
-  const { open: appearanceOpen, setOpen: setAppearanceOpen } = useAppearance()
   const chain = getChain(chainId)
 
   async function copy () {
@@ -46,10 +42,6 @@ export function Dashboard () {
       <div style={{ width: '100%', maxWidth: 460, display: 'flex', flexDirection: 'column', gap: 16 }}>
         <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <BrandHeader />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Button variant="ghost" size="sm" onClick={() => setAppearanceOpen(true)} aria-label="Appearance settings" title="Appearance">⚙</Button>
-            <Button variant="ghost" size="sm" onClick={() => void lock()}>Lock</Button>
-          </div>
         </header>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -96,12 +88,6 @@ export function Dashboard () {
         {familyOf(chainId) === 'evm' && address && (
           <TokenList chainId={chainId} address={address} onSend={(token) => { setSendToken(token); setDialog('send') }} />
         )}
-
-        <Activity />
-
-        <footer style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary, #b3a79f)', marginTop: 8 }}>
-          Self-custodial · keys never leave the worklet · built on Tether WDK
-        </footer>
       </div>
 
       {dialog === 'receive' && address && <ReceiveDialog address={address} chainId={chainId} onClose={() => setDialog('none')} />}
@@ -109,7 +95,6 @@ export function Dashboard () {
       {dialog === 'defi' && address && <DefiDialog chainId={chainId} accountIndex={accountIndex} onClose={() => setDialog('none')} />}
       {dialog === 'buy' && address && <BuyDialog chainId={chainId} address={address} onClose={() => setDialog('none')} />}
       {dialog === 'spark' && address && <SparkDialog accountIndex={accountIndex} onClose={() => setDialog('none')} />}
-      {appearanceOpen && <AppearanceDialog />}
     </main>
   )
 }

@@ -4,7 +4,7 @@ import { Providers } from './providers'
 import { useWallet } from '@/wallet/wallet-provider'
 import { OnboardingFlow } from '@/components/onboarding-flow'
 import { UnlockView } from '@/components/unlock-view'
-import { Dashboard } from '@/components/dashboard'
+import { WalletShell } from '@/components/wallet-shell'
 
 function Centered ({ children }: { children: React.ReactNode }) {
   return (
@@ -21,7 +21,7 @@ function Router () {
     case 'error': return <Centered>Wallet error: {error}</Centered>
     case 'no-vault': return <OnboardingFlow />
     case 'locked': return <UnlockView />
-    case 'unlocked': return <Dashboard />
+    case 'unlocked': return <WalletShell />
   }
 }
 

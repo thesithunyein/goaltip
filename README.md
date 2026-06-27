@@ -50,9 +50,9 @@ This template is the missing reference. It is a **real, working, self-custodial 
 
 ## Screenshots
 
-| Onboarding | Recovery phrase | Dashboard |
+| Home (tabbed shell) | Onboarding | Recovery phrase |
 |:--:|:--:|:--:|
-| ![Onboarding](./media/screenshots/01-onboarding.png) | ![Recovery phrase](./media/screenshots/02-recovery-phrase.png) | ![Dashboard](./media/screenshots/05-dashboard.png) |
+| ![Home — tabbed shell](./media/screenshots/home-shell.png) | ![Onboarding](./media/screenshots/01-onboarding.png) | ![Recovery phrase](./media/screenshots/02-recovery-phrase.png) |
 
 | Receive (QR) | Send | Multi-chain |
 |:--:|:--:|:--:|

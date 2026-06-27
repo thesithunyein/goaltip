@@ -12,5 +12,5 @@ export default defineConfig({
       { find: '@', replacement: here('../src') },
     ],
   },
-  build: { outDir: here('./dist'), emptyOutDir: true, rollupOptions: { input: { defi: here('./defi.html'), buy: here('./buy.html') } } },
+  build: { outDir: here('./dist'), emptyOutDir: true, rollupOptions: { input: { defi: here('./defi.html'), buy: here('./buy.html'), shell: here('./shell.html') } } },
 });
