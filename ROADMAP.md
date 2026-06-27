@@ -98,7 +98,7 @@ advance together.
   `useCustomPrimary`) into the app, with an any-hex primary override — all
   persisted to localStorage. Code-level theming still works (see `docs/CUSTOMIZATION.md`).
 - ✅ **Capture screenshots** of the real wallet surfaces (Home shell, Swap, Earn,
-  Buy) — done via a reusable component-render harness (`apps/web/screenshots/`,
+  Send, Buy) — done via a reusable component-render harness (`apps/web/screenshots/`,
   `pnpm screenshots:build`) that mounts the real worklet-coupled `WalletShell` /
   dialogs with the client/provider stubbed, the app's own dark theme, and the
   real `public/` brand + token assets; captured to
@@ -136,5 +136,13 @@ on the already-pro engine. Phase 1 cornerstone shipped; the rest is incremental.
   account) are now full tab destinations on a shared `Screen` layout, sharing one
   set of protocol wiring (`defi-panels.tsx`) with no duplication. The gasless
   toggle rides above the forms when a bundler is configured; non-EVM chains get a
-  clear note instead of a dead form. (Next: AmountInput with fiat⇄crypto + Max,
-  ReviewSheet/SuccessScreen, real Send flow, asset detail.)
+  clear note instead of a dead form.
+- ✅ **Send-flow primitives + a real two-step Send** — new shared `wdk-ui`
+  primitives (`AmountInput` with a fiat⇄crypto flip + Max, `ReviewSheet`,
+  `SuccessScreen`, `StatusPill`), each unit-tested and mirrored byte-identical to
+  the extension. The template Send is rebuilt on them as **Form → Review →
+  Success**: the amount field shows a live USD value and a Max chip (native
+  balance, or the token's own ERC-20 balance read through the worklet), Review
+  summarizes To/Amount/Value/Network with an irreversibility note, and Success
+  links to the explorer. (Next: adopt the TabBar IA + these primitives in the
+  extension popup; asset-detail screen; settings depth.)

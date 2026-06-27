@@ -58,9 +58,13 @@ This template is the missing reference. It is a **real, working, self-custodial 
 |:--:|:--:|:--:|
 | ![Receive](./media/screenshots/07-receive.png) | ![Send](./media/screenshots/08-send.png) | ![Chains](./media/screenshots/06-chain-selector.png) |
 
-| Swap (Velora) | Earn — Lend / Bridge / Gasless | Buy (fiat on-ramp) |
-|:--:|:--:|:--:|
-| ![Swap screen](./media/screenshots/swap-screen.png) | ![Earn screen](./media/screenshots/earn-screen.png) | ![Buy crypto dialog](./media/screenshots/buy-dialog.png) |
+| Swap (Velora) | Earn — Lend / Bridge / Gasless |
+|:--:|:--:|
+| ![Swap screen](./media/screenshots/swap-screen.png) | ![Earn screen](./media/screenshots/earn-screen.png) |
+
+| Send — amount (fiat⇄crypto + Max) → review | Buy (fiat on-ramp) |
+|:--:|:--:|
+| ![Send flow](./media/screenshots/send-flow.png) | ![Buy crypto dialog](./media/screenshots/buy-dialog.png) |
 
 **▶ Demo video** — a real screen recording of the running app: set up → create wallet → reveal the 12-word recovery phrase → verify it → dashboard (live on-chain balance) → receive QR.
 

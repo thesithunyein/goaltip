@@ -8,13 +8,14 @@ stubbed; the dark theme comes from the app's own `globals.css`).
 # from apps/web
 pnpm screenshots:build            # vite-build the harness → screenshots/dist
 npx http-server screenshots/dist  # or any static server
-# then headless-capture screenshots/dist/{swap,earn,buy,shell}.html
+# then headless-capture screenshots/dist/{swap,earn,send,buy,shell}.html
 ```
 
 - `stubs/` — `getWalletApi()` (async no-ops) + `useWallet()` (a benign context).
 - `shell-entry.tsx` / `swap-entry.tsx` / `earn-entry.tsx` mount the real
-  `<WalletShell>` at the Home / Swap / Earn tab; `buy-entry.tsx` mounts
-  `<BuyDialog>`.
+  `<WalletShell>` at the Home / Swap / Earn tab; `send-entry.tsx` renders the
+  real Send-flow primitives (`AmountInput` + `ReviewSheet`); `buy-entry.tsx`
+  mounts `<BuyDialog>`.
 - `vite.config.ts` aliases `@/wallet/wallet-client` + `@/wallet/wallet-provider`
   to the stubs and `@` to `../src`.
 

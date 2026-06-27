@@ -15,5 +15,5 @@ export default defineConfig({
       { find: '@', replacement: here('../src') },
     ],
   },
-  build: { outDir: here('./dist'), emptyOutDir: true, rollupOptions: { input: { swap: here('./swap.html'), earn: here('./earn.html'), buy: here('./buy.html'), shell: here('./shell.html') } } },
+  build: { outDir: here('./dist'), emptyOutDir: true, rollupOptions: { input: { swap: here('./swap.html'), earn: here('./earn.html'), send: here('./send.html'), buy: here('./buy.html'), shell: here('./shell.html') } } },
 });

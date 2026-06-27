@@ -1,11 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { Button, Input } from '@wdk-starter/wdk-ui'
+/**
+ * SendDialog — the pro-wallet Send flow: Form → Review → Success, built on the
+ * shared wdk-ui primitives (AmountInput with fiat⇄crypto + Max, ReviewSheet,
+ * SuccessScreen). Native or ERC-20 (token mode sends a transfer() to the token
+ * contract). Per-family address validation, paste-aware payment URIs, and the
+ * cross-VM signpost are preserved from the worklet engine.
+ */
+
+import { useEffect, useState } from 'react'
+import { Button, Input, AmountInput, ReviewSheet, SuccessScreen, type ReviewRow } from '@wdk-starter/wdk-ui'
 import { Modal } from './modal'
 import { useWallet } from '@/wallet/wallet-provider'
 import { getWalletApi } from '@/wallet/wallet-client'
-import { getChain, familyOf, parseAmount, type ChainFamily } from '@/wallet/chains'
+import { getChain, familyOf, parseAmount, formatAmount, type ChainFamily } from '@/wallet/chains'
 import { encodeErc20Transfer } from '@/wallet/erc20'
 import type { TokenInfo } from '@/wallet/tokens'
 import { crossVmSignpost, FAMILY_LABEL } from '@/wallet/bridge'
@@ -19,6 +27,14 @@ function formatBaseToDecimal (base: bigint, decimals: number): string {
   return frac ? `${whole}.${frac}` : whole.toString()
 }
 
+function middleTruncate (s: string): string {
+  return s.length > 18 ? `${s.slice(0, 10)}…${s.slice(-6)}` : s
+}
+
+function formatUsd (n: number): string {
+  return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+}
+
 const PLACEHOLDER: Record<ChainFamily, string> = {
   evm: '0x…',
   solana: 'Base58 address',
@@ -27,8 +43,10 @@ const PLACEHOLDER: Record<ChainFamily, string> = {
   tron: 'T… address'
 }
 
+type Phase = 'form' | 'review' | 'sending' | 'sent'
+
 export function SendDialog ({ chainId, token, onClose }: { chainId: string, token?: TokenInfo | null, onClose: () => void }) {
-  const { send, balance, accountIndex } = useWallet()
+  const { send, balance, accountIndex, address } = useWallet()
   const chain = getChain(chainId)
   const family = familyOf(chainId)
   // In token mode the amount/label use the token's units, and the send goes out
@@ -38,12 +56,35 @@ export function SendDialog ({ chainId, token, onClose }: { chainId: string, toke
   const [to, setTo] = useState('')
   const [amount, setAmount] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [phase, setPhase] = useState<'form' | 'sending' | 'sent'>('form')
+  const [phase, setPhase] = useState<Phase>('form')
   const [hash, setHash] = useState('')
+  const [usdPrice, setUsdPrice] = useState<number | undefined>(undefined)
+  const [spendable, setSpendable] = useState<bigint | undefined>(token ? undefined : balance)
 
   // If the pasted address belongs to a different network family, point the user
   // at the right bridge instead of letting them broadcast into a black hole.
   const signpost = crossVmSignpost(family, to)
+
+  // Best-effort unit price → enables the AmountInput fiat flip + the review's USD line.
+  useEffect(() => {
+    let off = false
+    void (async () => {
+      try { const p = await getWalletApi().pricing_getUsdPrice(symbol); if (!off && typeof p === 'number' && p > 0) setUsdPrice(p) } catch { /* unpriced — no fiat toggle */ }
+    })()
+    return () => { off = true }
+  }, [symbol])
+
+  // Spendable balance for "Max": native reuses the provider's balance; a token
+  // reads its own ERC-20 balance through the worklet.
+  useEffect(() => {
+    if (!token) { setSpendable(balance); return }
+    if (!address) return
+    let off = false
+    void (async () => {
+      try { const raw = await getWalletApi().rpc_getTokenBalance(chainId as never, address, token.address); if (!off) setSpendable(BigInt(raw)) } catch { if (!off) setSpendable(undefined) }
+    })()
+    return () => { off = true }
+  }, [token, address, chainId, balance])
 
   // Paste-aware recipient: a BIP-21 (bitcoin:) or EIP-681 (ethereum:) payment URI
   // fills the address and, when present, the amount — a scanned/copied request "just works".
@@ -62,24 +103,26 @@ export function SendDialog ({ chainId, token, onClose }: { chainId: string, toke
     setTo(raw)
   }
 
-  async function submit () {
+  /** Validate the form and advance to Review. */
+  function toReview () {
     setError(null)
     const check = validateAddress(family, to.trim())
     if (!check.valid) {
-      // The cross-VM signpost (shown above the field) already explains the fix.
       setError(signpost ? `This is a ${FAMILY_LABEL[signpost.detected]} address — bridge first, don’t send it on ${FAMILY_LABEL[family]}.` : (check.reason ? `Enter a valid recipient address — ${check.reason}.` : 'Enter a valid recipient address.'))
       return
     }
     let amountBase: bigint
-    try {
-      amountBase = parseAmount(amount, decimals)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Invalid amount.'); return
-    }
+    try { amountBase = parseAmount(amount, decimals) } catch (e) { setError(e instanceof Error ? e.message : 'Invalid amount.'); return }
     if (amountBase <= 0n) { setError('Amount must be greater than zero.'); return }
-    // The native `balance` doesn't bound a token transfer, so only check it for native sends.
-    if (!token && balance !== undefined && amountBase > balance) { setError('Insufficient balance.'); return }
+    if (spendable !== undefined && amountBase > spendable) { setError('Insufficient balance.'); return }
+    setPhase('review')
+  }
 
+  /** Sign + broadcast from the Review step. */
+  async function confirm () {
+    setError(null)
+    let amountBase: bigint
+    try { amountBase = parseAmount(amount, decimals) } catch { setError('Invalid amount.'); setPhase('form'); return }
     setPhase('sending')
     try {
       // ERC-20: call the token contract with transfer() calldata, value 0. Native: the provider's send().
@@ -90,13 +133,24 @@ export function SendDialog ({ chainId, token, onClose }: { chainId: string, toke
       setPhase('sent')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Transaction failed.')
-      setPhase('form')
+      setPhase('review')
     }
   }
 
+  const maxStr = spendable !== undefined ? formatAmount(spendable, decimals) : undefined
+  const amountNum = Number.parseFloat(amount)
+  const usdValue = usdPrice !== undefined && Number.isFinite(amountNum) ? formatUsd(amountNum * usdPrice) : null
+
+  const reviewRows: ReviewRow[] = [
+    { label: 'To', value: middleTruncate(to.trim()), mono: true },
+    { label: 'Amount', value: `${amount} ${symbol}` },
+    ...(usdValue ? [{ label: 'Value', value: usdValue }] : []),
+    { label: 'Network', value: `${chain.name}${chain.testnet ? ' · testnet' : ''}` }
+  ]
+
   return (
     <Modal title={`Send ${symbol}`} onClose={onClose}>
-      {phase !== 'sent' && (
+      {phase === 'form' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <label style={field}>
             <span style={labelText}>Recipient address</span>
@@ -116,27 +170,36 @@ export function SendDialog ({ chainId, token, onClose }: { chainId: string, toke
             </div>
           )}
           <label style={field}>
-            <span style={labelText}>Amount ({symbol})</span>
-            <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.0" inputMode="decimal" />
+            <span style={labelText}>Amount</span>
+            <AmountInput value={amount} onChange={setAmount} symbol={symbol} usdPrice={usdPrice} max={maxStr} />
           </label>
           {error && <p style={errorText}>{error}</p>}
-          <Button onClick={submit} disabled={phase === 'sending'} style={{ width: '100%' }}>
-            {phase === 'sending' ? 'Submitting…' : 'Review & send'}
-          </Button>
+          <Button onClick={toReview} style={{ width: '100%' }}>Review</Button>
         </div>
       )}
 
+      {(phase === 'review' || phase === 'sending') && (
+        <ReviewSheet
+          title={`Send ${symbol}`}
+          rows={reviewRows}
+          confirmLabel="Confirm & send"
+          onConfirm={confirm}
+          onCancel={() => { setError(null); setPhase('form') }}
+          busy={phase === 'sending'}
+          busyLabel="Submitting…"
+          error={error}
+          note="Double-check the recipient and network — on-chain sends can’t be reversed."
+        />
+      )}
+
       {phase === 'sent' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center' }}>
-          <div style={{ fontSize: 40 }}>✅</div>
-          <p style={{ margin: 0, textAlign: 'center' }}>Transaction submitted.</p>
-          {chain.explorer && (
-            <a href={`${chain.explorer}/tx/${hash}`} target="_blank" rel="noreferrer" style={{ fontSize: 13, wordBreak: 'break-all', textAlign: 'center' }}>
-              View on explorer ↗
-            </a>
-          )}
-          <Button onClick={onClose} style={{ width: '100%' }}>Done</Button>
-        </div>
+        <SuccessScreen
+          title="Sent"
+          message={`${amount} ${symbol} is on its way.`}
+          hash={hash}
+          link={chain.explorer ? { href: `${chain.explorer}/tx/${hash}`, label: 'View on explorer' } : undefined}
+          onDone={onClose}
+        />
       )}
     </Modal>
   )
