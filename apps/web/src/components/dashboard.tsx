@@ -9,6 +9,7 @@ import { BrandHeader } from './brand-header'
 import { ReceiveDialog } from './receive-dialog'
 import { SendDialog } from './send-dialog'
 import { TokenList } from './token-list'
+import { AssetDetail } from './asset-detail'
 import { BuyDialog } from './buy-dialog'
 import { SparkDialog } from './spark-dialog'
 
@@ -23,8 +24,8 @@ export function Dashboard () {
     chainId, setChainId, accountIndex, setAccountIndex,
     address, addressLoading, balance, balanceLoading, usdValue, refreshBalance
   } = useWallet()
-  const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'buy' | 'spark'>('none')
-  /** When set, the Send dialog sends this ERC-20 token instead of the native asset. */
+  const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'asset' | 'buy' | 'spark'>('none')
+  /** The token in context — sent by the Send dialog, and shown by the asset detail. */
   const [sendToken, setSendToken] = useState<TokenInfo | null>(null)
   const [copied, setCopied] = useState(false)
   const chain = getChain(chainId)
@@ -80,12 +81,22 @@ export function Dashboard () {
         </Card>
 
         {familyOf(chainId) === 'evm' && address && (
-          <TokenList chainId={chainId} address={address} onSend={(token) => { setSendToken(token); setDialog('send') }} />
+          <TokenList chainId={chainId} address={address} onSelect={(token) => { setSendToken(token); setDialog('asset') }} />
         )}
       </div>
 
       {dialog === 'receive' && address && <ReceiveDialog address={address} chainId={chainId} onClose={() => setDialog('none')} />}
       {dialog === 'send' && address && <SendDialog chainId={chainId} token={sendToken} onClose={() => setDialog('none')} />}
+      {dialog === 'asset' && address && sendToken && (
+        <AssetDetail
+          token={sendToken}
+          chainId={chainId}
+          address={address}
+          onSend={() => setDialog('send')}
+          onReceive={() => setDialog('receive')}
+          onClose={() => { setSendToken(null); setDialog('none') }}
+        />
+      )}
       {dialog === 'buy' && address && <BuyDialog chainId={chainId} address={address} onClose={() => setDialog('none')} />}
       {dialog === 'spark' && address && <SparkDialog accountIndex={accountIndex} onClose={() => setDialog('none')} />}
     </main>

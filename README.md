@@ -62,9 +62,9 @@ This template is the missing reference. It is a **real, working, self-custodial 
 |:--:|:--:|
 | ![Swap screen](./media/screenshots/swap-screen.png) | ![Earn screen](./media/screenshots/earn-screen.png) |
 
-| Send — amount (fiat⇄crypto + Max) → review | Buy (fiat on-ramp) |
-|:--:|:--:|
-| ![Send flow](./media/screenshots/send-flow.png) | ![Buy crypto dialog](./media/screenshots/buy-dialog.png) |
+| Send — amount (fiat⇄crypto + Max) → review | Asset detail | Buy (fiat on-ramp) |
+|:--:|:--:|:--:|
+| ![Send flow](./media/screenshots/send-flow.png) | ![Asset detail](./media/screenshots/asset-detail.png) | ![Buy crypto dialog](./media/screenshots/buy-dialog.png) |
 
 **▶ Demo video** — a real screen recording of the running app: set up → create wallet → reveal the 12-word recovery phrase → verify it → dashboard (live on-chain balance) → receive QR.
 

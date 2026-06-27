@@ -15,7 +15,7 @@ import { tokensFor, type TokenInfo } from '@/wallet/tokens'
 
 interface Row { readonly token: TokenInfo, readonly balance: bigint | null }
 
-export function TokenList ({ chainId, address, onSend }: { chainId: string, address: string, onSend: (token: TokenInfo) => void }) {
+export function TokenList ({ chainId, address, onSelect }: { chainId: string, address: string, onSelect: (token: TokenInfo) => void }) {
   const tokens = tokensFor(chainId)
   const [rows, setRows] = useState<Row[] | null>(null)
 
@@ -48,8 +48,8 @@ export function TokenList ({ chainId, address, onSend }: { chainId: string, addr
       {(rows ?? tokens.map((token) => ({ token, balance: null }))).map(({ token, balance }) => (
         <button
           key={token.address}
-          onClick={() => onSend(token)}
-          title={`Send ${token.symbol}`}
+          onClick={() => onSelect(token)}
+          title={`${token.symbol} details`}
           style={row}
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
@@ -61,7 +61,7 @@ export function TokenList ({ chainId, address, onSend }: { chainId: string, addr
                 ? <Skeleton style={{ width: 54, height: 16 }} />
                 : balance === null ? '—' : formatAmount(balance, token.decimals)}
             </span>
-            <span style={{ fontSize: 11, color: 'var(--text-secondary, #b3a79f)' }}>Send ›</span>
+            <span style={{ fontSize: 11, color: 'var(--text-secondary, #b3a79f)' }}>Details ›</span>
           </span>
         </button>
       ))}

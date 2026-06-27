@@ -98,7 +98,7 @@ advance together.
   `useCustomPrimary`) into the app, with an any-hex primary override — all
   persisted to localStorage. Code-level theming still works (see `docs/CUSTOMIZATION.md`).
 - ✅ **Capture screenshots** of the real wallet surfaces (Home shell, Swap, Earn,
-  Send, Buy) — done via a reusable component-render harness (`apps/web/screenshots/`,
+  Send, Asset detail, Buy) — done via a reusable component-render harness (`apps/web/screenshots/`,
   `pnpm screenshots:build`) that mounts the real worklet-coupled `WalletShell` /
   dialogs with the client/provider stubbed, the app's own dark theme, and the
   real `public/` brand + token assets; captured to
@@ -144,5 +144,10 @@ on the already-pro engine. Phase 1 cornerstone shipped; the rest is incremental.
   Success**: the amount field shows a live USD value and a Max chip (native
   balance, or the token's own ERC-20 balance read through the worklet), Review
   summarizes To/Amount/Value/Network with an irreversibility note, and Success
-  links to the explorer. (Next: adopt the TabBar IA + these primitives in the
-  extension popup; asset-detail screen; settings depth.)
+  links to the explorer. The extension popup adopted the same TabBar IA + these
+  primitives (incl. its Send) in lockstep.
+- ✅ **Asset-detail page** — tapping a token in the Home list opens a per-asset
+  page: large mark + balance + USD value, Send / Receive for that asset, and the
+  recent activity filtered to it (each row a shared `StatusPill`); balance + price
+  read through the worklet. (Next: native-asset detail + a price sparkline;
+  settings depth; the fiat flip in the popup Send.)
