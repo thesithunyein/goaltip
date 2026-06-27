@@ -69,8 +69,12 @@ methods; and the Next.js surface now wires them in:
    black hole (`wallet/bridge.ts`).
 6. ✅ **Transaction detail view** — click any activity row for a detail modal
    (amount, parties, status, time, copyable hash, explorer link).
-7. **SSR/edge boundaries** — document and harden the worklet/SSR split (the engine
-   is client-only by design); App Router patterns for wallet-gated routes. *(open)*
+7. ✅ **SSR/edge boundaries** — the worklet/SSR split is hardened (the single
+   `wallet-client.ts` boundary throws on server use; everything that reaches the
+   worker sits under `'use client'`) and documented: [`docs/INTEGRATION.md` §3](./docs/INTEGRATION.md)
+   covers the do/don't (no engine imports in Server Components / Route Handlers /
+   `middleware` / edge runtime), client-side wallet-gating, and why nothing is
+   gated or rendered on the server (the vault + key are client-only).
 
 ## ⏳ Phase 4 — DeFi & distribution
 

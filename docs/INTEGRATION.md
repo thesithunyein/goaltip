@@ -59,9 +59,45 @@ Common pitfalls this avoids:
 - **`WebAssembly module is included… experiments.asyncWebAssembly`** → enable the experiment.
 - **A native `.node` binding error at runtime** → the `sodium-native → sodium-javascript` alias.
 
-## 3. Keep the wallet client-side
+## 3. Keep the wallet client-side (SSR / edge boundaries)
 
-Wallets are inherently client-side (worker, IndexedDB, WebCrypto). Mark your wallet provider/components `'use client'`, and guard worker creation with `typeof window !== 'undefined'`. During SSR the app renders a neutral "loading" state and hydrates into the live wallet.
+Wallets are inherently client-side: the worklet (Web Worker), the encrypted vault
+(IndexedDB + WebCrypto), and the decrypted key all live in the browser. The engine
+has **no server story by design** — there is nothing to render, and nothing to
+gate, on the server.
+
+**The boundary is one file.** Only [`wallet/wallet-client.ts`](../apps/web/src/wallet/wallet-client.ts)
+talks to the worker, and it refuses to run server-side:
+
+```ts
+export function getWalletApi (): WalletApi {
+  if (typeof window === 'undefined') {
+    throw new Error('The wallet worker is only available in the browser.')
+  }
+  // …spawns the Worker + Comlink-wraps it on first use
+}
+```
+
+So an accidental server import surfaces as a clear error instead of a confusing
+hydration mismatch. Everything that reaches the worker sits under a `'use client'`
+boundary (`wallet-provider.tsx` and the components below it).
+
+**Do**
+- Mark wallet provider/components `'use client'`; render a neutral "loading" state
+  during SSR and hydrate into the live wallet (the provider's `phase` does this).
+- Gate wallet routes **on the client** — read vault/lock state from the worker and
+  branch in a client component. The vault is client-only, so the server can't (and
+  shouldn't) know whether a user is "logged in".
+
+**Don't**
+- Import `wallet-client.ts`, `@wdk-starter/wdk-web-core/worker`, or anything that
+  reaches them from a Server Component, Route Handler, `middleware.ts`, or any
+  `export const runtime = 'edge'` module — they need browser APIs (Worker,
+  `crypto.subtle`, IndexedDB) that don't exist on the Node/edge server runtimes.
+- Try to SSR a balance or an address. Derive them in the client after hydration.
+
+This keeps the trust boundary intact: the key never crosses to the server, and the
+SSR/edge surface stays free of wallet code.
 
 ## 4. Use the typed worker API
 
