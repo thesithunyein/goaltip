@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Button, Input } from '@wdk-starter/wdk-ui'
+import { Button, Input, TokenChip } from '@wdk-starter/wdk-ui'
 import { Modal } from './modal'
 import { getWalletApi } from '@/wallet/wallet-client'
 
@@ -75,7 +75,7 @@ export function BuyDialog ({ chainId, address, onClose }: { chainId: string, add
       {config === 'on' && assets && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', gap: 6 }}>
-            {assets.map((a, i) => <Button key={a.code} size="sm" variant={assetIdx === i ? 'primary' : 'secondary'} onClick={() => { setAssetIdx(i); setQuote(null) }} style={{ flex: 1 }}>{a.label}</Button>)}
+            {assets.map((a, i) => <Button key={a.code} size="sm" variant={assetIdx === i ? 'primary' : 'secondary'} onClick={() => { setAssetIdx(i); setQuote(null) }} style={{ flex: 1 }}><TokenChip symbol={a.label} /></Button>)}
           </div>
           <Input value={amount} onChange={(e) => { setAmount(e.target.value); setQuote(null) }} placeholder="Amount (USD)" inputMode="decimal" />
           {quote && <div style={pill}>{quote}</div>}

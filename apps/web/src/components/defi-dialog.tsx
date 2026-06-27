@@ -12,7 +12,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Button, Input } from '@wdk-starter/wdk-ui'
+import { Button, Input, TokenChip } from '@wdk-starter/wdk-ui'
 import { Modal } from './modal'
 import { useWallet } from '@/wallet/wallet-provider'
 import { getWalletApi } from '@/wallet/wallet-client'
@@ -123,7 +123,7 @@ function Lending ({ chainId, accountIndex, gasless }: { chainId: string, account
     <div style={col}>
       {position && <div style={pill}>{position}</div>}
       <Row label="Action">{ACTIONS.map((a) => <Button key={a} size="sm" variant={action === a ? 'primary' : 'secondary'} onClick={() => setAction(a)} style={{ flex: 1, textTransform: 'capitalize' }}>{a}</Button>)}</Row>
-      <Row label="Token">{tokens.map((t, i) => <Button key={t.address} size="sm" variant={tokenIdx === i ? 'primary' : 'secondary'} onClick={() => setTokenIdx(i)} style={{ flex: 1 }}>{t.symbol}</Button>)}</Row>
+      <Row label="Token">{tokens.map((t, i) => <Button key={t.address} size="sm" variant={tokenIdx === i ? 'primary' : 'secondary'} onClick={() => setTokenIdx(i)} style={{ flex: 1 }}><TokenChip symbol={t.symbol} /></Button>)}</Row>
       <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={`Amount (${token.symbol})`} inputMode="decimal" />
       {error && <p style={err}>{error}</p>}
       {hash ? <Done hash={hash} /> : <Button onClick={run} disabled={busy} style={{ width: '100%', textTransform: 'capitalize' }}>{busy ? 'Submitting…' : `${action} ${token.symbol}`}</Button>}
@@ -162,8 +162,8 @@ function Swap ({ chainId, accountIndex, gasless }: { chainId: string, accountInd
 
   return (
     <div style={col}>
-      <Row label="Sell">{tokens.map((t, i) => <Button key={t.address} size="sm" variant={inIdx === i ? 'primary' : 'secondary'} onClick={() => { setInIdx(i); setQuote(null) }} style={{ flex: 1 }}>{t.symbol}</Button>)}</Row>
-      <Row label="Buy">{tokens.map((t, i) => <Button key={t.address} size="sm" variant={outIdx === i ? 'primary' : 'secondary'} onClick={() => { setOutIdx(i); setQuote(null) }} style={{ flex: 1 }}>{t.symbol}</Button>)}</Row>
+      <Row label="Sell">{tokens.map((t, i) => <Button key={t.address} size="sm" variant={inIdx === i ? 'primary' : 'secondary'} onClick={() => { setInIdx(i); setQuote(null) }} style={{ flex: 1 }}><TokenChip symbol={t.symbol} /></Button>)}</Row>
+      <Row label="Buy">{tokens.map((t, i) => <Button key={t.address} size="sm" variant={outIdx === i ? 'primary' : 'secondary'} onClick={() => { setOutIdx(i); setQuote(null) }} style={{ flex: 1 }}><TokenChip symbol={t.symbol} /></Button>)}</Row>
       <Input value={amount} onChange={(e) => { setAmount(e.target.value); setQuote(null) }} placeholder={`Amount (${tIn.symbol})`} inputMode="decimal" />
       {quote && <div style={pill}>Expected: {quote}</div>}
       {error && <p style={err}>{error}</p>}
