@@ -15,7 +15,7 @@
     "build": "pnpm build:packages && pnpm -F @wdk-starter/web build",
     "start": "pnpm -F @wdk-starter/web start",
     "typecheck": "pnpm -r --filter=\"./packages/**\" --filter=\"./apps/**\" typecheck",
-    "test": "pnpm -r --filter=\"./packages/**\" test",
+    "test": "pnpm -r --filter=\"./packages/**\" --filter=\"./apps/**\" test",
     "lint": "pnpm -F @wdk-starter/web lint"
   },
   "devDependencies": {

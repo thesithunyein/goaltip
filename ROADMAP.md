@@ -102,6 +102,11 @@ advance together.
 
 ## Security / dependency follow-ups
 
+- ✅ **App-level tests** — done (closes the parity gap: the shared packages carried
+  the suite, the `apps/web` code had none). A vitest config + 23 specs over the
+  wallet utilities (`chains` amount math + family predicates, `bridge` cross-VM
+  route table + engine-backed detection, `erc20` calldata, `tokens` registry),
+  wired into `pnpm test`. Run with `pnpm -C apps/web test`.
 - ✅ **Next.js 15 + React 19 migration** — done. Upgraded to Next 15.5.16 + React 19
   and rebuilt `wdk-ui` against React 19 (the 14 `JSX.Element` annotations now import
   the JSX type from 'react'). Cleared all five Next.js highs plus the postcss
