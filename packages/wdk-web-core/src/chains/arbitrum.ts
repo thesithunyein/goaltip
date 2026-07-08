@@ -8,6 +8,7 @@ export default WalletManagerEvm;
 
 export const config = {
   rpcUrl: 'https://arb1.arbitrum.io/rpc',
+  provider: 'https://arb1.arbitrum.io/rpc',
   chainId: 42161,
 } as const;
 

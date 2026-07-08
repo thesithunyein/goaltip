@@ -72,12 +72,7 @@ export function WatchPartyScreen (): React.JSX.Element {
       })
       if (updated) setParty(updated)
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Tip failed.'
-      // WDK surfaces an unfunded/unbroadcastable account as a provider error;
-      // translate it for demo users.
-      setError(/provider/i.test(msg)
-        ? 'Wallet has no funds yet — get Sepolia ETH (gas) + test USDt from the faucets below, then tip again.'
-        : msg)
+      setError(e instanceof Error ? e.message : 'Tip failed.')
     } finally {
       setBusy(false)
       setSelectedNation(null)

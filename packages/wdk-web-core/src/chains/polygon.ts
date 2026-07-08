@@ -10,6 +10,7 @@ export const config = {
   // polygon-rpc.com deprecated public access (now 401); publicnode is a
   // CORS-enabled, no-key default. Override with a keyed endpoint via env.
   rpcUrl: 'https://polygon-bor-rpc.publicnode.com',
+  provider: 'https://polygon-bor-rpc.publicnode.com',
   chainId: 137,
 } as const;
 

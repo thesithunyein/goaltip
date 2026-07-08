@@ -11,6 +11,7 @@ export default WalletManagerEvm;
 
 export const config = {
   rpcUrl: 'https://testnet-rpc.plasma.to',
+  provider: 'https://testnet-rpc.plasma.to',
   chainId: 9746,
 } as const;
 

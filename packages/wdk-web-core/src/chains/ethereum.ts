@@ -13,6 +13,7 @@ export const config = {
   // CORS-enabled, no-key public default (works in a browser out of the box).
   // Override with an authenticated endpoint via the adapter's `rpcUrls`/env.
   rpcUrl: 'https://ethereum-rpc.publicnode.com',
+  provider: 'https://ethereum-rpc.publicnode.com',
   chainId: 1,
 } as const;
 

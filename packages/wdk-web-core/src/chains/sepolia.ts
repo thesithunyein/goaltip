@@ -19,6 +19,9 @@ export default WalletManagerEvm;
 
 export const config = {
   rpcUrl: 'https://ethereum-sepolia-rpc.publicnode.com',
+  // WDK's WalletManagerEvm/WalletAccountEvm read `provider` (string RPC URL or
+  // EIP-1193 object) — without it accounts can't sign-and-broadcast.
+  provider: 'https://ethereum-sepolia-rpc.publicnode.com',
   chainId: 11155111,
 } as const;
 

@@ -36,6 +36,8 @@ export interface DefinedEvmChain {
   readonly default: typeof WalletManagerEvm;
   readonly config: {
     readonly rpcUrl: string;
+    /** WDK wallet managers/accounts read `provider` for sign-and-broadcast. */
+    readonly provider: string;
     readonly chainId: number;
   };
   readonly meta: ChainModuleMeta;
@@ -46,6 +48,7 @@ export function defineEvmChain(spec: EvmChainSpec): DefinedEvmChain {
     default: WalletManagerEvm,
     config: {
       rpcUrl: spec.rpcUrl,
+      provider: spec.rpcUrl,
       chainId: spec.chainId,
     },
     meta: {
