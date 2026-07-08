@@ -13,13 +13,13 @@ WDK : Wallets (with optional QVAC local AI coach module)
 GoalTip lets football fans tip USDt for their nation during watch parties without giving up custody of their keys. Built with Tether WDK in a Web Worker — all signing happens client-side. Watch party rooms track nation-vs-nation tipping pools on Sepolia testnet. Optional local AI coach (QVAC SDK, on-device LLM) suggests which nation to tip with zero cloud AI.
 
 ## GitHub
-YOUR_GITHUB_URL
+https://github.com/thesithunyein/goaltip
 
 ## Demo video
-YOUR_YOUTUBE_UNLISTED_URL
+ADD_YOUTUBE_UNLISTED_URL
 
 ## Live demo
-YOUR_VERCEL_URL
+ADD_VERCEL_URL
 
 ## Earlier work
 Forked and extended [wdk-wallet-template](https://github.com/plinkdev1/wdk-wallet-template) (MIT). All GoalTip-specific features (watch party, football UI, QVAC coach) built during the Tether Developers Cup.

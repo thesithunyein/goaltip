@@ -1,95 +1,98 @@
 # GoalTip ⚽
 
-**Self-custodial USDT fan tipping for football watch parties — your keys, your tips, no custodian.**
+Self-custodial USDt tipping for football watch parties. Fans back a nation, tip live, and track the pool transparently.
 
-Built for the [Tether Developers Cup](https://dorahacks.io/hackathon/tether-developers-cup) · **WDK : Wallets** track.
+Built for [Tether Developers Cup](https://dorahacks.io/hackathon/tether-developers-cup) on **WDK : Wallets**.
 
-## What it does
+## 3-second judge view
 
-- **Watch Party** — pick two nations, create a room, tip USDt to rally your team
-- **Self-custodial wallet** — WDK runs in a Web Worker; keys never leave your browser
-- **Sepolia testnet** — demo-safe USDT tips via `@tetherto/wdk`
-- **Local AI Coach (QVAC)** — optional on-device football analyst (`npm run coach`)
+- **Football-native use case:** watch party rooms and nation-vs-nation tipping
+- **Real WDK usage:** key custody and signing stay inside a Web Worker
+- **Self-custodial proof:** no private keys on Vercel/server
+- **Demo-safe chain:** Sepolia + mock USDt
+- **Bonus path:** optional local QVAC coach (no cloud AI)
 
-## Live demo
+## Links
 
-Deploy to Vercel (see below) and open your URL. Judges: use the live link — no install required for the web app.
+- **GitHub:** https://github.com/thesithunyein/goaltip
+- **Live demo:** add your Vercel URL in `SUBMISSION.md`
+- **Demo video:** add your YouTube unlisted URL in `SUBMISSION.md`
 
-## Quick start (judges)
+## What judges can test fast
 
-**Requirements:** Node 20+, pnpm 10
+1. Create/import wallet
+2. Open **Party** tab and create a watch room
+3. Tip nation A or B with preset USDt amounts
+4. Open tx on [Sepolia Etherscan](https://sepolia.etherscan.io)
+5. Verify wallet is self-custodial in architecture notes below
+
+## Judge quick start
+
+Requirements: Node 20+, pnpm 10
 
 ```bash
-git clone <your-goaltip-repo-url>
+git clone https://github.com/thesithunyein/goaltip.git
 cd goaltip
 pnpm install
 pnpm dev
 ```
 
-Open http://localhost:3000
+Open `http://localhost:3000`.
 
-### Demo script (3 min)
+## 3-minute demo flow
 
-1. Create wallet → save recovery phrase → unlock
-2. Go to **Party** tab → create watch party (e.g. Myanmar vs Brazil)
-3. Get Sepolia test ETH + USDt from faucets (below)
-4. Tip your nation with preset amounts (1 / 5 / 10 USDt)
-5. Show tx on [Sepolia Etherscan](https://sepolia.etherscan.io)
-6. **Wallet** tab → show self-custodial address and USDt balance
-7. **Coach** tab → run the optional QVAC coach locally after installing `@qvac/sdk`
+1. Wallet setup: create wallet, show recovery phrase flow
+2. Party setup: choose nations (example Myanmar vs Brazil)
+3. Get test funds (links below), then tip 1/5/10 USDt
+4. Show latest tips + explorer links
+5. Show Wallet tab and self-custodial address
+6. Optional: Coach tab with local QVAC server
 
 ## Testnet faucets
 
-1. **Sepolia ETH** (gas): https://sepoliafaucet.com or https://www.alchemy.com/faucets/ethereum-sepolia
-2. **Sepolia USDt** (mock): https://docs.candide.dev/welcome/guides/faucet/ or Pimlico test USDt
+- Sepolia ETH (gas): https://sepoliafaucet.com
+- Sepolia ETH (alt): https://www.alchemy.com/faucets/ethereum-sepolia
+- Mock USDt: https://docs.candide.dev/welcome/guides/faucet/
 
-## Local QVAC coach (QVAC + WDK combo)
+## Optional local QVAC coach (Phase 2)
 
 ```bash
-npx @qvac/sdk doctor   # verify GPU (4.5GB+ VRAM works with 1B model)
-pnpm add @qvac/sdk     # optional Phase 2 dependency, not needed for the WDK web demo
-npm run coach          # starts http://127.0.0.1:3847
-pnpm dev               # open Coach tab in app
+npx @qvac/sdk doctor
+pnpm add @qvac/sdk
+npm run coach
+pnpm dev
 ```
 
-Uses `LLAMA_3_2_1B_INST_Q4_0` only — no cloud AI, no API keys.
+Model used: `LLAMA_3_2_1B_INST_Q4_0` (local only, no cloud API keys).
 
 ## Deploy to Vercel
 
-1. Push this repo to GitHub
-2. Import in [Vercel](https://vercel.com) → set **Root Directory** to `apps/web`
-3. Deploy (install/build commands are in `apps/web/vercel.json`)
+1. Import this repo in [Vercel](https://vercel.com)
+2. Set **Root Directory** to `apps/web`
+3. Deploy (`apps/web/vercel.json` contains build/install commands)
 
 ## Architecture
 
 ```
 Browser (Next.js on Vercel)
-  ├── UI: Watch Party, Wallet, Coach
-  └── Web Worker: WDK vault, signing, key derivation (Comlink)
-        └── Keys NEVER sent to server
+  ├── UI: Party, Wallet, Coach
+  └── Web Worker (WDK): vault, derivation, signing
+       └── private keys never leave client runtime
 
-Local (optional): coach/server.mjs → QVAC SDK on-device LLM
+Optional local service:
+  coach/server.mjs -> QVAC SDK local inference
 ```
-
-Based on [wdk-wallet-template](https://github.com/plinkdev1/wdk-wallet-template) (MIT) — browser port of Tether WDK.
 
 ## External services
 
 - Sepolia public RPC (via WDK chain config)
-- Vercel (hosting)
-- YouTube (demo video, unlisted)
-- CoinGecko pricing (USD display, optional)
+- Vercel hosting
+- YouTube unlisted demo video
+- CoinGecko pricing (optional)
 
-## Hackathon submission
+## Submission helper
 
-| Field | Value |
-|-------|--------|
-| Track | WDK : Wallets (+ QVAC coach module) |
-| Theme | Football watch-party fan tipping |
-| License | MIT |
-| Demo video | YouTube unlisted, ≤3 min |
-
-See [SUBMISSION.md](./SUBMISSION.md) for DoraHacks copy-paste text.
+Use [SUBMISSION.md](./SUBMISSION.md) as copy-paste text for DoraHacks.
 
 ## License
 
