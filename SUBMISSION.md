@@ -16,7 +16,7 @@ GoalTip lets football fans tip USDt for their nation during watch parties withou
 https://github.com/thesithunyein/goaltip
 
 ## Demo video
-ADD_YOUTUBE_UNLISTED_URL
+https://youtu.be/2p8f8a_Tj0w
 
 ## Live demo
 https://goaltip-web.vercel.app
