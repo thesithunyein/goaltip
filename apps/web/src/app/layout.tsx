@@ -6,7 +6,11 @@ export const metadata: Metadata = {
   title: 'GoalTip — Self-Custodial Football Fan Tipping',
   description: 'Self-custodial USDT fan tipping for football watch parties. Built with Tether WDK for the Developers Cup.',
   applicationName: 'GoalTip',
-  icons: { icon: '/favicon.ico', apple: '/goaltip-mark.svg' },
+  icons: {
+    icon: [{ url: '/goaltip-mark.svg', type: 'image/svg+xml' }],
+    shortcut: '/goaltip-mark.svg',
+    apple: '/goaltip-mark.svg'
+  },
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'GoalTip' }
 }
 
