@@ -11,7 +11,7 @@ Fans back a nation, tip live in USDt, and watch the pool grow — while their ke
 
 Built with [Tether WDK](https://wdk.tether.io) for the [Tether Developers Cup](https://dorahacks.io/hackathon/tether-developers-cup) — **WDK : Wallets** track, with an optional [QVAC](https://qvac.tether.io) local-AI coach.
 
-<img src="docs/screenshot-party.png" alt="GoalTip watch party — Myanmar vs Brazil tipping pool on Sepolia testnet" width="720" />
+<img src="docs/screenshot-party.png" alt="GoalTip self-custodial wallet — funded with USDt on Sepolia testnet" width="720" />
 
 </div>
 
