@@ -6,8 +6,8 @@ import {
 
 describe('chain catalogue', () => {
   it('has the default chain and resolves it', () => {
-    expect(DEFAULT_CHAIN_ID).toBe('plasma-mainnet')
-    expect(getChain(DEFAULT_CHAIN_ID).name).toBe('Plasma')
+    expect(DEFAULT_CHAIN_ID).toBe('sepolia-testnet')
+    expect(getChain(DEFAULT_CHAIN_ID).name).toBe('Sepolia')
   })
 
   it('every entry has a unique id and a known family', () => {
