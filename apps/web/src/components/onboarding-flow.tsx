@@ -51,8 +51,8 @@ export function OnboardingFlow () {
     <Shell>
       {step.name === 'choice' && (
         <Card padding="lg" style={cardStyle}>
-          <h2 style={h2}>Set up your wallet</h2>
-          <p style={dim}>Create a new self-custodial wallet, or restore one from a recovery phrase. Your keys are encrypted and stored only on this device.</p>
+          <h2 style={h2}>Set up GoalTip wallet</h2>
+          <p style={dim}>Create a self-custodial wallet for watch-party tipping. Your keys are encrypted and stored only on this device — never on Vercel or any server.</p>
           <Button onClick={startCreate} disabled={busy} style={{ width: '100%' }}>
             {busy ? 'Generating…' : 'Create a new wallet'}
           </Button>

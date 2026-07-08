@@ -8,17 +8,17 @@ import type { MetadataRoute } from 'next'
  */
 export default function manifest (): MetadataRoute.Manifest {
   return {
-    name: 'WDK Wallet Template',
-    short_name: 'WDK Wallet',
-    description: 'A self-custodial multi-chain wallet built on Tether WDK and Next.js.',
+    name: 'GoalTip',
+    short_name: 'GoalTip',
+    description: 'Self-custodial USDt fan tipping for football watch parties, built on Tether WDK.',
     start_url: '/',
     scope: '/',
     display: 'standalone',
     background_color: '#161312',
     theme_color: '#161312',
     icons: [
-      { src: '/wdk-mark.png', sizes: '256x256', type: 'image/png', purpose: 'any' },
-      { src: '/wdk-mark.png', sizes: '256x256', type: 'image/png', purpose: 'maskable' }
+      { src: '/goaltip-mark.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+      { src: '/goaltip-mark.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' }
     ]
   }
 }

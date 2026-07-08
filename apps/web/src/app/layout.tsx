@@ -3,11 +3,11 @@ import './globals.css'
 import { ServiceWorkerRegister } from '@/components/service-worker-register'
 
 export const metadata: Metadata = {
-  title: 'WDK Wallet Template',
-  description: 'A self-custodial multi-chain wallet template built on Tether WDK and Next.js.',
-  applicationName: 'WDK Wallet',
-  icons: { icon: '/favicon.ico', apple: '/wdk-mark.png' },
-  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'WDK Wallet' }
+  title: 'GoalTip — Self-Custodial Football Fan Tipping',
+  description: 'Self-custodial USDT fan tipping for football watch parties. Built with Tether WDK for the Developers Cup.',
+  applicationName: 'GoalTip',
+  icons: { icon: '/favicon.ico', apple: '/goaltip-mark.svg' },
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'GoalTip' }
 }
 
 export const viewport: Viewport = {

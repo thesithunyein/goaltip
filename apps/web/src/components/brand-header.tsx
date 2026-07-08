@@ -15,7 +15,7 @@ export function BrandHeader () {
       )}
       <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
         <strong style={{ fontSize: 16 }}>{brand.name}</strong>
-        <span style={{ fontSize: 12, color: 'var(--text-secondary, #b3a79f)' }}>Next.js template</span>
+        <span style={{ fontSize: 12, color: 'var(--text-secondary, #b3a79f)' }}>Self-custodial fan tipping</span>
       </div>
     </div>
   )

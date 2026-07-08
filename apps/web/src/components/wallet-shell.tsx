@@ -1,14 +1,7 @@
 'use client'
 
 /**
- * WalletShell — the navigable pro-wallet IA (PRD Phase 1 cornerstone).
- *
- * Replaces the single-page "modal soup" with a real tab shell: Home (balance +
- * tokens + action cluster), Swap (Velora), Earn (Aave lend / USDT0 bridge /
- * gasless), Activity (history), and Settings (appearance, security, account).
- * The dedicated Swap/Earn destinations retire the old cramped DeFi modal; the
- * remaining heavy flows (receive/send/buy/spark) stay as Home action launchers.
- * Built on the shared wdk-ui TabBar so the extension popup can adopt the same IA.
+ * GoalTip shell — football watch party + self-custodial WDK wallet.
  */
 
 import { useState } from 'react'
@@ -17,22 +10,22 @@ import { useWallet } from '@/wallet/wallet-provider'
 import { Dashboard } from './dashboard'
 import { Activity } from './activity'
 import { Screen } from './screen'
-import { SwapScreen } from './swap-screen'
-import { EarnScreen } from './earn-screen'
+import { WatchPartyScreen } from './watch-party-screen'
+import { CoachScreen } from './coach-screen'
 import { AppearanceDialog } from './appearance-dialog'
 import { useAppearance } from './appearance-provider'
 
-type TabId = 'home' | 'swap' | 'earn' | 'activity' | 'settings'
+type TabId = 'party' | 'wallet' | 'coach' | 'activity' | 'settings'
 
 const TABS: readonly TabItem[] = [
-  { id: 'home', label: 'Home', icon: '◎' },
-  { id: 'swap', label: 'Swap', icon: '⇄' },
-  { id: 'earn', label: 'Earn', icon: '％' },
+  { id: 'party', label: 'Party', icon: '⚽' },
+  { id: 'wallet', label: 'Wallet', icon: '◎' },
+  { id: 'coach', label: 'Coach', icon: '🧠' },
   { id: 'activity', label: 'Activity', icon: '≡' },
   { id: 'settings', label: 'Settings', icon: '⚙' }
 ]
 
-export function WalletShell ({ initialTab = 'home' }: { initialTab?: TabId } = {}): React.JSX.Element {
+export function WalletShell ({ initialTab = 'party' }: { initialTab?: TabId } = {}): React.JSX.Element {
   const [tab, setTab] = useState<TabId>(initialTab)
   const { open: appearanceOpen } = useAppearance()
 
@@ -40,14 +33,14 @@ export function WalletShell ({ initialTab = 'home' }: { initialTab?: TabId } = {
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', overflowY: 'auto' }}>
         <div style={{ width: '100%', maxWidth: 460 }}>
-          {tab === 'home' && <Dashboard />}
-          {tab === 'swap' && <SwapScreen />}
-          {tab === 'earn' && <EarnScreen />}
+          {tab === 'party' && <WatchPartyScreen />}
+          {tab === 'wallet' && <Dashboard />}
+          {tab === 'coach' && <CoachScreen />}
           {tab === 'activity' && <Screen title="Activity"><Activity /></Screen>}
           {tab === 'settings' && <SettingsTab />}
         </div>
       </div>
-      <TabBar tabs={TABS} active={tab} onChange={(id) => setTab(id as TabId)} aria-label="Wallet" />
+      <TabBar tabs={TABS} active={tab} onChange={(id) => setTab(id as TabId)} aria-label="GoalTip" />
       {appearanceOpen && <AppearanceDialog />}
     </div>
   )
@@ -65,7 +58,7 @@ function SettingsTab (): React.JSX.Element {
         <Button variant="outline" onClick={() => void lock()} style={{ width: '100%' }}>Lock wallet</Button>
       </Card>
       <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary, #b3a79f)' }}>
-        Self-custodial · keys never leave the worklet · built on Tether WDK
+        GoalTip · self-custodial · keys in Web Worker · built on Tether WDK
       </p>
     </Screen>
   )

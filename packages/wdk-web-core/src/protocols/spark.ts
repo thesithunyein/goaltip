@@ -86,14 +86,10 @@ export async function createSparkManager(
 ): Promise<SparkManagerLike> {
   let mod: { default: SparkManagerCtor };
   try {
-    // Spark is a real engine dependency that coexists with @tetherto/wdk-wallet-btc:
-    // the workspace pins BTC to @noble/hashes v1 via pnpm.packageExtensions while
-    // the Spark SDK keeps v2 (see spark-browser-validation/NOBLE-HASHES-V1-V2-CONFLICT.md).
-    // A *literal* dynamic import keeps the ~6.4 MB SDK in its own lazy chunk
-    // (F-SPARK-03) while letting the bundler statically split it. On an MV3 service
-    // worker, runtime dynamic import() may still be unavailable — the catch below
-    // surfaces a clear error there (the template / Web-Worker path is unaffected).
-    mod = (await import('@tetherto/wdk-wallet-spark')) as unknown as { default: SparkManagerCtor };
+    // GoalTip does not use Spark in the WDK track MVP. Keep this runtime-only so
+    // the optional Spark package is not required for install/build tonight.
+    const load = new Function('name', 'return import(name)') as (name: string) => Promise<unknown>;
+    mod = await load('@tetherto/wdk-wallet-spark') as { default: SparkManagerCtor };
   } catch (cause) {
     throw new Error(IMPORT_ERROR, { cause });
   }

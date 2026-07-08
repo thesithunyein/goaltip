@@ -14,11 +14,11 @@ import {
  * (runtime, persisted to localStorage). Assets live in apps/web/public/.
  */
 export const TEMPLATE_BRAND: BrandConfig = {
-  name: 'WDK Wallet',
-  markSrc: '/wdk-mark.png',
-  markAlt: 'WDK Wallet',
-  wordmarkSrc: '/wdk-wordmark.svg',
-  wordmarkAlt: 'WDK Wallet'
+  name: 'GoalTip',
+  markSrc: '/goaltip-mark.svg',
+  markAlt: 'GoalTip',
+  wordmarkSrc: undefined,
+  wordmarkAlt: 'GoalTip'
 }
 
 interface AppearanceValue {

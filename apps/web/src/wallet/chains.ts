@@ -35,7 +35,7 @@ export const CHAINS: readonly ChainInfo[] = [
   { id: 'solana-devnet', name: 'Solana Devnet', symbol: 'SOL', family: 'solana', testnet: true, decimals: 9, explorer: 'https://explorer.solana.com' }
 ]
 
-export const DEFAULT_CHAIN_ID = 'plasma-mainnet'
+export const DEFAULT_CHAIN_ID = 'sepolia-testnet'
 
 const byId = new Map(CHAINS.map((c) => [c.id, c]))
 
