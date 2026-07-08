@@ -177,13 +177,19 @@ export function WatchPartyScreen (): React.JSX.Element {
               )
             })}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Input value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} placeholder="Amount" />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Input value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} placeholder="Custom amount" style={{ flex: '1 1 120px' }} />
             <Button
-              disabled={busy || !usdt}
+              disabled={busy || !usdt || customAmount.trim() === ''}
               onClick={() => void tipNation(party.nationA, customAmount)}
             >
-              Tip home
+              {nationAInfo?.flag} Tip
+            </Button>
+            <Button
+              disabled={busy || !usdt || customAmount.trim() === ''}
+              onClick={() => void tipNation(party.nationB, customAmount)}
+            >
+              {nationBInfo?.flag} Tip
             </Button>
           </div>
           {error && <p style={errorStyle}>{error}</p>}
