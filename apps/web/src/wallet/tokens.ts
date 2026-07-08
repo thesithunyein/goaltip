@@ -13,8 +13,8 @@ export interface TokenInfo {
 
 const TOKENS: Record<string, readonly TokenInfo[]> = {
   'sepolia-testnet': [
-    // Sepolia mock USDt — get test tokens from Pimlico/Candide faucets (see README).
-    { symbol: 'USDt', address: '0xaA8E23Fb1079EA71e0a56F48aAEaa078965c36b6', decimals: 6 },
+    // Aave v3 Sepolia test USDT (mintable via the Aave testnet faucet — see README).
+    { symbol: 'USDt', address: '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0', decimals: 6 },
   ],
   ethereum: [
     { symbol: 'USDt', address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', decimals: 6 },

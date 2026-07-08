@@ -41,13 +41,24 @@ export function WatchPartyScreen (): React.JSX.Element {
   }, [address, nationA, nationB])
 
   const tipNation = useCallback(async (nationId: string, amountStr: string) => {
-    if (!party || !usdt || phase !== 'unlocked') return
+    if (!party || !usdt || phase !== 'unlocked' || !address) return
     setBusy(true)
     setError(null)
     setSelectedNation(nationId)
     try {
       const amountBase = parseAmount(amountStr, usdt.decimals)
-      const hash = await getWalletApi().account_sendTransaction(
+      const api = getWalletApi()
+      // Pre-check the USDt balance so an unfunded wallet gets a friendly
+      // faucet hint instead of a low-level provider/broadcast error.
+      let usdtBalance: bigint | null = null
+      try {
+        usdtBalance = BigInt(await api.rpc_getTokenBalance(CHAIN_ID as never, address, usdt.address))
+      } catch { /* balance read failed — let the send surface its own error */ }
+      if (usdtBalance !== null && usdtBalance < amountBase) {
+        setError(`Not enough test USDt (balance: ${(Number(usdtBalance) / 1e6).toFixed(2)}). Mint free USDT from the Aave Sepolia faucet — link in the card below.`)
+        return
+      }
+      const hash = await api.account_sendTransaction(
         CHAIN_ID as never,
         accountIndex,
         { to: usdt.address, value: 0n, data: encodeErc20Transfer(party.poolAddress, amountBase) }
@@ -61,12 +72,17 @@ export function WatchPartyScreen (): React.JSX.Element {
       })
       if (updated) setParty(updated)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Tip failed.')
+      const msg = e instanceof Error ? e.message : 'Tip failed.'
+      // WDK surfaces an unfunded/unbroadcastable account as a provider error;
+      // translate it for demo users.
+      setError(/provider/i.test(msg)
+        ? 'Wallet has no funds yet — get Sepolia ETH (gas) + test USDt from the faucets below, then tip again.'
+        : msg)
     } finally {
       setBusy(false)
       setSelectedNation(null)
     }
-  }, [party, usdt, phase, accountIndex])
+  }, [party, usdt, phase, accountIndex, address])
 
   if (phase !== 'unlocked') {
     return (
@@ -171,6 +187,15 @@ export function WatchPartyScreen (): React.JSX.Element {
             </Button>
           </div>
           {error && <p style={errorStyle}>{error}</p>}
+        </Card>
+
+        <Card padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <h3 style={{ margin: 0, fontSize: 14 }}>Need test funds? (free, 1 min)</h3>
+          <p style={{ ...dim, fontSize: 12 }}>
+            1. <a href="https://www.alchemy.com/faucets/ethereum-sepolia" target="_blank" rel="noreferrer">Sepolia ETH faucet</a> — gas for transactions<br />
+            2. <a href="https://app.aave.com/faucet/" target="_blank" rel="noreferrer">Aave faucet</a> (enable Testnet Mode in settings) — mint test USDT<br />
+            3. Send both to your wallet address in the <strong>Wallet</strong> tab, then tip.
+          </p>
         </Card>
 
         {party.tips.length > 0 && (

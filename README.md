@@ -14,8 +14,8 @@ Built for [Tether Developers Cup](https://dorahacks.io/hackathon/tether-develope
 
 ## Links
 
+- **Live demo:** https://goaltip-web.vercel.app
 - **GitHub:** https://github.com/thesithunyein/goaltip
-- **Live demo:** add your Vercel URL in `SUBMISSION.md`
 - **Demo video:** add your YouTube unlisted URL in `SUBMISSION.md`
 
 ## What judges can test fast
@@ -50,9 +50,9 @@ Open `http://localhost:3000`.
 
 ## Testnet faucets
 
-- Sepolia ETH (gas): https://sepoliafaucet.com
-- Sepolia ETH (alt): https://www.alchemy.com/faucets/ethereum-sepolia
-- Mock USDt: https://docs.candide.dev/welcome/guides/faucet/
+- Sepolia ETH (gas): https://www.alchemy.com/faucets/ethereum-sepolia
+- Test USDT (mintable): https://app.aave.com/faucet/ — enable **Testnet Mode** (gear icon), pick Sepolia market, mint USDT
+- Token contract used: [`0xaA8E...33D0`](https://sepolia.etherscan.io/address/0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0) (Aave v3 Sepolia test USDT, 6 decimals)
 
 ## Optional local QVAC coach (Phase 2)
 

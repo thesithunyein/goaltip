@@ -19,7 +19,7 @@ https://github.com/thesithunyein/goaltip
 ADD_YOUTUBE_UNLISTED_URL
 
 ## Live demo
-ADD_VERCEL_URL
+https://goaltip-web.vercel.app
 
 ## Earlier work
 Forked and extended [wdk-wallet-template](https://github.com/plinkdev1/wdk-wallet-template) (MIT). All GoalTip-specific features (watch party, football UI, QVAC coach) built during the Tether Developers Cup.
