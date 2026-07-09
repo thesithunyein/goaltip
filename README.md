@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/goaltip-mark.svg" alt="GoalTip" width="96" height="96" />
+<img src="https://raw.githubusercontent.com/thesithunyein/goaltip/main/docs/goaltip-mark.svg" alt="GoalTip" width="96" height="96" />
 
 # GoalTip
 
@@ -11,7 +11,7 @@ Fans back a nation, tip live in USDt, and watch a **shared** pool grow — while
 
 Built with [Tether WDK](https://wdk.tether.io) for the [Tether Developers Cup](https://dorahacks.io/hackathon/tether-developers-cup) — **WDK : Wallets** track, with an optional [QVAC](https://qvac.tether.io) local-AI coach.
 
-<img src="docs/screenshot-party.png" alt="GoalTip self-custodial wallet — funded with USDt on Sepolia testnet" width="720" />
+<img src="https://raw.githubusercontent.com/thesithunyein/goaltip/main/docs/screenshot-wallet.png" alt="GoalTip self-custodial wallet — Sepolia ETH + USDt balance" width="720" />
 
 </div>
 
@@ -171,7 +171,7 @@ goaltip/
 │   └── server.mjs                     # Optional local QVAC inference
 ├── docs/
 │   ├── goaltip-mark.svg
-│   ├── screenshot-party.png
+│   ├── screenshot-wallet.png
 │   ├── DEMO_SCRIPT.md
 │   ├── ARCHITECTURE.md
 │   └── …
