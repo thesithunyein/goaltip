@@ -14,15 +14,16 @@ import { WatchPartyScreen } from './watch-party-screen'
 import { CoachScreen } from './coach-screen'
 import { AppearanceDialog } from './appearance-dialog'
 import { useAppearance } from './appearance-provider'
+import { ActivityIcon, CoachIcon, PartyIcon, SettingsIcon, WalletIcon } from './tab-icons'
 
 type TabId = 'party' | 'wallet' | 'coach' | 'activity' | 'settings'
 
 const TABS: readonly TabItem[] = [
-  { id: 'party', label: 'Party', icon: '⚽' },
-  { id: 'wallet', label: 'Wallet', icon: '◎' },
-  { id: 'coach', label: 'Coach', icon: '🧠' },
-  { id: 'activity', label: 'Activity', icon: '≡' },
-  { id: 'settings', label: 'Settings', icon: '⚙' }
+  { id: 'party', label: 'Party', icon: <PartyIcon /> },
+  { id: 'wallet', label: 'Wallet', icon: <WalletIcon /> },
+  { id: 'coach', label: 'Coach', icon: <CoachIcon /> },
+  { id: 'activity', label: 'Activity', icon: <ActivityIcon /> },
+  { id: 'settings', label: 'Settings', icon: <SettingsIcon /> }
 ]
 
 export function WalletShell ({ initialTab = 'party' }: { initialTab?: TabId } = {}): React.JSX.Element {
