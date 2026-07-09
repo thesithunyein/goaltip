@@ -73,13 +73,24 @@ export async function apiCreateParty (body: {
   nationA: string
   nationB: string
   poolAddress: string
+  code?: string
 }): Promise<WatchParty> {
   const res = await fetch('/api/party', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   })
-  if (!res.ok) throw new Error(await res.text() || 'Failed to create party')
+  if (!res.ok) {
+    let message = 'Failed to create party'
+    try {
+      const data = await res.json() as { error?: string }
+      if (data.error) message = data.error
+    } catch {
+      const text = await res.text().catch(() => '')
+      if (text) message = text
+    }
+    throw new Error(message)
+  }
   return await res.json() as WatchParty
 }
 

@@ -49,30 +49,71 @@ export function WatchPartyScreen (): React.JSX.Element {
   }, [])
 
   // Hydrate from local cache, then ?room=CODE, then refresh from API.
+  // Old local-only rooms (pre-shared) are republished to the shared board.
   useEffect(() => {
     const cached = getParty()
-    if (cached) setParty(cached)
-
     const params = new URLSearchParams(window.location.search)
     const room = params.get('room')
+
+    const publishLocal = async (local: WatchParty): Promise<WatchParty | null> => {
+      try {
+        return await apiCreateParty({
+          nationA: local.nationA,
+          nationB: local.nationB,
+          poolAddress: local.poolAddress,
+          code: local.code
+        })
+      } catch {
+        return null
+      }
+    }
+
     if (room) {
       setMode('join')
       setJoinCode(normalizeRoomCode(room))
       void (async () => {
         try {
           const remote = await apiGetParty(room)
-          if (remote) applyParty(remote)
+          if (remote) {
+            applyParty(remote)
+            return
+          }
+          // Room code in URL but not on server — clear stale local cache for that code.
+          if (cached && normalizeRoomCode(cached.code) === normalizeRoomCode(room)) {
+            clearParty()
+            setParty(null)
+          }
+          setError('Room not found on the shared board. Ask the host to Create a new shared room and send a fresh invite link.')
         } catch {
-          /* keep cache / show join form */
+          setError('Could not reach the shared board. Check your connection and try Join again.')
         }
       })()
-    } else if (cached) {
+      return
+    }
+
+    if (cached) {
       void (async () => {
         try {
           const remote = await apiGetParty(cached.code)
-          if (remote) applyParty(remote)
+          if (remote) {
+            applyParty(remote)
+            return
+          }
+          // Local-only legacy room: publish it so friends can join.
+          const published = await publishLocal(cached)
+          if (published) {
+            applyParty(published)
+            const url = new URL(window.location.href)
+            url.searchParams.set('room', published.code)
+            window.history.replaceState({}, '', url.toString())
+            return
+          }
+          // Could not publish — leave room so user creates a fresh shared one.
+          clearParty()
+          setParty(null)
+          setError('Your old room was local-only. Create a new shared room, then copy the invite link.')
         } catch {
-          /* offline / memory cold start — keep local cache */
+          applyParty(cached)
         }
       })()
     }
@@ -125,7 +166,7 @@ export function WatchPartyScreen (): React.JSX.Element {
     try {
       const remote = await apiGetParty(code)
       if (!remote) {
-        setError('Room not found. Check the code and try again.')
+        setError('Room not found on the shared board. Old local rooms do not work — host must Create a new shared room and send a fresh invite.')
         return
       }
       applyParty(remote)
@@ -271,8 +312,7 @@ export function WatchPartyScreen (): React.JSX.Element {
               <>
                 <h2 style={h2}>Join a watch party</h2>
                 <p style={dim}>
-                  Enter the room code from a friend&apos;s invite. You tip from your own self-custodial wallet;
-                  the shared board updates for everyone.
+                  Enter the room code from a friend&apos;s invite. Old local-only rooms (from before shared boards) will not work — the host must Create a new shared room.
                 </p>
                 <label style={field}>
                   <span style={label}>Room code</span>

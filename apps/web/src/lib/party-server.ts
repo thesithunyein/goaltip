@@ -69,10 +69,34 @@ export async function createSharedParty (opts: {
   poolAddress: string
   code?: string
 }): Promise<WatchParty> {
-  let code = normalizeRoomCode(opts.code ?? makeRoomCode())
-  if (!code) code = makeRoomCode()
+  const requested = opts.code ? normalizeRoomCode(opts.code) : ''
 
-  // Avoid collisions (rare with 6 chars; retry a few times).
+  if (requested) {
+    const existing = await getSharedParty(requested)
+    if (existing) {
+      // Same room already shared — return it (idempotent republish).
+      if (
+        existing.nationA === opts.nationA &&
+        existing.nationB === opts.nationB &&
+        existing.poolAddress.toLowerCase() === opts.poolAddress.toLowerCase()
+      ) {
+        return existing
+      }
+      throw new Error(`Room ${requested} already exists with different settings. Create a new room.`)
+    }
+    const party: WatchParty = {
+      code: requested,
+      nationA: opts.nationA,
+      nationB: opts.nationB,
+      poolAddress: opts.poolAddress,
+      tips: [],
+      createdAt: new Date().toISOString()
+    }
+    await saveSharedParty(party)
+    return party
+  }
+
+  let code = makeRoomCode()
   for (let i = 0; i < 5; i++) {
     const existing = await getSharedParty(code)
     if (!existing) break
