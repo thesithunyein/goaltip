@@ -17,8 +17,9 @@ export default function manifest (): MetadataRoute.Manifest {
     background_color: '#161312',
     theme_color: '#161312',
     icons: [
-      { src: '/goaltip-mark.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
-      { src: '/goaltip-mark.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' }
+      { src: '/goaltip-mark.svg?v=20260709', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+      { src: '/goaltip-mark.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/goaltip-mark.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
     ]
   }
 }

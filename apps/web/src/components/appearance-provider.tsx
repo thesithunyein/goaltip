@@ -1,12 +1,15 @@
 'use client'
 
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import {
   WdkThemeProvider, BrandProvider,
   useThemePicker, useBrandPicker, useCustomPrimary,
   composeTheme, defaultTheme,
   type WdkTheme, type BrandConfig
 } from '@wdk-starter/wdk-ui'
+
+/** Cache-busted so browser tab + header always pick up the latest mark. */
+export const GOALTIP_MARK_SRC = '/goaltip-mark.svg?v=20260709'
 
 /**
  * The template's out-of-the-box brand. A fork rebrands either by editing this
@@ -15,7 +18,7 @@ import {
  */
 export const TEMPLATE_BRAND: BrandConfig = {
   name: 'GoalTip',
-  markSrc: '/goaltip-mark.svg',
+  markSrc: GOALTIP_MARK_SRC,
   markAlt: 'GoalTip',
   wordmarkSrc: undefined,
   wordmarkAlt: 'GoalTip'
@@ -55,6 +58,16 @@ export function AppearanceProvider ({ children }: { children: React.ReactNode })
   const [customPrimary, setCustomPrimary] = useCustomPrimary()
   const [brand, setBrand] = useBrandPicker(TEMPLATE_BRAND)
   const [open, setOpen] = useState(false)
+
+  // Drop stale Appearance-panel logos (old WDK mark / cached SVG without ?v=).
+  useEffect(() => {
+    const src = brand.markSrc ?? ''
+    if (!src.includes('goaltip-mark.svg') || src !== GOALTIP_MARK_SRC) {
+      setBrand(TEMPLATE_BRAND)
+    }
+    // Intentionally run once on mount to clear stale localStorage brand.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // A custom hex primary, when set, overrides the swatch selection.
   const effectiveTheme = useMemo(

@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="apps/web/public/goaltip-mark.svg" alt="GoalTip" width="96" height="96" />
+<img src="docs/goaltip-mark.png" alt="GoalTip" width="96" height="96" />
 
 # GoalTip
 
