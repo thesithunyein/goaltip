@@ -5,7 +5,15 @@
  */
 
 import type { TipRecord, WatchParty } from './party-types'
-import { makeRoomCode, normalizeRoomCode, upsertTips } from './party-types'
+import { makeRoomCode, normalizeRoomCode, upsertTips, walletTotal } from './party-types'
+
+/** Thrown when a tip would push a wallet over the room's host-set spend cap. */
+export class SpendCapExceededError extends Error {
+  constructor (readonly capAmount: string, readonly alreadyTipped: number) {
+    super(`Spend limit reached: this room caps tips at ${capAmount} USDt per wallet (already tipped ${alreadyTipped.toFixed(2)}).`)
+    this.name = 'SpendCapExceededError'
+  }
+}
 
 const KEY_PREFIX = 'goaltip:party:'
 const TTL_SECONDS = 60 * 60 * 24 * 7 // 7 days
@@ -68,8 +76,10 @@ export async function createSharedParty (opts: {
   nationB: string
   poolAddress: string
   code?: string
+  capPerWallet?: string
 }): Promise<WatchParty> {
   const requested = opts.code ? normalizeRoomCode(opts.code) : ''
+  const capPerWallet = opts.capPerWallet?.trim() || undefined
 
   if (requested) {
     const existing = await getSharedParty(requested)
@@ -90,7 +100,8 @@ export async function createSharedParty (opts: {
       nationB: opts.nationB,
       poolAddress: opts.poolAddress,
       tips: [],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      ...(capPerWallet ? { capPerWallet } : {})
     }
     await saveSharedParty(party)
     return party
@@ -109,7 +120,8 @@ export async function createSharedParty (opts: {
     nationB: opts.nationB,
     poolAddress: opts.poolAddress,
     tips: [],
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    ...(capPerWallet ? { capPerWallet } : {})
   }
 
   await saveSharedParty(party)
@@ -131,6 +143,17 @@ export async function saveSharedParty (party: WatchParty): Promise<void> {
 export async function appendSharedTip (code: string, tip: TipRecord): Promise<WatchParty | null> {
   const party = await getSharedParty(code)
   if (!party) return null
+
+  if (party.capPerWallet && tip.from) {
+    const cap = Number.parseFloat(party.capPerWallet)
+    const already = walletTotal(party, tip.from)
+    const next = already + Number.parseFloat(tip.amount)
+    // Small epsilon guards against float rounding on repeated decimal tips.
+    if (Number.isFinite(cap) && next > cap + 1e-9) {
+      throw new SpendCapExceededError(party.capPerWallet, already)
+    }
+  }
+
   const next: WatchParty = {
     ...party,
     tips: upsertTips(party.tips, tip)

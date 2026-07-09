@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeRoomCode, upsertTips, nationTotals, type TipRecord, type WatchParty } from './party-types'
+import { normalizeRoomCode, upsertTips, nationTotals, remainingCap, walletTotal, type TipRecord, type WatchParty } from './party-types'
 
 describe('party-types', () => {
   it('normalizes room codes', () => {
@@ -32,5 +32,29 @@ describe('party-types', () => {
     const totals = nationTotals(party)
     expect(totals.get('mm')).toBe(6)
     expect(totals.get('br')).toBe(10)
+  })
+
+  it('computes per-wallet totals and remaining spend cap', () => {
+    const alice = '0x' + 'aa'.repeat(20)
+    const bob = '0x' + 'bb'.repeat(20)
+    const party: WatchParty = {
+      code: 'CAP123',
+      nationA: 'mm',
+      nationB: 'br',
+      poolAddress: '0x' + '11'.repeat(20),
+      capPerWallet: '10',
+      tips: [
+        { nationId: 'mm', amount: '4', symbol: 'USDt', hash: '0x1', ts: 1, from: alice },
+        { nationId: 'br', amount: '3', symbol: 'USDt', hash: '0x2', ts: 2, from: alice },
+        { nationId: 'mm', amount: '9', symbol: 'USDt', hash: '0x3', ts: 3, from: bob }
+      ]
+    }
+    expect(walletTotal(party, alice)).toBe(7)
+    expect(walletTotal(party, alice.toUpperCase())).toBe(7)
+    expect(remainingCap(party, alice)).toBeCloseTo(3)
+    expect(remainingCap(party, bob)).toBeCloseTo(1)
+
+    const uncapped: WatchParty = { ...party, capPerWallet: undefined }
+    expect(remainingCap(uncapped, alice)).toBeNull()
   })
 })

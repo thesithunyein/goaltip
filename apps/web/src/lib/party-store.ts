@@ -1,10 +1,10 @@
 /** Client-side localStorage cache + helpers for shared watch parties. */
 
 import type { TipRecord, WatchParty } from './party-types'
-import { nationTotals, normalizeRoomCode, partySharePath, upsertTips } from './party-types'
+import { nationTotals, normalizeRoomCode, partySharePath, remainingCap, upsertTips, walletTotal } from './party-types'
 
 export type { TipRecord, WatchParty }
-export { nationTotals, normalizeRoomCode, partySharePath }
+export { nationTotals, normalizeRoomCode, partySharePath, remainingCap, walletTotal }
 
 const KEY = 'goaltip-party'
 
@@ -74,6 +74,7 @@ export async function apiCreateParty (body: {
   nationB: string
   poolAddress: string
   code?: string
+  capPerWallet?: string
 }): Promise<WatchParty> {
   const res = await fetch('/api/party', {
     method: 'POST',

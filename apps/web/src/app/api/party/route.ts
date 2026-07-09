@@ -11,11 +11,13 @@ export async function POST (req: Request): Promise<Response> {
       nationB?: string
       poolAddress?: string
       code?: string
+      capPerWallet?: string
     }
     const nationA = body.nationA?.trim()
     const nationB = body.nationB?.trim()
     const poolAddress = body.poolAddress?.trim()
     const code = body.code?.trim()
+    const capPerWallet = body.capPerWallet?.trim()
     if (!nationA || !nationB || !poolAddress) {
       return NextResponse.json({ error: 'nationA, nationB, and poolAddress are required' }, { status: 400 })
     }
@@ -25,11 +27,15 @@ export async function POST (req: Request): Promise<Response> {
     if (nationA === nationB) {
       return NextResponse.json({ error: 'Nations must differ' }, { status: 400 })
     }
+    if (capPerWallet && (!Number.isFinite(Number.parseFloat(capPerWallet)) || Number.parseFloat(capPerWallet) <= 0)) {
+      return NextResponse.json({ error: 'Spend limit must be a positive number' }, { status: 400 })
+    }
     const party = await createSharedParty({
       nationA,
       nationB,
       poolAddress,
-      ...(code ? { code } : {})
+      ...(code ? { code } : {}),
+      ...(capPerWallet ? { capPerWallet } : {})
     })
     return NextResponse.json(party)
   } catch (e) {

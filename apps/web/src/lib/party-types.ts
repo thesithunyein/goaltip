@@ -6,6 +6,8 @@ export interface TipRecord {
   readonly symbol: string
   readonly hash: string
   readonly ts: number
+  /** Sender wallet address — used to enforce the per-wallet spend cap. */
+  readonly from?: string
 }
 
 export interface WatchParty {
@@ -16,6 +18,11 @@ export interface WatchParty {
   readonly tips: readonly TipRecord[]
   /** ISO timestamp when the room was created (server-side). */
   readonly createdAt?: string
+  /**
+   * Optional host-set spend limit: max total USDt any single wallet may tip
+   * in this room, for the whole match. Enforced server-side on every tip.
+   */
+  readonly capPerWallet?: string
 }
 
 export function nationTotals (party: WatchParty): Map<string, number> {
@@ -42,4 +49,23 @@ export function partySharePath (code: string): string {
 export function upsertTips (existing: readonly TipRecord[], tip: TipRecord): TipRecord[] {
   const without = existing.filter((t) => t.hash.toLowerCase() !== tip.hash.toLowerCase())
   return [tip, ...without].sort((a, b) => b.ts - a.ts)
+}
+
+/** Total already tipped by one wallet in this room (case-insensitive match). */
+export function walletTotal (party: WatchParty, address: string): number {
+  const target = address.toLowerCase()
+  return party.tips
+    .filter((t) => t.from?.toLowerCase() === target)
+    .reduce((sum, t) => sum + Number.parseFloat(t.amount), 0)
+}
+
+/**
+ * Remaining spend budget for a wallet under the room's cap.
+ * Returns `null` when the host set no cap (unlimited).
+ */
+export function remainingCap (party: WatchParty, address: string): number | null {
+  if (!party.capPerWallet) return null
+  const cap = Number.parseFloat(party.capPerWallet)
+  if (!Number.isFinite(cap) || cap <= 0) return null
+  return Math.max(0, cap - walletTotal(party, address))
 }

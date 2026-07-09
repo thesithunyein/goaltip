@@ -17,7 +17,9 @@ import {
   inviteUrl,
   nationTotals,
   normalizeRoomCode,
+  remainingCap,
   setPartyCache,
+  walletTotal,
   type WatchParty
 } from '@/lib/party-store'
 import { BrandHeader } from './brand-header'
@@ -41,6 +43,8 @@ export function WatchPartyScreen (): React.JSX.Element {
   const [selectedNation, setSelectedNation] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [mode, setMode] = useState<'create' | 'join'>('create')
+  const [capPerWallet, setCapPerWallet] = useState('10')
+  const [capEnabled, setCapEnabled] = useState(true)
 
   const usdt = tokensFor(CHAIN_ID).find((t) => t.symbol === 'USDt')
 
@@ -144,7 +148,12 @@ export function WatchPartyScreen (): React.JSX.Element {
     setBusy(true)
     setError(null)
     try {
-      const p = await apiCreateParty({ nationA, nationB, poolAddress: address })
+      const p = await apiCreateParty({
+        nationA,
+        nationB,
+        poolAddress: address,
+        ...(capEnabled && capPerWallet.trim() ? { capPerWallet: capPerWallet.trim() } : {})
+      })
       applyParty(p)
       const url = new URL(window.location.href)
       url.searchParams.set('room', p.code)
@@ -154,7 +163,7 @@ export function WatchPartyScreen (): React.JSX.Element {
     } finally {
       setBusy(false)
     }
-  }, [address, nationA, nationB, applyParty])
+  }, [address, nationA, nationB, capEnabled, capPerWallet, applyParty])
 
   const joinParty = useCallback(async () => {
     const code = normalizeRoomCode(joinCode)
@@ -213,6 +222,16 @@ export function WatchPartyScreen (): React.JSX.Element {
     setError(null)
     setSelectedNation(nationId)
     try {
+      const remaining = remainingCap(party, address)
+      const wantAmount = Number.parseFloat(amountStr)
+      if (remaining !== null && Number.isFinite(wantAmount) && wantAmount > remaining + 1e-9) {
+        setError(
+          remaining <= 0
+            ? `You've hit this room's spend limit (${party.capPerWallet} USDt per wallet). No signing needed — the cap blocked it before any transaction.`
+            : `That would exceed this room's spend limit. You have ${remaining.toFixed(2)} USDt left to tip.`
+        )
+        return
+      }
       const amountBase = parseAmount(amountStr, usdt.decimals)
       const api = getWalletApi()
       let usdtBalance: bigint | null = null
@@ -233,7 +252,8 @@ export function WatchPartyScreen (): React.JSX.Element {
         amount: amountStr,
         symbol: 'USDt' as const,
         hash: hash as string,
-        ts: Date.now()
+        ts: Date.now(),
+        from: address
       }
       // Optimistic local update, then sync to shared board.
       const local = setPartyCache({
@@ -301,6 +321,29 @@ export function WatchPartyScreen (): React.JSX.Element {
                   <span style={label}>Away nation</span>
                   <NationSelect value={nationB} onChange={setNationB} exclude={nationA} />
                 </label>
+                <label style={{ ...field, gap: 8 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={capEnabled}
+                      onChange={(e) => setCapEnabled(e.target.checked)}
+                      style={{ width: 18, height: 18, accentColor: 'var(--color-primary, var(--wdk-orange, #f4642f))' }}
+                    />
+                    <span style={label}>Spend limit per wallet (WDK-enforced)</span>
+                  </span>
+                  {capEnabled && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Input
+                        value={capPerWallet}
+                        onChange={(e) => setCapPerWallet(e.target.value)}
+                        placeholder="10"
+                        inputMode="decimal"
+                        style={{ flex: '0 0 100px', minHeight: 44 }}
+                      />
+                      <span style={dim}>USDt max per person, this match</span>
+                    </div>
+                  )}
+                </label>
                 <Button
                   onClick={() => void startParty()}
                   disabled={!address || nationA === nationB || busy}
@@ -346,6 +389,8 @@ export function WatchPartyScreen (): React.JSX.Element {
   const totalA = totals.get(party.nationA) ?? 0
   const totalB = totals.get(party.nationB) ?? 0
   const chain = getChain(CHAIN_ID)
+  const myRemaining = address ? remainingCap(party, address) : null
+  const myTipped = address ? walletTotal(party, address) : 0
 
   return (
     <main style={page}>
@@ -361,7 +406,9 @@ export function WatchPartyScreen (): React.JSX.Element {
         <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <span style={dim}>Room {party.code}</span>
-            <span style={{ fontSize: 12, color: 'var(--color-primary, var(--wdk-orange, #f4642f))', whiteSpace: 'nowrap' }}>Shared · Sepolia</span>
+            <span style={{ fontSize: 12, color: 'var(--color-primary, var(--wdk-orange, #f4642f))', whiteSpace: 'nowrap' }}>
+              Shared · Sepolia{party.capPerWallet ? ` · Capped ${party.capPerWallet} USDt` : ''}
+            </span>
           </div>
           <div style={matchRow}>
             <NationBadge nation={nationAInfo} total={totalA} />
@@ -379,6 +426,12 @@ export function WatchPartyScreen (): React.JSX.Element {
         <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <h3 style={{ margin: 0, fontSize: 16 }}>Tip your nation (USDt)</h3>
           {!usdt && <p style={errorStyle}>USDt is not configured for Sepolia. Open the Wallet tab and use native test ETH send as a fallback demo.</p>}
+          {party.capPerWallet && (
+            <p style={{ ...dim, fontSize: 12, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span aria-hidden style={{ color: 'var(--color-primary, var(--wdk-orange, #f4642f))' }}>●</span>
+              Spend limit {party.capPerWallet} USDt/wallet — you have tipped {myTipped.toFixed(2)}, {myRemaining !== null ? myRemaining.toFixed(2) : '—'} left. Enforced by the party server before your wallet can sign over the cap.
+            </p>
+          )}
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {[party.nationA, party.nationB].map((id) => {
               const n = getNation(id)
@@ -388,17 +441,21 @@ export function WatchPartyScreen (): React.JSX.Element {
                   <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                     <NationFlag nation={n} size={22} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{n.name}</span>
                   </strong>
-                  {TIP_PRESETS.map((amt) => (
-                    <Button
-                      key={amt}
-                      variant="secondary"
-                      disabled={busy || !usdt}
-                      onClick={() => void tipNation(id, amt)}
-                      style={{ width: '100%', minHeight: 44 }}
-                    >
-                      {busy && selectedNation === id ? '…' : `Tip ${amt} USDt`}
-                    </Button>
-                  ))}
+                  {TIP_PRESETS.map((amt) => {
+                    const overCap = myRemaining !== null && Number.parseFloat(amt) > myRemaining + 1e-9
+                    return (
+                      <Button
+                        key={amt}
+                        variant="secondary"
+                        disabled={busy || !usdt || overCap}
+                        onClick={() => void tipNation(id, amt)}
+                        style={{ width: '100%', minHeight: 44 }}
+                        title={overCap ? 'Would exceed this room\'s spend limit' : undefined}
+                      >
+                        {busy && selectedNation === id ? '…' : `Tip ${amt} USDt`}
+                      </Button>
+                    )
+                  })}
                 </div>
               )
             })}
