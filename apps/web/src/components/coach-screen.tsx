@@ -5,6 +5,8 @@ import { Button, Card, Input } from '@wdk-starter/wdk-ui'
 import { getNation, NATIONS } from '@/lib/nations'
 import { Screen } from './screen'
 
+// Native <select> cannot show images; use name + ISO so Windows Chrome is readable.
+
 const COACH_URL = 'http://127.0.0.1:3847'
 
 export function CoachScreen (): React.JSX.Element {
@@ -104,11 +106,11 @@ export function CoachScreen (): React.JSX.Element {
 
         <div style={{ display: 'flex', gap: 8 }}>
           <select value={nationA} onChange={(e) => setNationA(e.target.value)} style={selectStyle}>
-            {NATIONS.map((n) => <option key={n.id} value={n.id}>{n.flag} {n.name}</option>)}
+            {NATIONS.map((n) => <option key={n.id} value={n.id}>{n.name} ({n.iso.toUpperCase()})</option>)}
           </select>
           <span style={{ alignSelf: 'center', color: 'var(--text-dim)' }}>vs</span>
           <select value={nationB} onChange={(e) => setNationB(e.target.value)} style={selectStyle}>
-            {NATIONS.map((n) => <option key={n.id} value={n.id}>{n.flag} {n.name}</option>)}
+            {NATIONS.map((n) => <option key={n.id} value={n.id}>{n.name} ({n.iso.toUpperCase()})</option>)}
           </select>
         </div>
         <Input

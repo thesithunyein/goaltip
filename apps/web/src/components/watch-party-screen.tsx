@@ -7,7 +7,7 @@ import { getChain, parseAmount } from '@/wallet/chains'
 import { encodeErc20Transfer } from '@/wallet/erc20'
 import { getWalletApi } from '@/wallet/wallet-client'
 import { tokensFor } from '@/wallet/tokens'
-import { NATIONS, getNation } from '@/lib/nations'
+import { NATIONS, getNation, type Nation } from '@/lib/nations'
 import {
   apiAppendTip,
   apiCreateParty,
@@ -21,6 +21,7 @@ import {
   type WatchParty
 } from '@/lib/party-store'
 import { BrandHeader } from './brand-header'
+import { NationFlag } from './nation-flag'
 import { Screen } from './screen'
 
 const CHAIN_ID = 'sepolia-testnet'
@@ -384,7 +385,9 @@ export function WatchPartyScreen (): React.JSX.Element {
               if (!n) return null
               return (
                 <div key={id} style={{ flex: '1 1 140px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <strong>{n.flag} {n.name}</strong>
+                  <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    <NationFlag nation={n} size={22} /> {n.name}
+                  </strong>
                   {TIP_PRESETS.map((amt) => (
                     <Button
                       key={amt}
@@ -405,14 +408,16 @@ export function WatchPartyScreen (): React.JSX.Element {
             <Button
               disabled={busy || !usdt || customAmount.trim() === ''}
               onClick={() => void tipNation(party.nationA, customAmount)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
-              {nationAInfo?.flag} Tip
+              <NationFlag nation={nationAInfo} size={16} /> Tip
             </Button>
             <Button
               disabled={busy || !usdt || customAmount.trim() === ''}
               onClick={() => void tipNation(party.nationB, customAmount)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
-              {nationBInfo?.flag} Tip
+              <NationFlag nation={nationBInfo} size={16} /> Tip
             </Button>
           </div>
           {error && <p style={errorStyle}>{error}</p>}
@@ -435,7 +440,9 @@ export function WatchPartyScreen (): React.JSX.Element {
                 const n = getNation(t.nationId)
                 return (
                   <li key={t.hash} style={tipRow}>
-                    <span>{n?.flag} {n?.name} · {t.amount} {t.symbol}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <NationFlag nation={n} size={16} /> {n?.name} · {t.amount} {t.symbol}
+                    </span>
                     {chain.explorer && (
                       <a href={`${chain.explorer}/tx/${t.hash}`} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>
                         explorer ↗
@@ -469,17 +476,19 @@ function NationSelect ({ value, onChange, exclude }: { value: string, onChange: 
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)} style={selectStyle}>
       {NATIONS.filter((n) => n.id !== exclude).map((n) => (
-        <option key={n.id} value={n.id}>{n.flag} {n.name}</option>
+        <option key={n.id} value={n.id}>{n.name} ({n.iso.toUpperCase()})</option>
       ))}
     </select>
   )
 }
 
-function NationBadge ({ nation, total }: { nation?: { flag: string, name: string }, total: number }) {
+function NationBadge ({ nation, total }: { nation?: Nation, total: number }) {
   if (!nation) return null
   return (
     <div style={{ textAlign: 'center', flex: 1 }}>
-      <div style={{ fontSize: 36 }}>{nation.flag}</div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+        <NationFlag nation={nation} size={40} />
+      </div>
       <div style={{ fontWeight: 600 }}>{nation.name}</div>
       <div style={{ fontSize: 14, color: 'var(--wdk-orange, #f4642f)' }}>{total} USDt</div>
     </div>
