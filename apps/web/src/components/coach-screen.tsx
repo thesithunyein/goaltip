@@ -70,9 +70,9 @@ export function CoachScreen (): React.JSX.Element {
     'Checking…'
 
   const statusColor =
-    online === true ? '#22c55e' :
-    online === false ? '#f59e0b' :
-    'var(--text-dim, #b3a79f)'
+    online === true ? 'var(--color-success, #22c55e)' :
+    online === false ? 'var(--color-warning, #f59e0b)' :
+    'var(--text-secondary, var(--text-dim, #b3a79f))'
 
   return (
     <Screen title="AI Coach">
@@ -108,7 +108,7 @@ export function CoachScreen (): React.JSX.Element {
           <select value={nationA} onChange={(e) => setNationA(e.target.value)} style={selectStyle}>
             {NATIONS.map((n) => <option key={n.id} value={n.id}>{n.name} ({n.iso.toUpperCase()})</option>)}
           </select>
-          <span style={{ alignSelf: 'center', color: 'var(--text-dim)' }}>vs</span>
+          <span style={{ alignSelf: 'center', color: 'var(--text-secondary, var(--text-dim))' }}>vs</span>
           <select value={nationB} onChange={(e) => setNationB(e.target.value)} style={selectStyle}>
             {NATIONS.map((n) => <option key={n.id} value={n.id}>{n.name} ({n.iso.toUpperCase()})</option>)}
           </select>
@@ -154,21 +154,26 @@ npm run coach
   )
 }
 
-const dim: React.CSSProperties = { margin: 0, color: 'var(--text-dim, #b3a79f)', fontSize: 14, lineHeight: 1.5 }
-const errorStyle: React.CSSProperties = { margin: 0, color: '#ef4444', fontSize: 13 }
+const dim: React.CSSProperties = { margin: 0, color: 'var(--text-secondary, var(--text-dim, #b3a79f))', fontSize: 14, lineHeight: 1.5 }
+const errorStyle: React.CSSProperties = { margin: 0, color: 'var(--color-error, #ef4444)', fontSize: 13 }
 const answerBox: React.CSSProperties = {
-  padding: 12, borderRadius: 8, background: 'var(--surface-2, #241f1c)',
-  border: '1px solid var(--border, #332c28)', fontSize: 14
+  padding: 12, borderRadius: 8, background: 'var(--bg-elevated-2, var(--surface-2, #241f1c))',
+  border: '1px solid var(--border-default, var(--border, #332c28))', fontSize: 14,
+  color: 'var(--text-primary, var(--text))'
 }
 const offlineBox: React.CSSProperties = {
-  padding: 12, borderRadius: 8, background: 'rgba(245, 158, 11, 0.08)',
-  border: '1px solid rgba(245, 158, 11, 0.35)'
+  padding: 12, borderRadius: 8, background: 'color-mix(in srgb, var(--color-warning, #f59e0b) 12%, transparent)',
+  border: '1px solid color-mix(in srgb, var(--color-warning, #f59e0b) 40%, transparent)'
 }
 const selectStyle: React.CSSProperties = {
-  flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border, #332c28)',
-  background: 'var(--surface-2, #241f1c)', color: 'var(--text, #f7eee8)', fontSize: 13
+  flex: 1, padding: '8px 10px', borderRadius: 8,
+  border: '1px solid var(--border-default, var(--border, #332c28))',
+  background: 'var(--bg-elevated-2, var(--surface-2, #241f1c))',
+  color: 'var(--text-primary, var(--text, #f7eee8))', fontSize: 13
 }
 const codeBlock: React.CSSProperties = {
-  margin: '8px 0 0', padding: 12, borderRadius: 8, background: '#0e0c0b',
+  margin: '8px 0 0', padding: 12, borderRadius: 8,
+  background: 'var(--bg-elevated-3, var(--bg-base, #0e0c0b))',
+  color: 'var(--text-primary, var(--text))',
   overflow: 'auto', fontSize: 12
 }

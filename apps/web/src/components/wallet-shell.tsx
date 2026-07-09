@@ -31,7 +31,7 @@ export function WalletShell ({ initialTab = 'party' }: { initialTab?: TabId } = 
   const { open: appearanceOpen } = useAppearance()
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg-base, var(--bg))', color: 'var(--text-primary, var(--text))' }}>
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', overflowY: 'auto' }}>
         <div style={{ width: '100%', maxWidth: 460 }}>
           {tab === 'party' && <WatchPartyScreen />}

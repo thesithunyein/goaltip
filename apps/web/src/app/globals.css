@@ -2,12 +2,19 @@
   --wdk-orange: #f4642f;
   --wdk-dark: #161312;
   --wdk-cream: #f7eee8;
-  --bg: #0e0c0b;
-  --surface: #1a1614;
-  --surface-2: #241f1c;
-  --border: #332c28;
-  --text: #f7eee8;
-  --text-dim: #b3a79f;
+
+  /*
+   * GoalTip aliases → WdkThemeProvider tokens.
+   * Appearance light/dark updates --bg-base / --text-primary / etc.;
+   * these aliases keep Party/Coach screens in sync (no stuck dark page).
+   */
+  --bg: var(--bg-base, #0e0c0b);
+  --surface: var(--bg-elevated-1, #1a1614);
+  --surface-2: var(--bg-elevated-2, #241f1c);
+  --border: var(--border-default, #332c28);
+  --text: var(--text-primary, #f7eee8);
+  --text-dim: var(--text-secondary, #b3a79f);
+  --accent: var(--color-primary, #f4642f);
 }
 
 * {
@@ -25,8 +32,16 @@ body {
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 a {
-  color: var(--wdk-orange);
+  color: var(--color-primary, var(--wdk-orange));
+}
+
+/* Native selects / inputs inherit theme when Appearance switches */
+select,
+input,
+textarea {
+  color-scheme: light dark;
 }

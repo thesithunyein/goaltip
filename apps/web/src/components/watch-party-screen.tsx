@@ -365,7 +365,7 @@ export function WatchPartyScreen (): React.JSX.Element {
           </div>
           <div style={matchRow}>
             <NationBadge nation={nationAInfo} total={totalA} />
-            <span style={{ fontSize: 20, color: 'var(--text-dim, #b3a79f)' }}>vs</span>
+            <span style={{ fontSize: 20, color: 'var(--text-secondary, var(--text-dim, #b3a79f))' }}>vs</span>
             <NationBadge nation={nationBInfo} total={totalB} />
           </div>
           <p style={{ ...dim, fontSize: 12, margin: 0 }}>
@@ -495,16 +495,18 @@ function NationBadge ({ nation, total }: { nation?: Nation, total: number }) {
   )
 }
 
-const page: React.CSSProperties = { minHeight: '100dvh', padding: '24px 16px' }
+const page: React.CSSProperties = { minHeight: '100dvh', padding: '24px 16px', background: 'var(--bg-base, var(--bg))', color: 'var(--text-primary, var(--text))' }
 const container: React.CSSProperties = { width: '100%', maxWidth: 460, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }
-const h2: React.CSSProperties = { margin: 0, fontSize: 22 }
-const dim: React.CSSProperties = { margin: 0, color: 'var(--text-dim, #b3a79f)', fontSize: 14, lineHeight: 1.5 }
+const h2: React.CSSProperties = { margin: 0, fontSize: 22, color: 'var(--text-primary, var(--text))' }
+const dim: React.CSSProperties = { margin: 0, color: 'var(--text-secondary, var(--text-dim, #b3a79f))', fontSize: 14, lineHeight: 1.5 }
 const field: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6 }
-const label: React.CSSProperties = { fontSize: 13, color: 'var(--text-dim, #b3a79f)' }
+const label: React.CSSProperties = { fontSize: 13, color: 'var(--text-secondary, var(--text-dim, #b3a79f))' }
 const matchRow: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }
-const errorStyle: React.CSSProperties = { margin: 0, color: '#ef4444', fontSize: 13 }
-const tipRow: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '8px 0', borderBottom: '1px solid var(--border, #332c28)' }
+const errorStyle: React.CSSProperties = { margin: 0, color: 'var(--color-error, #ef4444)', fontSize: 13 }
+const tipRow: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '8px 0', borderBottom: '1px solid var(--border-default, var(--border, #332c28))', color: 'var(--text-primary, var(--text))' }
 const selectStyle: React.CSSProperties = {
-  padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border, #332c28)',
-  background: 'var(--surface-2, #241f1c)', color: 'var(--text, #f7eee8)', fontSize: 14
+  padding: '10px 12px', borderRadius: 8,
+  border: '1px solid var(--border-default, var(--border, #332c28))',
+  background: 'var(--bg-elevated-2, var(--surface-2, #241f1c))',
+  color: 'var(--text-primary, var(--text, #f7eee8))', fontSize: 14
 }
