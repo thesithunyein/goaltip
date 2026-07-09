@@ -5,7 +5,7 @@
 # GoalTip
 
 **Self-custodial USDT tipping for football watch parties.**
-Fans back a nation, tip live in USDt, and watch the pool grow — while their keys never leave the browser.
+Fans back a nation, tip live in USDt, and watch a **shared** pool grow — while their keys never leave the browser.
 
 [**Live demo**](https://goaltip-web.vercel.app) · [**Demo video**](https://youtu.be/2p8f8a_Tj0w) · [Architecture](#architecture) · [Quick start](#quick-start)
 
@@ -21,23 +21,24 @@ Built with [Tether WDK](https://wdk.tether.io) for the [Tether Developers Cup](h
 
 Every match night, fans in group chats say *"loser buys drinks"* — and then nobody settles up. GoalTip makes that moment real:
 
-- **Create a watch party** for tonight's match (any two nations)
-- **Tip your nation** in USDt — 1, 5, 10, or any amount
-- **Watch the pool** update live, with every tip verifiable on-chain
+- **Create a shared watch party** for tonight's match (any two nations)
+- **Invite friends** with a room code or link — every device sees the same tip board
+- **Tip your nation** in USDt — 1, 5, 10, or any amount — signed locally with WDK
+- **Verify on-chain** — every tip links to Sepolia Etherscan
 - **Stay self-custodial** — GoalTip never touches your keys. Ever.
 
-No signup, no server-side accounts, no custodian. Your wallet is generated in your browser, encrypted with your password, and signs everything locally.
+No signup, no custodian. Your wallet is generated in your browser, encrypted with your password, and signs everything locally. The shared board only stores tip *metadata* (nation, amount, tx hash) — never keys.
 
 ## Highlights
 
 | | |
 |---|---|
-| ⚽ **Football-native** | Nation-vs-nation tipping pools built around the watch-party moment |
-| 🔐 **True self-custody** | BIP-39/BIP-44 wallet lives in a Web Worker; private keys never reach the DOM, the network, or any server |
-| 💸 **Real on-chain USDt** | ERC-20 transfers on Sepolia testnet — every tip links to Etherscan |
-| 🧠 **Local AI coach** | Optional QVAC-powered match analyst running 100% on-device (LLAMA 3.2 1B), no cloud, no API keys |
-| 📱 **Installable PWA** | Works on mobile, installs to the home screen, dark theme |
-| 🌍 **Portable keys** | Standard recovery phrase — restore the same wallet in any BIP-44 wallet app |
+| Football-native | Nation-vs-nation tipping pools built around the watch-party moment |
+| True self-custody | BIP-39/BIP-44 wallet lives in a Web Worker; private keys never reach the DOM or any server |
+| Shared rooms | Create / join by code; invite link `?room=CODE`; live tip board sync across devices |
+| Real on-chain USDt | ERC-20 transfers on Sepolia — every tip links to Etherscan |
+| Local AI coach | Optional QVAC-powered match analyst (LLAMA 3.2 1B), on-device, no cloud |
+| Installable PWA | Works on mobile, installs to the home screen |
 
 ## Quick start
 
@@ -50,119 +51,132 @@ pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:3000` — create a wallet, open the **Party** tab, and start tipping.
+Open `http://localhost:3000` — create a wallet, open the **Party** tab, create or join a room, and tip.
 
-Or skip setup entirely: **https://goaltip-web.vercel.app**
+Or skip setup: **https://goaltip-web.vercel.app**
+
+### Shared rooms on Vercel (recommended)
+
+For multi-device demos that survive serverless cold starts, add free [Upstash Redis](https://upstash.com) credentials in the Vercel project (Root Directory `apps/web`):
+
+```
+UPSTASH_REDIS_REST_URL=...
+UPSTASH_REDIS_REST_TOKEN=...
+```
+
+See [apps/web/.env.example](./apps/web/.env.example). Without Redis, rooms use in-memory storage (fine for local `pnpm dev`; on Vercel, prefer Upstash).
 
 ## Try the full flow in 3 minutes
 
-1. **Create a wallet** — recovery phrase is generated inside a Web Worker, verified, then encrypted with your password
-2. **Start a watch party** — pick two nations (e.g. Myanmar 🇲🇲 vs Brazil 🇧🇷); a room code and tipping pool are created
-3. **Fund your wallet** (free testnet tokens, ~1 minute):
+1. **Create a wallet** — recovery phrase is generated inside a Web Worker
+2. **Create a shared room** — pick nations (e.g. Myanmar vs Brazil), copy the invite link
+3. **Join on a second device** — open the link or enter the room code
+4. **Fund your wallet** (free testnet tokens):
    - Gas: [Alchemy Sepolia ETH faucet](https://www.alchemy.com/faucets/ethereum-sepolia)
-   - USDt: [Aave faucet](https://app.aave.com/faucet/) — enable **Testnet Mode** (gear icon), pick the Sepolia market, mint USDT
-4. **Tip your nation** — 1 / 5 / 10 USDt presets or a custom amount
-5. **Verify on-chain** — every tip shows an `explorer ↗` link to [Sepolia Etherscan](https://sepolia.etherscan.io)
-6. **Optional:** run the local QVAC coach (below) and ask for a match read — all inference on your machine
+   - USDt: [Aave faucet](https://app.aave.com/faucet/) — enable **Testnet Mode**, Sepolia market, mint USDT
+5. **Tip from both devices** — boards update for everyone; open `explorer` links
+6. **Optional:** run the local QVAC coach (below)
 
-The test USDt contract is [`0xaA8E…33D0`](https://sepolia.etherscan.io/address/0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0) (6 decimals, mintable via the Aave faucet).
+The test USDt contract is [`0xaA8E…33D0`](https://sepolia.etherscan.io/address/0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0) (6 decimals).
+
+Demo script for recording: [docs/DEMO_SCRIPT.md](./docs/DEMO_SCRIPT.md)
 
 ## Architecture
 
-The security boundary is the Web Worker. The UI thread renders screens and requests actions; the worker owns the seed, derives keys, and signs. Nothing sensitive crosses back.
+The security boundary is the Web Worker. The UI requests actions; the worker owns the seed, derives keys, and signs. Shared rooms sync tip metadata only.
 
 ```mermaid
 flowchart TB
-    subgraph Browser["Browser (Next.js app, static — hosted on Vercel)"]
-        UI["UI thread<br/>Party · Wallet · Coach · Activity · Settings"]
-        subgraph Worker["Web Worker — WDK worklet (security boundary)"]
-            Vault["Encrypted vault<br/>(AES-GCM, password-derived key)"]
-            Keys["BIP-39 seed + BIP-44 derivation"]
-            Signer["Transaction signing"]
+    subgraph Browser["Browser (Next.js on Vercel)"]
+        UI["UI: Party · Wallet · Coach · Activity · Settings"]
+        subgraph Worker["Web Worker — WDK worklet"]
+            Vault["Encrypted vault"]
+            Keys["BIP-39 / BIP-44"]
+            Signer["Signing"]
         end
-        Store["localStorage<br/>party rooms + ciphertext only"]
+        Cache["localStorage cache"]
     end
 
+    API["API /api/party<br/>tip metadata only"]
+    Redis["Upstash Redis optional"]
     RPC["Sepolia public RPC"]
-    Chain["Ethereum Sepolia<br/>USDt ERC-20 transfers"]
-    QVAC["Optional: local QVAC server<br/>LLAMA 3.2 1B — on-device inference"]
+    Chain["USDt ERC-20 transfers"]
+    QVAC["Optional local QVAC<br/>LLAMA 3.2 1B"]
 
-    UI -- "RPC calls (Comlink)" --> Worker
-    Worker -- "signed tx only" --> RPC
+    UI -- "Comlink" --> Worker
+    Worker -- "signed tx" --> RPC
     RPC --> Chain
+    UI -- "create / join / tips" --> API
+    API --> Redis
+    UI --- Cache
     UI -- "localhost only" --> QVAC
-    UI --- Store
 ```
 
 Key properties:
 
-- **Keys never leave the worker.** The UI receives addresses and signed transactions — never the seed or private keys.
-- **The server holds nothing.** Vercel serves static assets; there is no backend, no database, no session. Wiping localStorage + your password = only you can restore, via your recovery phrase.
-- **Tips are plain ERC-20 transfers** to the party pool address, encoded client-side (`transfer(address,uint256)`) and signed in the worker.
-- **The AI coach is local-first.** The QVAC SDK runs the model on your device; the web app talks to `localhost` only. No cloud AI, no API keys, no data leaves the machine.
-
-More depth: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) · [docs/INTEGRATION.md](./docs/INTEGRATION.md)
+- **Keys never leave the worker.** The UI receives addresses and signed txs only.
+- **Shared board is metadata-only.** Room code, nations, pool address, tip amounts + tx hashes. No private keys, no seed, no passwords.
+- **Tips are ERC-20 transfers** to the party pool address, encoded client-side and signed in the worker.
+- **QVAC is local-first.** The live site correctly shows the coach offline; run `npm run coach` on your machine for on-device answers.
 
 ## Project structure
 
 ```
 goaltip/
-├── apps/web/                  # Next.js app (deployed to Vercel)
+├── apps/web/
 │   └── src/
+│       ├── app/api/party/     # Shared room create / get / tip sync
 │       ├── components/        # Watch party, coach, wallet UI
-│       ├── wallet/            # Chain catalog, tokens, ERC-20 encoding, worker client
-│       └── app/               # App router, PWA manifest, layout
-├── packages/
-│   ├── wdk-web-core/          # WDK worklet: vault, derivation, signing, RPC
-│   └── wdk-ui/                # Reusable wallet UI kit (themes, brand, components)
-├── coach/server.mjs           # Optional local QVAC inference server
-└── docs/                      # Architecture, setup, integration notes
+│       ├── lib/               # party-store, party-server, nations
+│       └── wallet/            # Chains, tokens, ERC-20, worker client
+├── packages/wdk-web-core/     # WDK worklet
+├── packages/wdk-ui/           # UI kit
+├── coach/server.mjs           # Optional QVAC server
+└── docs/                      # Architecture + demo script
 ```
 
 ## Optional: local AI coach (QVAC)
 
-The Coach tab talks to a small local server that runs LLAMA 3.2 1B **on your device** through the QVAC SDK — no cloud, no API keys.
-
 ```bash
-npx @qvac/sdk doctor     # check your machine can run local inference
-pnpm add @qvac/sdk       # optional dependency, not required for the wallet
-npm run coach            # starts the local inference server
-pnpm dev                 # coach tab now shows "online"
+npx @qvac/sdk doctor
+pnpm add @qvac/sdk
+npm run coach
+pnpm dev
 ```
 
-Model: `LLAMA_3_2_1B_INST_Q4_0`. The deployed site correctly reports the coach as offline — by design, it only ever connects to `localhost`.
+Model: `LLAMA_3_2_1B_INST_Q4_0`. Coach tab shows an Online/Offline badge and setup steps when offline.
 
 ## Testing & CI
 
 ```bash
-pnpm -F @wdk-starter/web typecheck   # strict TypeScript
-pnpm -F @wdk-starter/web test        # vitest — chain catalog, ERC-20 encoding, amount parsing, bridge
-pnpm build                           # full production build
+pnpm -F @wdk-starter/web typecheck
+pnpm -F @wdk-starter/web test
+pnpm build
 ```
-
-GitHub Actions runs build + tests on every push.
 
 ## Deploy your own
 
-1. Fork and import the repo in [Vercel](https://vercel.com)
+1. Import the repo in [Vercel](https://vercel.com)
 2. Set **Root Directory** to `apps/web`
-3. Deploy — `apps/web/vercel.json` carries the build/install commands
+3. Add Upstash env vars (recommended)
+4. Deploy (`apps/web/vercel.json` has install/build commands)
 
 ## External services & credits
 
-- **Tether WDK** — wallet worklet: custody, derivation, signing
-- **Tether QVAC SDK** (optional) — local AI inference
-- **Sepolia public RPC** — chain access (no key material ever sent)
+- **Tether WDK** — custody, derivation, signing
+- **Tether QVAC SDK** (optional) — local AI
+- **Sepolia public RPC** — broadcast (no key material)
 - **Aave v3 Sepolia test USDT** — mintable demo token
-- **Vercel** — static hosting only
-- Built on the open-source `wdk-wallet-template`; all GoalTip features (watch party, tipping pools, nations, coach, branding) were built during the event
+- **Upstash Redis** (optional) — shared room persistence
+- **Vercel** — hosting + API routes
+- Built on `wdk-wallet-template` (MIT); GoalTip features built during the Tether Developers Cup
 
 ## Roadmap
 
-- **Group pools with claim logic** — winner-nation fans split the pool via a smart contract
-- **P2P party sync** — replace localStorage rooms with Hyperswarm (Pears stack) so friends see one live pool
-- **Match data feeds** — auto-create parties from real fixtures
-- **Mainnet USDt on Plasma** — one config flip away (`DEFAULT_CHAIN_ID`)
+- **P2P party sync** via Hyperswarm (Pears) so rooms need no central store
+- **Smart-contract pool** with winner-nation claim logic
+- **Match data feeds** from real fixtures
+- **Mainnet USDt on Plasma** — one `DEFAULT_CHAIN_ID` flip away
 
 ## License
 
@@ -171,5 +185,5 @@ MIT — see [LICENSE](./LICENSE).
 ---
 
 <div align="center">
-<sub>⚽ Built in Myanmar 🇲🇲 for the Tether Developers Cup 2026</sub>
+<sub>Built in Myanmar for the Tether Developers Cup 2026</sub>
 </div>

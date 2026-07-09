@@ -1,0 +1,34 @@
+import { NextResponse } from 'next/server'
+import { createSharedParty } from '@/lib/party-server'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+export async function POST (req: Request): Promise<Response> {
+  try {
+    const body = await req.json() as {
+      nationA?: string
+      nationB?: string
+      poolAddress?: string
+    }
+    const nationA = body.nationA?.trim()
+    const nationB = body.nationB?.trim()
+    const poolAddress = body.poolAddress?.trim()
+    if (!nationA || !nationB || !poolAddress) {
+      return NextResponse.json({ error: 'nationA, nationB, and poolAddress are required' }, { status: 400 })
+    }
+    if (!/^0x[a-fA-F0-9]{40}$/.test(poolAddress)) {
+      return NextResponse.json({ error: 'Invalid poolAddress' }, { status: 400 })
+    }
+    if (nationA === nationB) {
+      return NextResponse.json({ error: 'Nations must differ' }, { status: 400 })
+    }
+    const party = await createSharedParty({ nationA, nationB, poolAddress })
+    return NextResponse.json(party)
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : 'Create failed' },
+      { status: 500 }
+    )
+  }
+}

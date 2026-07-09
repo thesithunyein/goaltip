@@ -4,13 +4,13 @@
 GoalTip
 
 ## Tagline
-Self-custodial USDT fan tipping for football watch parties — your keys, your tips, no custodian.
+Self-custodial USDT fan tipping for football watch parties. Shared rooms, on-chain tips, keys stay in your browser.
 
 ## Track
 WDK : Wallets (with optional QVAC local AI coach module)
 
 ## Description
-GoalTip lets football fans tip USDt for their nation during watch parties without giving up custody of their keys. Built with Tether WDK in a Web Worker — all signing happens client-side. Watch party rooms track nation-vs-nation tipping pools on Sepolia testnet. Optional local AI coach (QVAC SDK, on-device LLM) suggests which nation to tip with zero cloud AI.
+GoalTip lets football fans tip USDt for their nation during watch parties without giving up custody of their keys. Built with Tether WDK in a Web Worker — BIP-39 generation, BIP-44 derivation, and transaction signing all happen client-side. Fans create a shared watch party room, invite friends by code or link, and tip 1/5/10 USDt or a custom amount. Every tip is a real ERC-20 transfer on Sepolia testnet with an Etherscan link. Tip boards sync across devices (metadata only — never keys). Optional local AI coach via QVAC SDK (LLAMA 3.2 1B, on-device, no cloud). Live demo works on mobile as an installable PWA.
 
 ## GitHub
 https://github.com/thesithunyein/goaltip
@@ -22,26 +22,30 @@ https://youtu.be/2p8f8a_Tj0w
 https://goaltip-web.vercel.app
 
 ## Earlier work
-Forked and extended [wdk-wallet-template](https://github.com/plinkdev1/wdk-wallet-template) (MIT). All GoalTip-specific features (watch party, football UI, QVAC coach) built during the Tether Developers Cup.
+Forked and extended [wdk-wallet-template](https://github.com/plinkdev1/wdk-wallet-template) (MIT). All GoalTip-specific features (shared watch parties, football UI, QVAC coach, Sepolia tipping) built during the Tether Developers Cup.
 
 ## External services
 - Sepolia RPC (public)
-- Vercel (static/SSR hosting — no keys on server)
+- Vercel (hosting + party API routes — tip metadata only, no keys)
+- Upstash Redis (optional shared room persistence)
 - CoinGecko (optional USD pricing)
 - YouTube (demo video hosting)
 
 ## Judge quickstart
 ```bash
 pnpm install && pnpm dev
-# Open http://localhost:3000 → Party tab
+# Open http://localhost:3000 → Party tab → Create shared room
+# Second browser: Join with room code or ?room=CODE
 ```
 
-Faucets: Sepolia ETH + mock USDt (links in README.md).
+Faucets: Sepolia ETH + Aave test USDT (links in README.md).
+Optional shared rooms on Vercel: set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`.
 
-## Demo video script (2:50)
-1. Hook: fan tipping without custodians
-2. Create wallet, show keys stay local
-3. Watch party: Myanmar vs Brazil, tip 1 USDt
-4. Leaderboard + explorer link
-5. WDK Web Worker architecture in README
-6. Optional: local QVAC coach (`npm run coach`)
+## New demo script (90s)
+See [docs/DEMO_SCRIPT.md](./docs/DEMO_SCRIPT.md) — two devices, shared board, explorer proof, optional QVAC clip.
+
+## Resubmit checklist (before July 15)
+1. Add Upstash env vars on Vercel (so shared rooms work in production)
+2. Record new 90s video with two devices joining the same room
+3. Paste new YouTube URL here and in DoraHacks Manage Submission
+4. Keep track as WDK : Wallets (add QVAC only if the video shows a live local coach answer)

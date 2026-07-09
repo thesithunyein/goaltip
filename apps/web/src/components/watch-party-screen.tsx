@@ -9,36 +9,161 @@ import { getWalletApi } from '@/wallet/wallet-client'
 import { tokensFor } from '@/wallet/tokens'
 import { NATIONS, getNation } from '@/lib/nations'
 import {
-  clearParty, createParty, getParty, recordTip, updateParty, nationTotals, type WatchParty
+  apiAppendTip,
+  apiCreateParty,
+  apiGetParty,
+  clearParty,
+  getParty,
+  inviteUrl,
+  nationTotals,
+  normalizeRoomCode,
+  setPartyCache,
+  type WatchParty
 } from '@/lib/party-store'
 import { BrandHeader } from './brand-header'
 import { Screen } from './screen'
 
 const CHAIN_ID = 'sepolia-testnet'
 const TIP_PRESETS = ['1', '5', '10'] as const
+const POLL_MS = 4000
 
 export function WatchPartyScreen (): React.JSX.Element {
   const { address, accountIndex, phase } = useWallet()
   const [party, setParty] = useState<WatchParty | null>(null)
   const [nationA, setNationA] = useState('mm')
   const [nationB, setNationB] = useState('br')
+  const [joinCode, setJoinCode] = useState('')
   const [busy, setBusy] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [customAmount, setCustomAmount] = useState('1')
   const [selectedNation, setSelectedNation] = useState<string | null>(null)
-
-  useEffect(() => {
-    setParty(getParty())
-  }, [])
+  const [copied, setCopied] = useState(false)
+  const [mode, setMode] = useState<'create' | 'join'>('create')
 
   const usdt = tokensFor(CHAIN_ID).find((t) => t.symbol === 'USDt')
 
-  const startParty = useCallback(() => {
-    if (!address) return
-    const p = createParty({ nationA, nationB, poolAddress: address })
+  const applyParty = useCallback((p: WatchParty) => {
+    setPartyCache(p)
     setParty(p)
+  }, [])
+
+  // Hydrate from local cache, then ?room=CODE, then refresh from API.
+  useEffect(() => {
+    const cached = getParty()
+    if (cached) setParty(cached)
+
+    const params = new URLSearchParams(window.location.search)
+    const room = params.get('room')
+    if (room) {
+      setMode('join')
+      setJoinCode(normalizeRoomCode(room))
+      void (async () => {
+        try {
+          const remote = await apiGetParty(room)
+          if (remote) applyParty(remote)
+        } catch {
+          /* keep cache / show join form */
+        }
+      })()
+    } else if (cached) {
+      void (async () => {
+        try {
+          const remote = await apiGetParty(cached.code)
+          if (remote) applyParty(remote)
+        } catch {
+          /* offline / memory cold start — keep local cache */
+        }
+      })()
+    }
+  }, [applyParty])
+
+  // Live poll while a party is open.
+  useEffect(() => {
+    if (!party?.code) return
+    let cancelled = false
+    const tick = async () => {
+      try {
+        const remote = await apiGetParty(party.code)
+        if (!cancelled && remote) applyParty(remote)
+      } catch {
+        /* ignore transient poll errors */
+      }
+    }
+    const id = window.setInterval(() => { void tick() }, POLL_MS)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [party?.code, applyParty])
+
+  const startParty = useCallback(async () => {
+    if (!address) return
+    setBusy(true)
     setError(null)
-  }, [address, nationA, nationB])
+    try {
+      const p = await apiCreateParty({ nationA, nationB, poolAddress: address })
+      applyParty(p)
+      const url = new URL(window.location.href)
+      url.searchParams.set('room', p.code)
+      window.history.replaceState({}, '', url.toString())
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not create party.')
+    } finally {
+      setBusy(false)
+    }
+  }, [address, nationA, nationB, applyParty])
+
+  const joinParty = useCallback(async () => {
+    const code = normalizeRoomCode(joinCode)
+    if (!code) {
+      setError('Enter a room code.')
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      const remote = await apiGetParty(code)
+      if (!remote) {
+        setError('Room not found. Check the code and try again.')
+        return
+      }
+      applyParty(remote)
+      const url = new URL(window.location.href)
+      url.searchParams.set('room', remote.code)
+      window.history.replaceState({}, '', url.toString())
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not join party.')
+    } finally {
+      setBusy(false)
+    }
+  }, [joinCode, applyParty])
+
+  const copyInvite = useCallback(async () => {
+    if (!party) return
+    try {
+      await navigator.clipboard.writeText(inviteUrl(party.code))
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setError('Could not copy invite link.')
+    }
+  }, [party])
+
+  const refreshParty = useCallback(async () => {
+    if (!party) return
+    setSyncing(true)
+    setError(null)
+    try {
+      const remote = await apiGetParty(party.code)
+      if (remote) applyParty(remote)
+      else setError('Room not found on server (may have expired).')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Refresh failed.')
+    } finally {
+      setSyncing(false)
+    }
+  }, [party, applyParty])
 
   const tipNation = useCallback(async (nationId: string, amountStr: string) => {
     if (!party || !usdt || phase !== 'unlocked' || !address) return
@@ -48,8 +173,6 @@ export function WatchPartyScreen (): React.JSX.Element {
     try {
       const amountBase = parseAmount(amountStr, usdt.decimals)
       const api = getWalletApi()
-      // Pre-check the USDt balance so an unfunded wallet gets a friendly
-      // faucet hint instead of a low-level provider/broadcast error.
       let usdtBalance: bigint | null = null
       try {
         usdtBalance = BigInt(await api.rpc_getTokenBalance(CHAIN_ID as never, address, usdt.address))
@@ -63,21 +186,32 @@ export function WatchPartyScreen (): React.JSX.Element {
         accountIndex,
         { to: usdt.address, value: 0n, data: encodeErc20Transfer(party.poolAddress, amountBase) }
       )
-      const updated = recordTip({
+      const tip = {
         nationId,
         amount: amountStr,
-        symbol: 'USDt',
+        symbol: 'USDt' as const,
         hash: hash as string,
         ts: Date.now()
+      }
+      // Optimistic local update, then sync to shared board.
+      const local = setPartyCache({
+        ...party,
+        tips: [tip, ...party.tips.filter((t) => t.hash.toLowerCase() !== tip.hash.toLowerCase())]
       })
-      if (updated) setParty(updated)
+      setParty(local)
+      try {
+        const synced = await apiAppendTip(party.code, tip)
+        applyParty(synced)
+      } catch {
+        setError('Tip sent on-chain, but shared board sync failed. Tap Refresh pool.')
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Tip failed.')
     } finally {
       setBusy(false)
       setSelectedNation(null)
     }
-  }, [party, usdt, phase, accountIndex, address])
+  }, [party, usdt, phase, accountIndex, address, applyParty])
 
   if (phase !== 'unlocked') {
     return (
@@ -93,22 +227,72 @@ export function WatchPartyScreen (): React.JSX.Element {
         <div style={container}>
           <BrandHeader />
           <Card padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <h2 style={h2}>Start a watch party</h2>
-            <p style={dim}>
-              Pick tonight&apos;s match, create a tipping pool, and rally fans for your nation.
-              Tips are self-custodial USDT on Sepolia testnet via WDK.
-            </p>
-            <label style={field}>
-              <span style={label}>Home nation</span>
-              <NationSelect value={nationA} onChange={setNationA} exclude={nationB} />
-            </label>
-            <label style={field}>
-              <span style={label}>Away nation</span>
-              <NationSelect value={nationB} onChange={setNationB} exclude={nationA} />
-            </label>
-            <Button onClick={startParty} disabled={!address || nationA === nationB} style={{ width: '100%' }}>
-              Create watch party
-            </Button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button
+                variant={mode === 'create' ? 'primary' : 'outline'}
+                onClick={() => { setMode('create'); setError(null) }}
+                style={{ flex: 1 }}
+              >
+                Create
+              </Button>
+              <Button
+                variant={mode === 'join' ? 'primary' : 'outline'}
+                onClick={() => { setMode('join'); setError(null) }}
+                style={{ flex: 1 }}
+              >
+                Join
+              </Button>
+            </div>
+
+            {mode === 'create' ? (
+              <>
+                <h2 style={h2}>Start a watch party</h2>
+                <p style={dim}>
+                  Pick tonight&apos;s match, create a shared tipping room, and send friends the invite link.
+                  Tips are self-custodial USDT on Sepolia via WDK — every device sees the same board.
+                </p>
+                <label style={field}>
+                  <span style={label}>Home nation</span>
+                  <NationSelect value={nationA} onChange={setNationA} exclude={nationB} />
+                </label>
+                <label style={field}>
+                  <span style={label}>Away nation</span>
+                  <NationSelect value={nationB} onChange={setNationB} exclude={nationA} />
+                </label>
+                <Button
+                  onClick={() => void startParty()}
+                  disabled={!address || nationA === nationB || busy}
+                  style={{ width: '100%' }}
+                >
+                  {busy ? 'Creating…' : 'Create shared room'}
+                </Button>
+              </>
+            ) : (
+              <>
+                <h2 style={h2}>Join a watch party</h2>
+                <p style={dim}>
+                  Enter the room code from a friend&apos;s invite. You tip from your own self-custodial wallet;
+                  the shared board updates for everyone.
+                </p>
+                <label style={field}>
+                  <span style={label}>Room code</span>
+                  <Input
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. 9UFZ1Y"
+                    style={{ textTransform: 'uppercase', letterSpacing: 2 }}
+                  />
+                </label>
+                <Button
+                  onClick={() => void joinParty()}
+                  disabled={busy || normalizeRoomCode(joinCode).length < 4}
+                  style={{ width: '100%' }}
+                >
+                  {busy ? 'Joining…' : 'Join room'}
+                </Button>
+              </>
+            )}
+            {error && <p style={errorStyle}>{error}</p>}
           </Card>
         </div>
       </main>
@@ -130,12 +314,13 @@ export function WatchPartyScreen (): React.JSX.Element {
           <h1 style={{ margin: 0, fontSize: 28, letterSpacing: -0.5 }}>GoalTip</h1>
           <p style={dim}>
             Self-custodial USDt tipping for football watch parties. WDK keeps signing inside the browser worklet.
+            Shared rooms sync tip boards across devices.
           </p>
         </Card>
         <Card padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
             <span style={dim}>Room {party.code}</span>
-            <span style={{ fontSize: 12, color: 'var(--wdk-orange, #f4642f)' }}>Sepolia testnet</span>
+            <span style={{ fontSize: 12, color: 'var(--wdk-orange, #f4642f)' }}>Shared · Sepolia</span>
           </div>
           <div style={matchRow}>
             <NationBadge nation={nationAInfo} total={totalA} />
@@ -145,6 +330,9 @@ export function WatchPartyScreen (): React.JSX.Element {
           <p style={{ ...dim, fontSize: 12, margin: 0 }}>
             Pool: {party.poolAddress.slice(0, 8)}…{party.poolAddress.slice(-6)}
           </p>
+          <Button variant="secondary" onClick={() => void copyInvite()} style={{ width: '100%' }}>
+            {copied ? 'Copied invite link' : 'Copy invite link'}
+          </Button>
         </Card>
 
         <Card padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -201,7 +389,7 @@ export function WatchPartyScreen (): React.JSX.Element {
 
         {party.tips.length > 0 && (
           <Card padding="lg">
-            <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>Recent tips</h3>
+            <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>Recent tips (shared)</h3>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {party.tips.slice(0, 8).map((t) => {
                 const n = getNation(t.nationId)
@@ -220,17 +408,17 @@ export function WatchPartyScreen (): React.JSX.Element {
           </Card>
         )}
 
-        <Button variant="outline" onClick={() => {
-          if (address) updateParty({ nationA, nationB, poolAddress: address })
-          setParty(getParty())
-        }} style={{ width: '100%' }}>
-          Refresh pool
+        <Button variant="outline" onClick={() => void refreshParty()} disabled={syncing} style={{ width: '100%' }}>
+          {syncing ? 'Refreshing…' : 'Refresh pool'}
         </Button>
         <Button variant="outline" onClick={() => {
           clearParty()
           setParty(null)
+          const url = new URL(window.location.href)
+          url.searchParams.delete('room')
+          window.history.replaceState({}, '', url.pathname)
         }} style={{ width: '100%' }}>
-          Reset demo room
+          Leave room
         </Button>
       </div>
     </main>

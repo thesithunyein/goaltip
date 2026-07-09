@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Input } from '@wdk-starter/wdk-ui'
 import { getNation, NATIONS } from '@/lib/nations'
 import { Screen } from './screen'
@@ -15,6 +15,7 @@ export function CoachScreen (): React.JSX.Element {
   const [busy, setBusy] = useState(false)
   const [online, setOnline] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [setupOpen, setSetupOpen] = useState(false)
 
   const checkCoach = useCallback(async () => {
     try {
@@ -27,13 +28,18 @@ export function CoachScreen (): React.JSX.Element {
     }
   }, [])
 
+  useEffect(() => {
+    void checkCoach()
+  }, [checkCoach])
+
   const askCoach = useCallback(async () => {
     setBusy(true)
     setError(null)
     setAnswer(null)
-    const up = online ?? await checkCoach()
+    const up = await checkCoach()
     if (!up) {
-      setError('Local QVAC coach is offline. Run: npm run coach')
+      setError('Local QVAC coach is offline. Start it on this machine (setup below), then try again.')
+      setSetupOpen(true)
       setBusy(false)
       return
     }
@@ -54,14 +60,48 @@ export function CoachScreen (): React.JSX.Element {
     } finally {
       setBusy(false)
     }
-  }, [nationA, nationB, question, online, checkCoach])
+  }, [nationA, nationB, question, checkCoach])
+
+  const statusLabel =
+    online === true ? 'Online (local)' :
+    online === false ? 'Offline (expected on Vercel)' :
+    'Checking…'
+
+  const statusColor =
+    online === true ? '#22c55e' :
+    online === false ? '#f59e0b' :
+    'var(--text-dim, #b3a79f)'
 
   return (
     <Screen title="AI Coach">
       <Card padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <p style={dim}>
-          100% local AI via QVAC — no cloud, no API keys. Run the coach server on your machine, then ask who to tip.
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          <p style={{ ...dim, margin: 0, flex: 1 }}>
+            100% local AI via QVAC. No cloud, no API keys. Data never leaves your machine.
+          </p>
+          <span style={{
+            fontSize: 11,
+            fontWeight: 600,
+            padding: '4px 8px',
+            borderRadius: 999,
+            border: `1px solid ${statusColor}`,
+            color: statusColor,
+            whiteSpace: 'nowrap'
+          }}>
+            {statusLabel}
+          </span>
+        </div>
+
+        {online === false && (
+          <div style={offlineBox}>
+            <strong style={{ fontSize: 13 }}>Why offline on the live site?</strong>
+            <p style={{ ...dim, fontSize: 12, margin: '6px 0 0' }}>
+              QVAC runs on your device only. The Vercel deployment correctly cannot reach your localhost.
+              For a live answer, run the coach server on this machine (steps below), then ask again.
+            </p>
+          </div>
+        )}
+
         <div style={{ display: 'flex', gap: 8 }}>
           <select value={nationA} onChange={(e) => setNationA(e.target.value)} style={selectStyle}>
             {NATIONS.map((n) => <option key={n.id} value={n.id}>{n.flag} {n.name}</option>)}
@@ -80,7 +120,7 @@ export function CoachScreen (): React.JSX.Element {
           {busy ? 'Thinking locally…' : 'Ask local coach'}
         </Button>
         <Button variant="outline" onClick={() => void checkCoach()} style={{ width: '100%' }}>
-          Check coach status {online === true ? '✓ online' : online === false ? '✗ offline' : ''}
+          Recheck coach status
         </Button>
         {error && <p style={errorStyle}>{error}</p>}
         {answer && (
@@ -89,11 +129,23 @@ export function CoachScreen (): React.JSX.Element {
             <p style={{ margin: '8px 0 0', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{answer}</p>
           </div>
         )}
-        <details style={{ fontSize: 13, color: 'var(--text-dim)' }}>
-          <summary>Setup local coach</summary>
-          <pre style={codeBlock}>{`npm install
+
+        <details
+          open={setupOpen || online === false}
+          onToggle={(e) => setSetupOpen((e.target as HTMLDetailsElement).open)}
+          style={{ fontSize: 13, color: 'var(--text-dim)' }}
+        >
+          <summary style={{ cursor: 'pointer' }}>How to run the local QVAC coach</summary>
+          <ol style={{ margin: '10px 0 0', paddingLeft: 18, lineHeight: 1.6 }}>
+            <li>In the repo root: <code>pnpm add @qvac/sdk</code></li>
+            <li>Check your machine: <code>npx @qvac/sdk doctor</code></li>
+            <li>Start the server: <code>npm run coach</code></li>
+            <li>Keep this tab open on <code>localhost:3000</code> (or the live site) and tap Recheck</li>
+          </ol>
+          <pre style={codeBlock}>{`pnpm add @qvac/sdk
+npx @qvac/sdk doctor
 npm run coach
-# Requires Node 22+ and QVAC-compatible GPU (4.5GB+ VRAM for 1B model)`}</pre>
+# Model: LLAMA 3.2 1B (on-device). First load may take a few minutes.`}</pre>
         </details>
       </Card>
     </Screen>
@@ -105,6 +157,10 @@ const errorStyle: React.CSSProperties = { margin: 0, color: '#ef4444', fontSize:
 const answerBox: React.CSSProperties = {
   padding: 12, borderRadius: 8, background: 'var(--surface-2, #241f1c)',
   border: '1px solid var(--border, #332c28)', fontSize: 14
+}
+const offlineBox: React.CSSProperties = {
+  padding: 12, borderRadius: 8, background: 'rgba(245, 158, 11, 0.08)',
+  border: '1px solid rgba(245, 158, 11, 0.35)'
 }
 const selectStyle: React.CSSProperties = {
   flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border, #332c28)',
