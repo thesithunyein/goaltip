@@ -9,7 +9,7 @@ import {
 } from '@wdk-starter/wdk-ui'
 
 /** Cache-busted so browser tab + header always pick up the latest mark. */
-export const GOALTIP_MARK_SRC = '/goaltip-mark.svg?v=20260709'
+export const GOALTIP_MARK_SRC = '/goaltip-mark.svg?v=20260709b'
 
 /**
  * The template's out-of-the-box brand. A fork rebrands either by editing this

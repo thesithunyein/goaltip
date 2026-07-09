@@ -7,12 +7,9 @@ export const metadata: Metadata = {
   description: 'Self-custodial USDT fan tipping for football watch parties. Built with Tether WDK for the Developers Cup.',
   applicationName: 'GoalTip',
   icons: {
-    icon: [
-      { url: '/goaltip-mark.svg?v=20260709', type: 'image/svg+xml' },
-      { url: '/goaltip-mark.png', type: 'image/png', sizes: '512x512' }
-    ],
-    shortcut: '/goaltip-mark.svg?v=20260709',
-    apple: '/goaltip-mark.png'
+    icon: [{ url: '/goaltip-mark.svg?v=20260709b', type: 'image/svg+xml' }],
+    shortcut: '/goaltip-mark.svg?v=20260709b',
+    apple: '/goaltip-mark.svg?v=20260709b'
   },
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'GoalTip' }
 }

@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/goaltip-mark.png" alt="GoalTip" width="96" height="96" />
+<img src="docs/goaltip-mark.svg" alt="GoalTip" width="96" height="96" />
 
 # GoalTip
 
@@ -123,8 +123,7 @@ Key properties:
 goaltip/
 ├── apps/web/                          # Next.js app (Vercel)
 │   ├── public/
-│   │   ├── goaltip-mark.svg           # Favicon + in-app mark
-│   │   ├── goaltip-mark.png           # PWA / Apple icon
+│   │   ├── goaltip-mark.svg           # Favicon, PWA, in-app mark
 │   │   └── sw.js                      # Service worker
 │   ├── src/
 │   │   ├── app/
@@ -171,7 +170,7 @@ goaltip/
 ├── coach/
 │   └── server.mjs                     # Optional local QVAC inference
 ├── docs/
-│   ├── goaltip-mark.png
+│   ├── goaltip-mark.svg
 │   ├── screenshot-party.png
 │   ├── DEMO_SCRIPT.md
 │   ├── ARCHITECTURE.md
