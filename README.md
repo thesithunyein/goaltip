@@ -123,17 +123,70 @@ Key properties:
 
 ```
 goaltip/
-├── apps/web/
-│   └── src/
-│       ├── app/api/party/     # Shared room create / get / tip sync
-│       ├── components/        # Watch party, coach, wallet UI
-│       ├── lib/               # party-store, party-server, nations
-│       └── wallet/            # Chains, tokens, ERC-20, worker client
-├── packages/wdk-web-core/     # WDK worklet
-├── packages/wdk-ui/           # UI kit
-├── coach/server.mjs           # Optional QVAC server
-└── docs/                      # Architecture + demo script
+├── apps/web/                          # Next.js app (Vercel)
+│   ├── public/
+│   │   ├── goaltip-mark.svg           # Favicon + in-app mark
+│   │   ├── goaltip-mark.png           # PWA / Apple icon
+│   │   └── sw.js                      # Service worker
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── api/party/             # Shared room API
+│   │   │   │   ├── route.ts           # POST create room
+│   │   │   │   └── [code]/
+│   │   │   │       ├── route.ts       # GET room
+│   │   │   │       └── tips/route.ts  # POST tip metadata
+│   │   │   ├── layout.tsx             # Metadata + icons
+│   │   │   ├── manifest.ts            # PWA manifest
+│   │   │   ├── page.tsx
+│   │   │   └── providers.tsx
+│   │   ├── components/
+│   │   │   ├── watch-party-screen.tsx # Create / join / tip / invite
+│   │   │   ├── coach-screen.tsx       # Optional QVAC coach UI
+│   │   │   ├── wallet-shell.tsx       # Tabs: Party Wallet Coach…
+│   │   │   ├── brand-header.tsx
+│   │   │   ├── nation-flag.tsx        # Flag images (Windows-safe)
+│   │   │   ├── dashboard.tsx
+│   │   │   ├── onboarding-flow.tsx
+│   │   │   └── …
+│   │   ├── lib/
+│   │   │   ├── nations.ts
+│   │   │   ├── party-types.ts
+│   │   │   ├── party-store.ts         # Client cache + API helpers
+│   │   │   └── party-server.ts        # Upstash Redis / memory store
+│   │   └── wallet/
+│   │       ├── chains.ts              # Default: Sepolia
+│   │       ├── tokens.ts              # Sepolia test USDt
+│   │       ├── erc20.ts
+│   │       ├── wallet-client.ts
+│   │       ├── wallet-provider.tsx
+│   │       └── worker.ts
+│   ├── vercel.json
+│   └── .env.example
+├── packages/
+│   ├── wdk-web-core/                  # WDK worklet: vault, derive, sign, RPC
+│   │   └── src/
+│   │       ├── worker/wallet-worker.ts
+│   │       ├── chains/                # ethereum, sepolia, plasma, …
+│   │       ├── vault/
+│   │       └── adapters/
+│   └── wdk-ui/                        # Theme, brand, wallet UI primitives
+├── coach/
+│   └── server.mjs                     # Optional local QVAC inference
+├── docs/
+│   ├── goaltip-mark.png
+│   ├── screenshot-party.png
+│   ├── DEMO_SCRIPT.md
+│   ├── ARCHITECTURE.md
+│   └── …
+├── .github/workflows/                 # CI
+├── SUBMISSION.md                      # DoraHacks copy-paste
+├── README.md
+└── LICENSE                            # MIT
 ```
+
+## Author
+
+Built by [**thesithunyein**](https://github.com/thesithunyein) (Sithu Nyein) for the Tether Developers Cup 2026.
 
 ## Optional: local AI coach (QVAC)
 
@@ -161,7 +214,7 @@ pnpm build
 3. Add Upstash env vars (recommended)
 4. Deploy (`apps/web/vercel.json` has install/build commands)
 
-## External services & credits
+## External services
 
 - **Tether WDK** — custody, derivation, signing
 - **Tether QVAC SDK** (optional) — local AI
@@ -169,7 +222,8 @@ pnpm build
 - **Aave v3 Sepolia test USDT** — mintable demo token
 - **Upstash Redis** (optional) — shared room persistence
 - **Vercel** — hosting + API routes
-- Built on `wdk-wallet-template` (MIT); GoalTip features built during the Tether Developers Cup
+
+Started from the open-source `wdk-wallet-template` (MIT). All GoalTip product work (watch parties, tipping, branding, coach, docs, demo) by [thesithunyein](https://github.com/thesithunyein).
 
 ## Roadmap
 
@@ -185,5 +239,5 @@ MIT — see [LICENSE](./LICENSE).
 ---
 
 <div align="center">
-<sub>Built in Myanmar for the Tether Developers Cup 2026</sub>
+<sub>Built by <a href="https://github.com/thesithunyein">thesithunyein</a> in Myanmar for the Tether Developers Cup 2026</sub>
 </div>
