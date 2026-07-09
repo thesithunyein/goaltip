@@ -268,19 +268,19 @@ export function WatchPartyScreen (): React.JSX.Element {
       <main style={page}>
         <div style={container}>
           <BrandHeader />
-          <Card padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'flex', gap: 8 }}>
               <Button
                 variant={mode === 'create' ? 'primary' : 'outline'}
                 onClick={() => { setMode('create'); setError(null) }}
-                style={{ flex: 1 }}
+                style={{ flex: 1, minHeight: 44 }}
               >
                 Create
               </Button>
               <Button
                 variant={mode === 'join' ? 'primary' : 'outline'}
                 onClick={() => { setMode('join'); setError(null) }}
-                style={{ flex: 1 }}
+                style={{ flex: 1, minHeight: 44 }}
               >
                 Join
               </Button>
@@ -304,7 +304,7 @@ export function WatchPartyScreen (): React.JSX.Element {
                 <Button
                   onClick={() => void startParty()}
                   disabled={!address || nationA === nationB || busy}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', minHeight: 48 }}
                 >
                   {busy ? 'Creating…' : 'Create shared room'}
                 </Button>
@@ -327,7 +327,7 @@ export function WatchPartyScreen (): React.JSX.Element {
                 <Button
                   onClick={() => void joinParty()}
                   disabled={busy || normalizeRoomCode(joinCode).length < 4}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', minHeight: 48 }}
                 >
                   {busy ? 'Joining…' : 'Join room'}
                 </Button>
@@ -351,42 +351,42 @@ export function WatchPartyScreen (): React.JSX.Element {
     <main style={page}>
       <div style={container}>
         <BrandHeader />
-        <Card padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <h1 style={{ margin: 0, fontSize: 28, letterSpacing: -0.5 }}>GoalTip</h1>
+        <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <h1 className="goaltip-party-hero" style={{ margin: 0, fontSize: 28, letterSpacing: -0.5, lineHeight: 1.15 }}>GoalTip</h1>
           <p style={dim}>
             Self-custodial USDt tipping for football watch parties. WDK keeps signing inside the browser worklet.
             Shared rooms sync tip boards across devices.
           </p>
         </Card>
-        <Card padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+        <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <span style={dim}>Room {party.code}</span>
-            <span style={{ fontSize: 12, color: 'var(--wdk-orange, #f4642f)' }}>Shared · Sepolia</span>
+            <span style={{ fontSize: 12, color: 'var(--color-primary, var(--wdk-orange, #f4642f))', whiteSpace: 'nowrap' }}>Shared · Sepolia</span>
           </div>
           <div style={matchRow}>
             <NationBadge nation={nationAInfo} total={totalA} />
-            <span style={{ fontSize: 20, color: 'var(--text-secondary, var(--text-dim, #b3a79f))' }}>vs</span>
+            <span style={{ fontSize: 18, color: 'var(--text-secondary, var(--text-dim, #b3a79f))', flexShrink: 0 }}>vs</span>
             <NationBadge nation={nationBInfo} total={totalB} />
           </div>
-          <p style={{ ...dim, fontSize: 12, margin: 0 }}>
+          <p style={{ ...dim, fontSize: 12, margin: 0, wordBreak: 'break-all' }}>
             Pool: {party.poolAddress.slice(0, 8)}…{party.poolAddress.slice(-6)}
           </p>
-          <Button variant="secondary" onClick={() => void copyInvite()} style={{ width: '100%' }}>
+          <Button variant="secondary" onClick={() => void copyInvite()} style={{ width: '100%', minHeight: 44 }}>
             {copied ? 'Copied invite link' : 'Copy invite link'}
           </Button>
         </Card>
 
-        <Card padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <h3 style={{ margin: 0, fontSize: 16 }}>Tip your nation (USDt)</h3>
           {!usdt && <p style={errorStyle}>USDt is not configured for Sepolia. Open the Wallet tab and use native test ETH send as a fallback demo.</p>}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {[party.nationA, party.nationB].map((id) => {
               const n = getNation(id)
               if (!n) return null
               return (
-                <div key={id} style={{ flex: '1 1 140px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                    <NationFlag nation={n} size={22} /> {n.name}
+                <div key={id} style={{ flex: '1 1 140px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <NationFlag nation={n} size={22} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{n.name}</span>
                   </strong>
                   {TIP_PRESETS.map((amt) => (
                     <Button
@@ -394,7 +394,7 @@ export function WatchPartyScreen (): React.JSX.Element {
                       variant="secondary"
                       disabled={busy || !usdt}
                       onClick={() => void tipNation(id, amt)}
-                      style={{ width: '100%' }}
+                      style={{ width: '100%', minHeight: 44 }}
                     >
                       {busy && selectedNation === id ? '…' : `Tip ${amt} USDt`}
                     </Button>
@@ -403,19 +403,19 @@ export function WatchPartyScreen (): React.JSX.Element {
               )
             })}
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Input value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} placeholder="Custom amount" style={{ flex: '1 1 120px' }} />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'stretch' }}>
+            <Input value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} placeholder="Custom amount" inputMode="decimal" style={{ flex: '1 1 100px', minWidth: 0, minHeight: 44 }} />
             <Button
               disabled={busy || !usdt || customAmount.trim() === ''}
               onClick={() => void tipNation(party.nationA, customAmount)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, flex: '1 1 auto' }}
             >
               <NationFlag nation={nationAInfo} size={16} /> Tip
             </Button>
             <Button
               disabled={busy || !usdt || customAmount.trim() === ''}
               onClick={() => void tipNation(party.nationB, customAmount)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, flex: '1 1 auto' }}
             >
               <NationFlag nation={nationBInfo} size={16} /> Tip
             </Button>
@@ -423,7 +423,7 @@ export function WatchPartyScreen (): React.JSX.Element {
           {error && <p style={errorStyle}>{error}</p>}
         </Card>
 
-        <Card padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <h3 style={{ margin: 0, fontSize: 14 }}>Need test funds? (free, 1 min)</h3>
           <p style={{ ...dim, fontSize: 12 }}>
             1. <a href="https://www.alchemy.com/faucets/ethereum-sepolia" target="_blank" rel="noreferrer">Sepolia ETH faucet</a> — gas for transactions<br />
@@ -433,18 +433,18 @@ export function WatchPartyScreen (): React.JSX.Element {
         </Card>
 
         {party.tips.length > 0 && (
-          <Card padding="lg">
+          <Card padding="md">
             <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>Recent tips (shared)</h3>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {party.tips.slice(0, 8).map((t) => {
                 const n = getNation(t.nationId)
                 return (
                   <li key={t.hash} style={tipRow}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <NationFlag nation={n} size={16} /> {n?.name} · {t.amount} {t.symbol}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
+                      <NationFlag nation={n} size={16} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{n?.name} · {t.amount} {t.symbol}</span>
                     </span>
                     {chain.explorer && (
-                      <a href={`${chain.explorer}/tx/${t.hash}`} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>
+                      <a href={`${chain.explorer}/tx/${t.hash}`} target="_blank" rel="noreferrer" style={{ fontSize: 12, flexShrink: 0, padding: '6px 0 6px 8px' }}>
                         explorer ↗
                       </a>
                     )}
@@ -455,7 +455,7 @@ export function WatchPartyScreen (): React.JSX.Element {
           </Card>
         )}
 
-        <Button variant="outline" onClick={() => void refreshParty()} disabled={syncing} style={{ width: '100%' }}>
+        <Button variant="outline" onClick={() => void refreshParty()} disabled={syncing} style={{ width: '100%', minHeight: 44 }}>
           {syncing ? 'Refreshing…' : 'Refresh pool'}
         </Button>
         <Button variant="outline" onClick={() => {
@@ -464,7 +464,7 @@ export function WatchPartyScreen (): React.JSX.Element {
           const url = new URL(window.location.href)
           url.searchParams.delete('room')
           window.history.replaceState({}, '', url.pathname)
-        }} style={{ width: '100%' }}>
+        }} style={{ width: '100%', minHeight: 44, marginBottom: 8 }}>
           Leave room
         </Button>
       </div>
@@ -485,28 +485,35 @@ function NationSelect ({ value, onChange, exclude }: { value: string, onChange: 
 function NationBadge ({ nation, total }: { nation?: Nation, total: number }) {
   if (!nation) return null
   return (
-    <div style={{ textAlign: 'center', flex: 1 }}>
+    <div style={{ textAlign: 'center', flex: 1, minWidth: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
-        <NationFlag nation={nation} size={40} />
+        <NationFlag nation={nation} size={36} />
       </div>
-      <div style={{ fontWeight: 600 }}>{nation.name}</div>
-      <div style={{ fontSize: 14, color: 'var(--wdk-orange, #f4642f)' }}>{total} USDt</div>
+      <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nation.name}</div>
+      <div style={{ fontSize: 13, color: 'var(--color-primary, var(--wdk-orange, #f4642f))' }}>{total} USDt</div>
     </div>
   )
 }
 
-const page: React.CSSProperties = { minHeight: '100dvh', padding: '24px 16px', background: 'var(--bg-base, var(--bg))', color: 'var(--text-primary, var(--text))' }
-const container: React.CSSProperties = { width: '100%', maxWidth: 460, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }
-const h2: React.CSSProperties = { margin: 0, fontSize: 22, color: 'var(--text-primary, var(--text))' }
+const page: React.CSSProperties = {
+  minHeight: '100%',
+  padding: '16px 12px 24px',
+  background: 'var(--bg-base, var(--bg))',
+  color: 'var(--text-primary, var(--text))'
+}
+const container: React.CSSProperties = { width: '100%', maxWidth: 460, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }
+const h2: React.CSSProperties = { margin: 0, fontSize: 20, color: 'var(--text-primary, var(--text))' }
 const dim: React.CSSProperties = { margin: 0, color: 'var(--text-secondary, var(--text-dim, #b3a79f))', fontSize: 14, lineHeight: 1.5 }
 const field: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6 }
 const label: React.CSSProperties = { fontSize: 13, color: 'var(--text-secondary, var(--text-dim, #b3a79f))' }
-const matchRow: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }
-const errorStyle: React.CSSProperties = { margin: 0, color: 'var(--color-error, #ef4444)', fontSize: 13 }
-const tipRow: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '8px 0', borderBottom: '1px solid var(--border-default, var(--border, #332c28))', color: 'var(--text-primary, var(--text))' }
+const matchRow: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }
+const errorStyle: React.CSSProperties = { margin: 0, color: 'var(--color-error, #ef4444)', fontSize: 13, lineHeight: 1.4 }
+const tipRow: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 13, padding: '10px 0', borderBottom: '1px solid var(--border-default, var(--border, #332c28))', color: 'var(--text-primary, var(--text))' }
 const selectStyle: React.CSSProperties = {
-  padding: '10px 12px', borderRadius: 8,
+  width: '100%',
+  padding: '12px', borderRadius: 8,
   border: '1px solid var(--border-default, var(--border, #332c28))',
   background: 'var(--bg-elevated-2, var(--surface-2, #241f1c))',
-  color: 'var(--text-primary, var(--text, #f7eee8))', fontSize: 14
+  color: 'var(--text-primary, var(--text, #f7eee8))', fontSize: 16,
+  minHeight: 44
 }

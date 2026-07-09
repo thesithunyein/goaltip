@@ -32,8 +32,8 @@ export function WalletShell ({ initialTab = 'party' }: { initialTab?: TabId } = 
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg-base, var(--bg))', color: 'var(--text-primary, var(--text))' }}>
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', overflowY: 'auto' }}>
-        <div style={{ width: '100%', maxWidth: 460 }}>
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ width: '100%', maxWidth: 460, minWidth: 0 }}>
           {tab === 'party' && <WatchPartyScreen />}
           {tab === 'wallet' && <Dashboard />}
           {tab === 'coach' && <CoachScreen />}
@@ -41,7 +41,9 @@ export function WalletShell ({ initialTab = 'party' }: { initialTab?: TabId } = 
           {tab === 'settings' && <SettingsTab />}
         </div>
       </div>
-      <TabBar tabs={TABS} active={tab} onChange={(id) => setTab(id as TabId)} aria-label="GoalTip" />
+      <div className="goaltip-tabbar">
+        <TabBar tabs={TABS} active={tab} onChange={(id) => setTab(id as TabId)} aria-label="GoalTip" />
+      </div>
       {appearanceOpen && <AppearanceDialog />}
     </div>
   )

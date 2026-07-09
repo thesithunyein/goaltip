@@ -166,10 +166,10 @@ const offlineBox: React.CSSProperties = {
   border: '1px solid color-mix(in srgb, var(--color-warning, #f59e0b) 40%, transparent)'
 }
 const selectStyle: React.CSSProperties = {
-  flex: 1, padding: '8px 10px', borderRadius: 8,
+  flex: 1, padding: '12px 10px', borderRadius: 8, minHeight: 44, minWidth: 0,
   border: '1px solid var(--border-default, var(--border, #332c28))',
   background: 'var(--bg-elevated-2, var(--surface-2, #241f1c))',
-  color: 'var(--text-primary, var(--text, #f7eee8))', fontSize: 13
+  color: 'var(--text-primary, var(--text, #f7eee8))', fontSize: 16
 }
 const codeBlock: React.CSSProperties = {
   margin: '8px 0 0', padding: 12, borderRadius: 8,

@@ -25,6 +25,8 @@ html,
 body {
   margin: 0;
   padding: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -32,7 +34,10 @@ body {
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
   transition: background-color 0.2s ease, color 0.2s ease;
+  /* iOS notch / home indicator */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
 }
 
 a {
@@ -44,4 +49,23 @@ select,
 input,
 textarea {
   color-scheme: light dark;
+  font-size: 16px; /* prevents iOS zoom-on-focus */
+  max-width: 100%;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Sticky bottom nav clears the home indicator */
+.goaltip-tabbar {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--bg-elevated-1, var(--surface, #1a1614));
+}
+
+@media (max-width: 420px) {
+  .goaltip-party-hero {
+    font-size: 22px !important;
+  }
 }
