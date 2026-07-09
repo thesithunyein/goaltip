@@ -79,8 +79,6 @@ See [apps/web/.env.example](./apps/web/.env.example). Without Redis, rooms use i
 
 The test USDt contract is [`0xaA8E…33D0`](https://sepolia.etherscan.io/address/0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0) (6 decimals).
 
-Demo script for recording: [docs/DEMO_SCRIPT.md](./docs/DEMO_SCRIPT.md)
-
 ## Architecture
 
 The security boundary is the Web Worker. The UI requests actions; the worker owns the seed, derives keys, and signs. Shared rooms sync tip metadata only.
