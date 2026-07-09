@@ -7,7 +7,7 @@
 **Self-custodial USDT tipping for football watch parties.**
 Fans back a nation, tip live in USDt, and watch a **shared** pool grow — while their keys never leave the browser.
 
-[**Live demo**](https://goaltip-web.vercel.app) · [**Demo video**](https://youtu.be/2p8f8a_Tj0w) · [Architecture](#architecture) · [Quick start](#quick-start)
+[**Live demo**](https://goaltip-web.vercel.app) · [**Demo video**](https://youtu.be/u8otedpp1mI) · [Architecture](#architecture) · [Quick start](#quick-start)
 
 Built with [Tether WDK](https://wdk.tether.io) for the [Tether Developers Cup](https://dorahacks.io/hackathon/tether-developers-cup) — **WDK : Wallets** track, with an optional [QVAC](https://qvac.tether.io) local-AI coach.
 
