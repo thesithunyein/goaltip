@@ -8,7 +8,17 @@ import { WalletShell } from '@/components/wallet-shell'
 
 function Centered ({ children }: { children: React.ReactNode }) {
   return (
-    <main style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, color: 'var(--text-secondary, #b3a79f)' }}>
+    <main style={{
+      minHeight: '100dvh',
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 16,
+      boxSizing: 'border-box',
+      background: 'var(--bg-base, var(--bg))',
+      color: 'var(--text-secondary, #b3a79f)'
+    }}>
       {children}
     </main>
   )

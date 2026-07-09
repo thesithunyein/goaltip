@@ -8,10 +8,22 @@ export function UnlockView () {
   const { unlock, reset } = useWallet()
 
   return (
-    <main style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 24 }}>
+    <main style={{
+      minHeight: '100dvh',
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '16px 12px',
+      gap: 20,
+      background: 'var(--bg-base, var(--bg))',
+      color: 'var(--text-primary, var(--text))',
+      boxSizing: 'border-box'
+    }}>
       <BrandHeader />
-      <div style={{ width: '100%', maxWidth: 420 }}>
-        <Card padding="none" variant="elevated" style={{ overflow: 'hidden' }}>
+      <div style={{ width: '100%', maxWidth: 420, minWidth: 0 }}>
+        <Card padding="none" variant="elevated" style={{ overflow: 'hidden', width: '100%' }}>
           <UnlockScreen
             title="Welcome back"
             subtitle="Enter your password to unlock your wallet."
