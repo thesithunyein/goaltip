@@ -1,50 +1,35 @@
-# Demo script (shared rooms + verified tip + spend limit + settle)
+# Demo script (~110s) — TipPool + Verified + settle
 
-## Screen flow (~100s)
-0:00–0:10  Party — hook ("match night / loser buys drinks").
-0:10–0:22  Wallet (A) — show ~500 USDt, self-custodial, generated in a Web Worker.
-0:22–0:32  Party (A) — Create shared room, enable spend limit (e.g. 10 USDt/wallet), copy invite.
-0:32–0:40  Device B — Join room. Same match, same pool. No tip yet.
-0:40–0:55  Device A — Tip 1 USDt Myanmar. Wait for **Verified** on the shared board.
-0:55–1:02  Explorer — open the real tip from A, hold ~4 sec (same hash as Verified row).
-1:02–1:10  Device A — Try to tip past the cap. Show it blocked *before* any signature is requested.
-1:10–1:18  Device B — same tip, Verified badge, same remaining budget.
-1:18–1:28  Device A (host) — Settle match (pick winner). Both devices show locked board + winner.
-1:28–1:35  Close: "That's GoalTip. Built on Tether WDK for the Developers Cup."
+## Timing
+0:00–0:12  Hook: match night / loser buys drinks → GoalTip
+0:12–0:28  Wallet: keys in Web Worker, show USDt balance
+0:28–0:48  Create room → TipPool deploy → invite link
+0:48–1:10  Device B joins → tip 1 USDt → **Verified** → explorer into TipPool
+1:10–1:22  Over-cap attempt → blocked before signature
+1:22–1:40  Host Settle → TipPool.settle → winner on both devices
+1:40–1:50  Close: "Built on Tether WDK — TipPool escrow, self-custodial."
 
-## Spoken script (natural, no em dashes)
+## Spoken script (main cut)
 
-So it's match night. Me and my friends are watching Myanmar versus Brazil, and someone always says loser buys drinks... and nobody ever pays. So I built GoalTip.
+It's match night — me and my friends are watching Myanmar versus Brazil, and someone always says loser buys drinks… and nobody ever pays. So I built GoalTip: a self-custodial wallet for football watch parties on Tether's WDK. Keys are generated in a Web Worker in my browser — no custodian. Here's my wallet with test USDt on Sepolia.
 
-It's a self-custodial wallet for football watch parties, built on Tether's WDK. Self-custodial means this: when I created this wallet, the recovery phrase and private keys were generated right here, inside a Web Worker in my browser. No server, no signup, no custodian. Nobody can touch my money but me. Here's my wallet. Real funds, five hundred USDt on Sepolia.
+I create a shared room with a spend limit. Creating the room deploys a TipPool escrow contract on Sepolia — tips go into the contract, not my personal address. I copy the invite. On my friend's phone, they join the same room.
 
-And here's tonight's shared watch party. I create a room, set a spend limit so nobody can overtip, and copy the invite link. My friend joins on another phone. Same match, same pool.
+I tip one USDt for Myanmar — signed in the worker. The board waits for the on-chain Transfer into TipPool, then shows Verified. Same hash on Etherscan. If I try to tip past the room cap, GoalTip blocks it before any signature.
 
-I tip one USDt for Myanmar. Signed locally in the worker, sent on-chain. Watch the board — GoalTip verifies the ERC-20 Transfer on Sepolia before the tip is accepted. Verified. Tap explorer. That's the same real transaction on Etherscan.
+When the match ends, I settle as host. That calls TipPool.settle on-chain, returns the escrowed USDt, and locks the board on every device so everyone sees the winner.
 
-Now watch what happens if I try to go past the limit. GoalTip blocks it before it ever asks the wallet to sign. That's a real spending limit, enforced by the server, not just a warning label.
+That's GoalTip. Built on Tether WDK for the Developers Cup — TipPool escrow, verified tips, spend limits. Thanks for watching.
 
-Flip to my friend's phone. Same tip, Verified, same remaining budget.
+## Optional QVAC clip (25–30s — splice for multi-track / Cup)
 
-Match over. As host I settle — Myanmar wins. Tips lock on every device. Shared tip board, on-chain verification, self-custodial wallets, real spend limits, match settle.
+Record separately on a machine with GPU / enough RAM:
 
-That's GoalTip. Built on Tether WDK for the Developers Cup. Thanks for watching.
+1. `pnpm add @qvac/sdk && npm run coach`
+2. Local `pnpm dev` → Coach tab → Recheck → ask "Who should I tip for Myanmar vs Brazil?"
+3. Show the local answer + "runs on-device, no cloud"
+4. Splice after settle, or cut as a B-roll appendix under 3:00 total
 
-## One-paragraph take (for re-record)
-
-So it's match night — me and my friends are watching Myanmar versus Brazil, and someone always says loser buys drinks… and nobody ever pays — so I built GoalTip, a self-custodial wallet for football watch parties on Tether's WDK: keys generated in a Web Worker in my browser, no custodian, here's five hundred USDt on Sepolia; I create a capped shared room, my friend joins, I tip one USDt for Myanmar signed in the worker, the board verifies the on-chain Transfer before accepting it — Verified — Etherscan proves the same hash; try to tip past the cap and it blocks before any signature; friend's phone shows the same Verified tip and budget; then I settle the match as host, tips lock, winner shows on both devices. That's GoalTip. Built on Tether WDK for the Developers Cup. Thanks for watching.
-
-## Optional QVAC clip (30s, record separately if GPU available)
-1. `pnpm add @qvac/sdk && npx @qvac/sdk doctor && npm run coach`
-2. Open http://localhost:3000 → Coach → Recheck → Online
-3. Ask: "Who should I tip for Myanmar vs Brazil?"
-4. Hold the answer on screen ~8 seconds
-5. Splice after settle only if you have it; otherwise skip QVAC in the main cut
-
-## Recording tips
-- Deploy Phase 1 (verify + settle) to Vercel before recording.
-- Confirm Upstash Redis is set on Vercel so Device B can join the live room.
-- Start recording after the app is already open — don't burn time on load screens.
-- Hold the **Verified** badge and the **spend-limit block** — those are the proof beats.
-- Settle is the closing product beat ("loser buys drinks" finally resolves on the board).
-- Skip "B tips Brazil" unless Device B is funded.
+## Do NOT say on camera
+- "WDK-enforced spend limit" — say server-enforced / blocked before signing
+- That Vercel runs QVAC — it is local-only by design

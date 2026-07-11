@@ -34,9 +34,13 @@ export class DuplicateTipError extends Error {
 /** Thrown when a non-host tries to settle. */
 export class SettleForbiddenError extends Error {
   constructor () {
-    super('Only the room host (pool wallet) can settle this match.')
+    super('Only the room host can settle this match.')
     this.name = 'SettleForbiddenError'
   }
+}
+
+function hostOf (party: WatchParty): string {
+  return (party.hostAddress ?? party.poolAddress).toLowerCase()
 }
 
 const KEY_PREFIX = 'goaltip:party:'
@@ -99,11 +103,26 @@ export async function createSharedParty (opts: {
   nationA: string
   nationB: string
   poolAddress: string
+  hostAddress?: string
+  escrowDeployTxHash?: string
   code?: string
   capPerWallet?: string
 }): Promise<WatchParty> {
   const requested = opts.code ? normalizeRoomCode(opts.code) : ''
   const capPerWallet = opts.capPerWallet?.trim() || undefined
+  const hostAddress = opts.hostAddress?.trim().toLowerCase() || undefined
+  const escrowDeployTxHash = opts.escrowDeployTxHash?.trim().toLowerCase() || undefined
+
+  const baseFields = {
+    nationA: opts.nationA,
+    nationB: opts.nationB,
+    poolAddress: opts.poolAddress,
+    tips: [] as TipRecord[],
+    createdAt: new Date().toISOString(),
+    ...(hostAddress ? { hostAddress } : {}),
+    ...(escrowDeployTxHash ? { escrowDeployTxHash } : {}),
+    ...(capPerWallet ? { capPerWallet } : {})
+  }
 
   if (requested) {
     const existing = await getSharedParty(requested)
@@ -118,15 +137,7 @@ export async function createSharedParty (opts: {
       }
       throw new Error(`Room ${requested} already exists with different settings. Create a new room.`)
     }
-    const party: WatchParty = {
-      code: requested,
-      nationA: opts.nationA,
-      nationB: opts.nationB,
-      poolAddress: opts.poolAddress,
-      tips: [],
-      createdAt: new Date().toISOString(),
-      ...(capPerWallet ? { capPerWallet } : {})
-    }
+    const party: WatchParty = { code: requested, ...baseFields }
     await saveSharedParty(party)
     return party
   }
@@ -138,15 +149,7 @@ export async function createSharedParty (opts: {
     code = makeRoomCode()
   }
 
-  const party: WatchParty = {
-    code,
-    nationA: opts.nationA,
-    nationB: opts.nationB,
-    poolAddress: opts.poolAddress,
-    tips: [],
-    createdAt: new Date().toISOString(),
-    ...(capPerWallet ? { capPerWallet } : {})
-  }
+  const party: WatchParty = { code, ...baseFields }
 
   await saveSharedParty(party)
   return party
@@ -198,11 +201,11 @@ export async function appendSharedTip (code: string, tip: TipRecord): Promise<Wa
 
 /**
  * Host settles the match: locks tips and records the winning nation.
- * Only the pool wallet (host) may settle.
+ * Only the room host may settle (hostAddress, or legacy poolAddress).
  */
 export async function settleSharedParty (
   code: string,
-  opts: { winnerNationId: string, from: string }
+  opts: { winnerNationId: string, from: string, settleTxHash?: string }
 ): Promise<WatchParty | null> {
   const party = await getSharedParty(code)
   if (!party) return null
@@ -212,7 +215,7 @@ export async function settleSharedParty (
   }
 
   const from = opts.from.trim().toLowerCase()
-  if (from !== party.poolAddress.toLowerCase()) {
+  if (from !== hostOf(party)) {
     throw new SettleForbiddenError()
   }
 
@@ -221,10 +224,13 @@ export async function settleSharedParty (
     throw new Error('Winner must be one of the two nations in this room.')
   }
 
+  const settleTxHash = opts.settleTxHash?.trim().toLowerCase() || undefined
+
   const next: WatchParty = {
     ...party,
     winnerNationId: winner,
-    settledAt: new Date().toISOString()
+    settledAt: new Date().toISOString(),
+    ...(settleTxHash ? { settleTxHash } : {})
   }
   await saveSharedParty(next)
   return next

@@ -9,7 +9,7 @@ Fans back a nation, tip live in USDt, and watch a **shared** pool grow — while
 
 [**Live demo**](https://goaltip-web.vercel.app) · [**Demo video**](https://youtu.be/u8otedpp1mI) · [Architecture](#architecture) · [Quick start](#quick-start)
 
-Built with [Tether WDK](https://wdk.tether.io) for the [Tether Developers Cup](https://dorahacks.io/hackathon/tether-developers-cup) — **WDK : Wallets** track, with an optional [QVAC](https://qvac.tether.io) local-AI coach.
+Built with [Tether WDK](https://wdk.tether.io) for the [Tether Developers Cup](https://dorahacks.io/hackathon/tether-developers-cup) — **WDK : Wallets** + optional [QVAC](https://qvac.tether.io) local-AI coach.
 
 <img src="https://raw.githubusercontent.com/thesithunyein/goaltip/main/docs/screenshot-wallet.png" alt="GoalTip self-custodial wallet — Sepolia ETH + USDt balance" width="720" />
 
@@ -21,11 +21,11 @@ Built with [Tether WDK](https://wdk.tether.io) for the [Tether Developers Cup](h
 
 Every match night, fans in group chats say *"loser buys drinks"* — and then nobody settles up. GoalTip makes that moment real:
 
-- **Create a shared watch party** for tonight's match (any two nations)
+- **Create a shared watch party** — deploys a TipPool escrow on Sepolia
 - **Invite friends** with a room code or link — every device sees the same tip board
-- **Tip your nation** in USDt — 1, 5, 10, or any amount — signed locally with WDK
-- **Verify on-chain** — the party API checks the Sepolia ERC-20 Transfer before the tip is accepted
-- **Settle the match** — host locks tips and shows the winner on every device
+- **Tip your nation** in USDt into the TipPool — signed locally with WDK
+- **Verify on-chain** — the party API checks the Sepolia ERC-20 Transfer into TipPool before accepting
+- **Settle the match** — host calls TipPool.settle on-chain; tips lock on every device
 - **Stay self-custodial** — GoalTip never touches your keys. Ever.
 
 No signup, no custodian. Your wallet is generated in your browser, encrypted with your password, and signs everything locally. The shared board only stores tip *metadata* (nation, amount, tx hash) — never keys.
@@ -37,9 +37,10 @@ No signup, no custodian. Your wallet is generated in your browser, encrypted wit
 | Football-native | Nation-vs-nation tipping pools built around the watch-party moment |
 | True self-custody | BIP-39/BIP-44 wallet lives in a Web Worker; private keys never reach the DOM or any server |
 | Shared rooms | Create / join by code; invite link `?room=CODE`; live tip board sync across devices |
-| On-chain verified tips | Server checks Sepolia ERC-20 Transfer (from, pool, amount) before the board accepts a tip |
+| TipPool escrow | Host deploys TipPool at room create; tips go to the contract, not an EOA |
+| On-chain verified tips | Server checks Sepolia ERC-20 Transfer (from, TipPool, amount) before accept |
 | Spend limits | Host sets per-wallet USDt cap; blocked client-side before signing + enforced server-side |
-| Match settle | Host picks the winner; tips lock; every device shows final totals |
+| Match settle | Host TipPool.settle on-chain; Settled event verified; board locks everywhere |
 | Real on-chain USDt | ERC-20 transfers on Sepolia — every tip links to Etherscan |
 | Local AI coach | Optional QVAC-powered match analyst (LLAMA 3.2 1B), on-device, no cloud |
 | Installable PWA | Works on mobile, installs to the home screen |

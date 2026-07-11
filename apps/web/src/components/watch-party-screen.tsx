@@ -23,6 +23,7 @@ import {
   walletTotal,
   type WatchParty
 } from '@/lib/party-store'
+import { encodeTipPoolSettle, partyHostAddress, tipPoolCreationData, waitForDeployedTipPool } from '@/lib/tip-pool'
 import { BrandHeader } from './brand-header'
 import { NationFlag } from './nation-flag'
 import { Screen } from './screen'
@@ -68,7 +69,10 @@ export function WatchPartyScreen (): React.JSX.Element {
           nationA: local.nationA,
           nationB: local.nationB,
           poolAddress: local.poolAddress,
-          code: local.code
+          code: local.code,
+          ...(local.hostAddress ? { hostAddress: local.hostAddress } : {}),
+          ...(local.escrowDeployTxHash ? { escrowDeployTxHash: local.escrowDeployTxHash } : {}),
+          ...(local.capPerWallet ? { capPerWallet: local.capPerWallet } : {})
         })
       } catch {
         return null
@@ -150,10 +154,21 @@ export function WatchPartyScreen (): React.JSX.Element {
     setBusy(true)
     setError(null)
     try {
+      const api = getWalletApi()
+      // 1) Host deploys a TipPool escrow contract (USDt tips go here, not to the EOA).
+      const deployHash = await api.account_sendTransaction(
+        CHAIN_ID as never,
+        accountIndex,
+        { data: tipPoolCreationData() }
+      )
+      const poolAddress = await waitForDeployedTipPool(deployHash as string)
+      // 2) Register the shared room with TipPool as pool + host EOA for settle.
       const p = await apiCreateParty({
         nationA,
         nationB,
-        poolAddress: address,
+        poolAddress,
+        hostAddress: address,
+        escrowDeployTxHash: deployHash as string,
         ...(capEnabled && capPerWallet.trim() ? { capPerWallet: capPerWallet.trim() } : {})
       })
       applyParty(p)
@@ -165,7 +180,7 @@ export function WatchPartyScreen (): React.JSX.Element {
     } finally {
       setBusy(false)
     }
-  }, [address, nationA, nationB, capEnabled, capPerWallet, applyParty])
+  }, [address, accountIndex, nationA, nationB, capEnabled, capPerWallet, applyParty])
 
   const joinParty = useCallback(async () => {
     const code = normalizeRoomCode(joinCode)
@@ -287,21 +302,36 @@ export function WatchPartyScreen (): React.JSX.Element {
 
   const settleMatch = useCallback(async (winnerNationId: string) => {
     if (!party || !address) return
-    if (address.toLowerCase() !== party.poolAddress.toLowerCase()) {
+    if (address.toLowerCase() !== partyHostAddress(party)) {
       setError('Only the room host can settle this match.')
       return
     }
     setBusy(true)
     setError(null)
     try {
-      const settled = await apiSettleParty(party.code, { winnerNationId, from: address })
+      let settleTxHash: string | undefined
+      // Escrow rooms: host calls TipPool.settle on-chain, then board verifies Settled.
+      if (party.hostAddress) {
+        const api = getWalletApi()
+        settleTxHash = await api.account_sendTransaction(
+          CHAIN_ID as never,
+          accountIndex,
+          { to: party.poolAddress, value: 0n, data: encodeTipPoolSettle(winnerNationId) }
+        ) as string
+        await new Promise((r) => setTimeout(r, 2000))
+      }
+      const settled = await apiSettleParty(party.code, {
+        winnerNationId,
+        from: address,
+        ...(settleTxHash ? { settleTxHash } : {})
+      })
       applyParty(settled)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Settle failed.')
     } finally {
       setBusy(false)
     }
-  }, [party, address, applyParty])
+  }, [party, address, accountIndex, applyParty])
 
   if (phase !== 'unlocked') {
     return (
@@ -344,8 +374,8 @@ export function WatchPartyScreen (): React.JSX.Element {
               <>
                 <h2 style={softH2}>Start a watch party</h2>
                 <p style={softDim}>
-                  Pick tonight&apos;s match, create a shared tipping room, and send friends the invite link.
-                  Tips are self-custodial USDT on Sepolia via WDK — every device sees the same board.
+                  Pick tonight&apos;s match. Creating a room deploys a TipPool escrow on Sepolia —
+                  tips go to the contract (verified on-chain), not your EOA. Friends join by invite link.
                 </p>
                 <label style={field}>
                   <span style={label}>Home nation</span>
@@ -383,7 +413,7 @@ export function WatchPartyScreen (): React.JSX.Element {
                   disabled={!address || nationA === nationB || busy}
                   style={{ width: '100%', ...softPillBtn, minHeight: 48 }}
                 >
-                  {busy ? 'Creating…' : 'Create shared room'}
+                  {busy ? 'Deploying TipPool…' : 'Create shared room'}
                 </Button>
               </>
             ) : (
@@ -425,10 +455,11 @@ export function WatchPartyScreen (): React.JSX.Element {
   const chain = getChain(CHAIN_ID)
   const myRemaining = address ? remainingCap(party, address) : null
   const myTipped = address ? walletTotal(party, address) : 0
-  const isHost = Boolean(address && address.toLowerCase() === party.poolAddress.toLowerCase())
+  const isHost = Boolean(address && address.toLowerCase() === partyHostAddress(party))
   const isSettled = Boolean(party.settledAt)
   const winnerInfo = party.winnerNationId ? getNation(party.winnerNationId) : undefined
   const tipsLocked = isSettled
+  const isEscrow = Boolean(party.hostAddress)
 
   return (
     <main style={softPage}>
@@ -437,8 +468,22 @@ export function WatchPartyScreen (): React.JSX.Element {
 
         <div style={{ textAlign: 'center', padding: '6px 0 2px' }}>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6 }}>
-            Room {party.code} · Sepolia{party.capPerWallet ? ` · Cap ${party.capPerWallet}` : ''}{isSettled ? ' · Settled' : ''}
+            Room {party.code} · Sepolia{isEscrow ? ' · TipPool' : ''}{party.capPerWallet ? ` · Cap ${party.capPerWallet}` : ''}{isSettled ? ' · Settled' : ''}
           </div>
+          {isEscrow && chain.explorer && (
+            <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--text-secondary)' }}>
+              Escrow{' '}
+              <a href={`${chain.explorer}/address/${party.poolAddress}`} target="_blank" rel="noreferrer">
+                {party.poolAddress.slice(0, 6)}…{party.poolAddress.slice(-4)}
+              </a>
+              {party.settleTxHash && (
+                <>
+                  {' · '}
+                  <a href={`${chain.explorer}/tx/${party.settleTxHash}`} target="_blank" rel="noreferrer">settle tx ↗</a>
+                </>
+              )}
+            </p>
+          )}
           <div style={matchRow}>
             <NationBadge nation={nationAInfo} total={totalA} winner={party.winnerNationId === party.nationA} />
             <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-tertiary)', flexShrink: 0 }}>vs</span>
@@ -524,7 +569,9 @@ export function WatchPartyScreen (): React.JSX.Element {
         {isHost && !isSettled && (
           <Card padding="md" variant="elevated" style={softCardStyle}>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Settle match</h3>
-            <p style={{ ...softDim, fontSize: 13 }}>Host only. Pick the winner to lock tipping on every device.</p>
+            <p style={{ ...softDim, fontSize: 13 }}>
+              Host only. {isEscrow ? 'Calls TipPool.settle on-chain, then locks the board on every device.' : 'Pick the winner to lock tipping on every device.'}
+            </p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <Button disabled={busy} onClick={() => void settleMatch(party.nationA)} style={{ flex: 1, ...softPillBtn, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                 <NationFlag nation={nationAInfo} size={16} /> {nationAInfo?.name} wins

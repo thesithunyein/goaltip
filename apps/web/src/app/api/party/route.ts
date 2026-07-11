@@ -10,12 +10,16 @@ export async function POST (req: Request): Promise<Response> {
       nationA?: string
       nationB?: string
       poolAddress?: string
+      hostAddress?: string
+      escrowDeployTxHash?: string
       code?: string
       capPerWallet?: string
     }
     const nationA = body.nationA?.trim()
     const nationB = body.nationB?.trim()
     const poolAddress = body.poolAddress?.trim()
+    const hostAddress = body.hostAddress?.trim()
+    const escrowDeployTxHash = body.escrowDeployTxHash?.trim()
     const code = body.code?.trim()
     const capPerWallet = body.capPerWallet?.trim()
     if (!nationA || !nationB || !poolAddress) {
@@ -23,6 +27,12 @@ export async function POST (req: Request): Promise<Response> {
     }
     if (!/^0x[a-fA-F0-9]{40}$/.test(poolAddress)) {
       return NextResponse.json({ error: 'Invalid poolAddress' }, { status: 400 })
+    }
+    if (hostAddress && !/^0x[a-fA-F0-9]{40}$/.test(hostAddress)) {
+      return NextResponse.json({ error: 'Invalid hostAddress' }, { status: 400 })
+    }
+    if (escrowDeployTxHash && !/^0x[a-fA-F0-9]{64}$/.test(escrowDeployTxHash)) {
+      return NextResponse.json({ error: 'Invalid escrowDeployTxHash' }, { status: 400 })
     }
     if (nationA === nationB) {
       return NextResponse.json({ error: 'Nations must differ' }, { status: 400 })
@@ -34,6 +44,8 @@ export async function POST (req: Request): Promise<Response> {
       nationA,
       nationB,
       poolAddress,
+      ...(hostAddress ? { hostAddress } : {}),
+      ...(escrowDeployTxHash ? { escrowDeployTxHash } : {}),
       ...(code ? { code } : {}),
       ...(capPerWallet ? { capPerWallet } : {})
     })

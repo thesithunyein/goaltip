@@ -73,6 +73,8 @@ export async function apiCreateParty (body: {
   nationA: string
   nationB: string
   poolAddress: string
+  hostAddress?: string
+  escrowDeployTxHash?: string
   code?: string
   capPerWallet?: string
 }): Promise<WatchParty> {
@@ -126,7 +128,7 @@ export async function apiAppendTip (code: string, tip: TipRecord): Promise<Watch
 
 export async function apiSettleParty (
   code: string,
-  body: { winnerNationId: string, from: string }
+  body: { winnerNationId: string, from: string, settleTxHash?: string }
 ): Promise<WatchParty> {
   const res = await fetch(`/api/party/${encodeURIComponent(normalizeRoomCode(code))}/settle`, {
     method: 'POST',

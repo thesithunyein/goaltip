@@ -8,6 +8,8 @@ out/
 build/
 .turbo/
 *.tsbuildinfo
+contracts/cache/
+contracts/out/
 
 # Env & secrets
 .env

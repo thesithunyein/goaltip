@@ -16,7 +16,20 @@ export interface WatchParty {
   readonly code: string
   readonly nationA: string
   readonly nationB: string
+  /**
+   * USDt tip destination. Escrow rooms use a TipPool contract address;
+   * legacy rooms used the host EOA.
+   */
   readonly poolAddress: string
+  /**
+   * Room host EOA (settle authority). Escrow rooms always set this.
+   * Legacy rooms omit it — host is inferred as poolAddress.
+   */
+  readonly hostAddress?: string
+  /** Sepolia tx hash that deployed this room's TipPool (escrow rooms). */
+  readonly escrowDeployTxHash?: string
+  /** Sepolia tx hash of TipPool.settle (set after on-chain settle). */
+  readonly settleTxHash?: string
   readonly tips: readonly TipRecord[]
   /** ISO timestamp when the room was created (server-side). */
   readonly createdAt?: string

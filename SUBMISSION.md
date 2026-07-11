@@ -4,120 +4,83 @@
 GoalTip
 
 ## Tagline
-Self-custodial USDT fan tipping for football watch parties. Shared rooms, on-chain verified tips, keys stay in your browser.
+Self-custodial USDT fan tipping for football watch parties. TipPool escrow, on-chain verified tips, keys stay in your browser.
 
-## Track
-WDK : Wallets (with optional QVAC local AI coach module)
+## Tracks
+**WDK : Wallets** + **QVAC (Local AI)** (optional coach module — tick both)
 
 ## Description
-GoalTip lets football fans tip USDt for their nation during watch parties without giving up custody of their keys. Built with Tether WDK in a Web Worker — BIP-39 generation, BIP-44 derivation, and transaction signing all happen client-side. Fans create a shared watch party room, invite friends by code or link, and tip 1/5/10 USDt or a custom amount. Hosts can set a per-wallet spend limit for the match, enforced server-side and checked client-side before any transaction is signed. Every tip is a real ERC-20 transfer on Sepolia; the party API verifies the on-chain Transfer (from, pool, amount) before the tip lands on the shared board. Hosts settle the match to lock tipping and show the winner on every device. Optional local AI coach via QVAC SDK (LLAMA 3.2 1B, on-device, no cloud). Live demo works on mobile as an installable PWA.
+GoalTip lets football fans tip USDt for their nation during watch parties without giving up custody of their keys. Built with Tether WDK in a Web Worker — BIP-39 generation, BIP-44 derivation, and transaction signing all happen client-side. Creating a shared room deploys a TipPool escrow contract on Sepolia; fans tip into the contract; the party API verifies the on-chain Transfer before the tip lands on the shared board. Hosts set per-wallet spend limits (checked before signing) and settle the match by calling TipPool.settle on-chain — escrowed USDt returns to the host and every device locks. Optional local AI coach via QVAC SDK (LLAMA 3.2 1B, on-device, no cloud). Live demo works on mobile as an installable PWA.
 
 ## GitHub
 https://github.com/thesithunyein/goaltip
 
 ## Demo video
 https://youtu.be/u8otedpp1mI
-<!-- Replace after re-record with verify + settle beats -->
+<!-- REPLACE with new ≤3min TipPool + Verified + settle (+ optional QVAC) video before final lock -->
 
 ## Live demo
 https://goaltip-web.vercel.app
 
 ## Earlier work
-Forked and extended [wdk-wallet-template](https://github.com/plinkdev1/wdk-wallet-template) (MIT). All GoalTip-specific features (shared watch parties, football UI, QVAC coach, Sepolia tipping, per-wallet spend limits, on-chain tip verification, match settle) built during the Tether Developers Cup.
+Forked and extended [wdk-wallet-template](https://github.com/plinkdev1/wdk-wallet-template) (MIT). All GoalTip-specific features (shared watch parties, TipPool escrow, football UI, QVAC coach, Sepolia tipping, spend limits, on-chain tip verification, match settle) built during the Tether Developers Cup.
 
 ## External services
-- Sepolia RPC (public) — used by the wallet worklet and by the party API for tip verification
-- Vercel (hosting + party API routes — tip metadata only, no keys)
-- Upstash Redis (shared room persistence — required for multi-device demos on Vercel)
+- Sepolia RPC (public) — wallet worklet + tip/settle verification
+- Vercel (hosting + party API — tip metadata only, no keys)
+- Upstash Redis (shared room persistence)
 - CoinGecko (optional USD pricing)
-- YouTube (demo video hosting)
+- YouTube (demo video)
+- QVAC runs locally only (`npm run coach`) — not on Vercel
 
 ## Judge quickstart
 ```bash
 pnpm install && pnpm dev
-# Open http://localhost:3000 → Party tab → Create shared room (enable spend limit)
-# Second browser: Join with room code or ?room=CODE
-# Tip → wait for Verified badge → open explorer → try over-cap → host Settle match
+# Party → Create shared room (deploys TipPool; enable spend limit)
+# Second browser: Join with ?room=CODE
+# Tip → Verified → explorer → over-cap → host Settle (on-chain)
+# Optional: pnpm add @qvac/sdk && npm run coach → Coach tab
 ```
 
-Faucets: Sepolia ETH + Aave test USDT (links in README.md).
-Production shared rooms: set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` on Vercel.
-Health probe: `GET /api/health` → `{ persistence: "redis" | "memory" }`.
+Health: `GET /api/health` → `persistence: redis`, `escrow: tippool-per-room`, `settle: on-chain-tippool+board`
 
-## New demo script (~100s)
-See [docs/DEMO_SCRIPT.md](./docs/DEMO_SCRIPT.md) — two devices, Verified tip, spend-limit block, settle, explorer proof.
-
-## Resubmit checklist (before July 12 cut)
-1. Deploy this build to Vercel
-2. Confirm `GET https://goaltip-web.vercel.app/api/party/health` returns `"persistence":"redis"`
-3. Two-browser join on the live URL works
-4. Record new ~100s video: Verified tip + spend-limit block + Settle
-5. Paste new YouTube URL here and in DoraHacks Manage Submission
-6. Keep track as WDK : Wallets (add QVAC only if the video shows a live local coach answer)
+## Final submission checklist
+1. Deploy this build to Vercel; confirm Redis health
+2. Two-browser TipPool tip + Verified + Settle on live URL
+3. Record ≤3min video (TipPool deploy → Verified → over-cap → settle); optional QVAC splice
+4. Paste new YouTube URL here + DoraHacks
+5. Tick tracks: **WDK** + **QVAC** (if video shows coach)
 
 ---
 
 ## Full BUIDL details (paste into DoraHacks)
 
 **THE PROBLEM**
-Every match night, fans in group chats say "loser buys drinks" and nobody settles up. Existing tipping apps either hold your keys (custodial) or force wallet extensions most casual fans do not have. GoalTip fixes the watch-party moment: back your nation, tip in USDt, prove it on-chain, keep your keys.
+Every match night, fans in group chats say "loser buys drinks" and nobody settles up. Custodial tip apps hold your keys; extension wallets scare casual fans. GoalTip fixes the watch-party moment: back your nation, tip USDt into an on-chain pool, prove it, keep your keys.
 
 **WHAT GOALTIP IS**
-GoalTip is a self-custodial fan tipping wallet for football watch parties. Fans create a shared room, pick two nations (e.g. Myanmar vs Brazil), invite friends by code or link, and tip USDt to rally behind their team. A live tip board syncs across devices. Every tip is a real ERC-20 transfer on Sepolia; the server verifies the Transfer before accepting it. The host settles the match to lock tips and show the winner. No signup. No custodian. Keys never leave the browser.
-
-**NOT A BET. NOT A TREASURY. MATCH-NIGHT TIPPING.**
-Most WDK entries are prediction pots, team treasuries, or full payment suites. GoalTip is different: live nation tipping during the match. Shared room. Shared board. On-chain verified WDK tips. Match settle. That is the product.
+A self-custodial fan tipping wallet for football watch parties. Create a shared room → deploy TipPool → invite friends → tip USDt for your nation → board verifies every Transfer → host settles on-chain after the whistle. Optional on-device QVAC coach. No signup. No custodian.
 
 **WHY THIS IS REAL WDK (NOT A LOGO SLAP)**
-GoalTip uses Tether WDK as the core wallet engine:
-- BIP-39 mnemonic generation and verification inside a Web Worker
-- BIP-44 key derivation for EVM accounts
-- Encrypted vault (AES-GCM, password-derived key) in localStorage
-- Transaction signing in the worker; private keys never reach the DOM or any server
-- Real USDt ERC-20 sends on Sepolia, not mock balances
+- BIP-39 / BIP-44 / AES-GCM vault in a Web Worker
+- Real Sepolia USDt sends signed in-worker
+- Host deploys TipPool via WDK contract-creation tx
+- Tips into TipPool; settle via TipPool.settle — both verified by the party API
 
-**ON-CHAIN TIP VERIFICATION**
-The shared board does not trust client-reported tip metadata:
-- After WDK signs and broadcasts, the party API fetches the Sepolia receipt
-- It requires a successful ERC-20 Transfer of the claimed amount from the tipper to the room pool
-- Only then does the tip land with a **Verified** badge (same hash as Etherscan)
+**ON-CHAIN ESCROW + VERIFICATION**
+- TipPool.sol (MIT) — per-room escrow, host immutable, settle pays USDt to host
+- Tip verify: ERC-20 Transfer(tipper → TipPool, amount)
+- Settle verify: Settled(host, winnerNationId, amount) event
+- Spend limits: server-enforced + client check before any signature
 
-**SPEND LIMITS — DIRECTLY FROM THE WDK BRIEF**
-The Tether Developers Cup rules ask WDK builders to "think about permissions, spending limits, recovery, and role separation." GoalTip implements this, not just claims it:
-- The host sets a per-wallet USDt cap when creating the room (e.g. 10 USDt for the whole match)
-- The cap is enforced **server-side** on every tip — the shared board rejects any tip that would push a wallet over the limit
-- The client checks the cap **before** asking WDK to sign anything — if you are over budget, GoalTip refuses to initiate the transaction at all, so no signature is ever requested for a blocked tip
-- The live board shows each wallet's remaining budget for the match in real time
-
-**MATCH SETTLE**
-Host (pool wallet) picks the winning nation. Tips lock. Every device shows the winner and final totals — the "loser buys drinks" moment finally resolves on the board.
-
-**SHARED ROOMS (THE DEMO KILLER)**
-This is not a single-wallet screenshot app.
-- Create / join by room code
-- Invite link: `?room=CODE`
-- Live tip board sync across phones
-- Server stores tip metadata only (nation, amount, tx hash, sender address, verified). Never keys.
-- Production persistence via Upstash Redis on Vercel
-
-**OPTIONAL QVAC COACH**
-On-device match coach powered by Tether QVAC (LLAMA 3.2 1B). No cloud. No API keys. Live site is offline by design; locally run `npm run coach`.
+**OPTIONAL QVAC**
+Local LLAMA 3.2 1B coach via `@qvac/sdk`. Data never leaves the machine. Live Vercel site shows coach offline by design; run `npm run coach` for demos.
 
 **LINKS**
-- Live demo: https://goaltip-web.vercel.app
-- Demo video: https://youtu.be/u8otedpp1mI
+- Live: https://goaltip-web.vercel.app
+- Health: https://goaltip-web.vercel.app/api/health
 - GitHub: https://github.com/thesithunyein/goaltip
-- Health: https://goaltip-web.vercel.app/api/party/health
+- Judge: JUDGE.md · Demo script: docs/DEMO_SCRIPT.md
 
-**JUDGE QUICKSTART**
-```bash
-pnpm install && pnpm dev
-# Open http://localhost:3000 → Party → Create shared room (enable spend limit)
-# Second browser: Join with room code or ?room=CODE
-# Tip → Verified → explorer → over-cap block → host Settle
-```
-
-**WHY THIS SHOULD WIN WDK : WALLETS**
-Most WDK entries are prediction pots, treasuries, or payment suites. GoalTip is the watch-party tipping wallet: create a shared room, invite friends, tip USDt for your nation from a real WDK Web Worker wallet, verify each tip on-chain before it hits the board, enforce spend limits before signing, and settle the match so every device sees the winner. Keys never leave the browser. Judges can try the full flow on mobile in under 3 minutes.
-
-Built solo for the Tether Developers Cup. Forked from `wdk-wallet-template` (MIT). All GoalTip features built during the event.
+**WHY THIS SHOULD WIN WDK + CUP**
+Clear football product, real TipPool escrow, verified tips, spend limits from the WDK brief, multi-device rooms, optional QVAC multi-stack — judges can run the full flow in under 3 minutes.

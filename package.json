@@ -17,7 +17,8 @@
     "typecheck": "pnpm -r --filter=\"./packages/**\" --filter=\"./apps/**\" typecheck",
     "test": "pnpm -r --filter=\"./packages/**\" --filter=\"./apps/**\" test",
     "lint": "pnpm -F @wdk-starter/web lint",
-    "coach": "node coach/server.mjs"
+    "coach": "node coach/server.mjs",
+    "embed:tippool": "node scripts/embed-tip-pool.mjs"
   },
   "devDependencies": {
     "typescript": "5.5.4"

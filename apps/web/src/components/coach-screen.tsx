@@ -90,7 +90,9 @@ export function CoachScreen (): React.JSX.Element {
           <div style={offlineBox}>
             <strong style={{ fontSize: 13 }}>Why offline on the live site?</strong>
             <p style={{ ...softDim, fontSize: 12, margin: '6px 0 0' }}>
-              QVAC runs on your device only. Vercel cannot reach localhost. Run the coach locally, then Recheck.
+              QVAC runs on your device only — required for the Cup multi-track demo.
+              The live Vercel site cannot reach localhost. On your recording machine:
+              <code>pnpm add @qvac/sdk && npm run coach</code>, then Recheck.
             </p>
           </div>
         )}
