@@ -10,7 +10,6 @@ import { ReceiveDialog } from './receive-dialog'
 import { SendDialog } from './send-dialog'
 import { TokenList } from './token-list'
 import { AssetDetail } from './asset-detail'
-import { BuyDialog } from './buy-dialog'
 
 const OPTIONS = chainOptions((id) => <NetworkIcon chain={id} size={16} />)
 
@@ -23,7 +22,7 @@ export function Dashboard () {
     chainId, setChainId, accountIndex, setAccountIndex,
     address, addressLoading, balance, balanceLoading, usdValue, refreshBalance
   } = useWallet()
-  const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'asset' | 'buy'>('none')
+  const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'asset'>('none')
   const [sendToken, setSendToken] = useState<TokenInfo | null>(null)
   const [copied, setCopied] = useState(false)
   const chain = getChain(chainId)
@@ -73,7 +72,6 @@ export function Dashboard () {
 
         <div className="goaltip-action-pill" style={{ margin: '4px 8px 0' }}>
           <button type="button" onClick={() => setDialog('receive')} disabled={!address}>↓ Receive</button>
-          <button type="button" className="goaltip-plus" onClick={() => setDialog('buy')} disabled={!address} aria-label="Buy crypto">+</button>
           <button type="button" onClick={() => { setSendToken(null); setDialog('send') }} disabled={!address}>Send ↑</button>
         </div>
 
@@ -112,7 +110,6 @@ export function Dashboard () {
           onClose={() => { setSendToken(null); setDialog('none') }}
         />
       )}
-      {dialog === 'buy' && address && <BuyDialog chainId={chainId} address={address} onClose={() => setDialog('none')} />}
     </main>
   )
 }

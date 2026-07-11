@@ -63,10 +63,11 @@ function SettingsTab (): React.JSX.Element {
         <Row label="Account" value={`Account ${accountIndex + 1}`} />
         {address && <Row label="Address" value={`${address.slice(0, 6)}…${address.slice(-4)}`} mono />}
         <Button variant="secondary" onClick={() => setAppearanceOpen(true)} style={{ width: '100%', borderRadius: 999, minHeight: 44 }}>Appearance</Button>
+        <Button variant="outline" onClick={() => { window.location.href = '/judge' }} style={{ width: '100%', borderRadius: 999, minHeight: 44 }}>Judge page</Button>
         <Button variant="outline" onClick={() => void lock()} style={{ width: '100%', borderRadius: 999, minHeight: 44 }}>Lock wallet</Button>
       </Card>
       <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary)' }}>
-        GoalTip · self-custodial · keys in Web Worker · built on Tether WDK
+        GoalTip · TipPool escrow · WDK Web Worker · optional QVAC coach
       </p>
     </Screen>
   )

@@ -42,6 +42,8 @@ export interface WatchParty {
   readonly winnerNationId?: string
   /** ISO timestamp when the host settled (tips lock after this). */
   readonly settledAt?: string
+  /** Human USDt paid out on TipPool.settle (from Settled event). */
+  readonly settledAmountUsdt?: string
 }
 
 export function nationTotals (party: WatchParty): Map<string, number> {

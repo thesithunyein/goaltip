@@ -24,6 +24,7 @@ type RpcReceipt = {
   logs?: Array<{
     address?: string
     topics?: string[]
+    data?: string
   }>
 } | null
 
@@ -65,7 +66,7 @@ export async function verifySettleTransaction (opts: {
   poolAddress: string
   hostAddress: string
   winnerNationId: string
-}): Promise<void> {
+}): Promise<{ settledAmountUsdt: string }> {
   const hash = opts.hash.trim()
   if (!/^0x[a-fA-F0-9]{64}$/.test(hash)) {
     throw new SettleVerificationError('Invalid settle transaction hash.')
@@ -104,4 +105,9 @@ export async function verifySettleTransaction (opts: {
       'On-chain Settled event does not match this room (TipPool, host, or winner). Settle rejected.'
     )
   }
+
+  const raw = (match.data ?? '0x0').replace(/^0x/, '') || '0'
+  const amountBase = BigInt(`0x${raw}`)
+  const settledAmountUsdt = (Number(amountBase) / 1e6).toFixed(2)
+  return { settledAmountUsdt }
 }

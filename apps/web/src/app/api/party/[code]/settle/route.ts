@@ -33,29 +33,32 @@ export async function POST (
     if (!/^0x[a-fA-F0-9]{40}$/.test(from)) {
       return NextResponse.json({ error: 'Invalid host address' }, { status: 400 })
     }
+    if (!settleTxHash || !/^0x[a-fA-F0-9]{64}$/.test(settleTxHash)) {
+      return NextResponse.json({ error: 'settleTxHash is required (TipPool.settle on-chain)' }, { status: 400 })
+    }
 
     const existing = await getSharedParty(code)
     if (!existing) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 })
     }
-
-    // Escrow rooms (TipPool) require an on-chain settle tx before the board locks.
-    if (existing.hostAddress) {
-      if (!settleTxHash || !/^0x[a-fA-F0-9]{64}$/.test(settleTxHash)) {
-        return NextResponse.json({ error: 'settleTxHash is required for TipPool escrow rooms' }, { status: 400 })
-      }
-      await verifySettleTransaction({
-        hash: settleTxHash,
-        poolAddress: existing.poolAddress,
-        hostAddress: partyHostAddress(existing),
-        winnerNationId
-      })
+    if (!existing.hostAddress) {
+      return NextResponse.json({
+        error: 'This room predates TipPool escrow. Create a new shared room.'
+      }, { status: 400 })
     }
+
+    const verified = await verifySettleTransaction({
+      hash: settleTxHash,
+      poolAddress: existing.poolAddress,
+      hostAddress: partyHostAddress(existing),
+      winnerNationId
+    })
 
     const party = await settleSharedParty(code, {
       winnerNationId,
       from,
-      ...(settleTxHash ? { settleTxHash } : {})
+      settleTxHash,
+      settledAmountUsdt: verified.settledAmountUsdt
     })
     if (!party) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 })

@@ -22,16 +22,18 @@ export async function POST (req: Request): Promise<Response> {
     const escrowDeployTxHash = body.escrowDeployTxHash?.trim()
     const code = body.code?.trim()
     const capPerWallet = body.capPerWallet?.trim()
-    if (!nationA || !nationB || !poolAddress) {
-      return NextResponse.json({ error: 'nationA, nationB, and poolAddress are required' }, { status: 400 })
+    if (!nationA || !nationB || !poolAddress || !hostAddress || !escrowDeployTxHash) {
+      return NextResponse.json({
+        error: 'nationA, nationB, poolAddress, hostAddress, and escrowDeployTxHash are required (TipPool escrow)'
+      }, { status: 400 })
     }
     if (!/^0x[a-fA-F0-9]{40}$/.test(poolAddress)) {
       return NextResponse.json({ error: 'Invalid poolAddress' }, { status: 400 })
     }
-    if (hostAddress && !/^0x[a-fA-F0-9]{40}$/.test(hostAddress)) {
+    if (!/^0x[a-fA-F0-9]{40}$/.test(hostAddress)) {
       return NextResponse.json({ error: 'Invalid hostAddress' }, { status: 400 })
     }
-    if (escrowDeployTxHash && !/^0x[a-fA-F0-9]{64}$/.test(escrowDeployTxHash)) {
+    if (!/^0x[a-fA-F0-9]{64}$/.test(escrowDeployTxHash)) {
       return NextResponse.json({ error: 'Invalid escrowDeployTxHash' }, { status: 400 })
     }
     if (nationA === nationB) {
@@ -44,8 +46,8 @@ export async function POST (req: Request): Promise<Response> {
       nationA,
       nationB,
       poolAddress,
-      ...(hostAddress ? { hostAddress } : {}),
-      ...(escrowDeployTxHash ? { escrowDeployTxHash } : {}),
+      hostAddress,
+      escrowDeployTxHash,
       ...(code ? { code } : {}),
       ...(capPerWallet ? { capPerWallet } : {})
     })

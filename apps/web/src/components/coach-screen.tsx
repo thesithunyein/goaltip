@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Input } from '@wdk-starter/wdk-ui'
 import { getNation, NATIONS } from '@/lib/nations'
+import { getParty, nationTotals } from '@/lib/party-store'
 import { softCardStyle, softDim, softPillBtn } from '@/lib/soft-ui'
 import { Screen } from './screen'
 
@@ -17,6 +18,27 @@ export function CoachScreen (): React.JSX.Element {
   const [online, setOnline] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [setupOpen, setSetupOpen] = useState(false)
+  const [roomHint, setRoomHint] = useState<string | null>(null)
+
+  // Sync Coach with the active Party room so WDK + QVAC feel like one product.
+  useEffect(() => {
+    const party = getParty()
+    if (!party) {
+      setRoomHint(null)
+      return
+    }
+    setNationA(party.nationA)
+    setNationB(party.nationB)
+    const totals = nationTotals(party)
+    const a = getNation(party.nationA)
+    const b = getNation(party.nationB)
+    const ta = (totals.get(party.nationA) ?? 0).toFixed(2)
+    const tb = (totals.get(party.nationB) ?? 0).toFixed(2)
+    setRoomHint(`Room ${party.code}: ${a?.name ?? party.nationA} ${ta} USDt vs ${b?.name ?? party.nationB} ${tb} USDt (verified)`)
+    setQuestion(
+      `Watch party ${party.code}. Verified tips: ${a?.name ?? party.nationA} ${ta} USDt vs ${b?.name ?? party.nationB} ${tb} USDt. Who should I tip next and why? Keep it under 120 words.`
+    )
+  }, [])
 
   const checkCoach = useCallback(async () => {
     try {
@@ -86,13 +108,18 @@ export function CoachScreen (): React.JSX.Element {
           </span>
         </div>
 
+        {roomHint && (
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--color-primary)' }}>
+            Linked to Party · {roomHint}
+          </p>
+        )}
+
         {online === false && (
           <div style={offlineBox}>
             <strong style={{ fontSize: 13 }}>Why offline on the live site?</strong>
             <p style={{ ...softDim, fontSize: 12, margin: '6px 0 0' }}>
               QVAC runs on your device only — required for the Cup multi-track demo.
-              The live Vercel site cannot reach localhost. On your recording machine:
-              <code>pnpm add @qvac/sdk && npm run coach</code>, then Recheck.
+              On your recording machine: <code>pnpm add @qvac/sdk && pnpm demo</code>, then Recheck.
             </p>
           </div>
         )}
@@ -106,7 +133,7 @@ export function CoachScreen (): React.JSX.Element {
             {NATIONS.map((n) => <option key={n.id} value={n.id}>{n.name} ({n.iso.toUpperCase()})</option>)}
           </select>
         </div>
-        <Input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Ask the coach (optional)…" style={{ borderRadius: 14, minHeight: 44 }} />
+        <Input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Ask the coach…" style={{ borderRadius: 14, minHeight: 44 }} />
         <Button onClick={() => void askCoach()} disabled={busy} style={{ width: '100%', ...softPillBtn, minHeight: 48 }}>
           {busy ? 'Thinking locally…' : 'Ask local coach'}
         </Button>
@@ -130,12 +157,12 @@ export function CoachScreen (): React.JSX.Element {
           <ol style={{ margin: '10px 0 0', paddingLeft: 18, lineHeight: 1.6 }}>
             <li><code>pnpm add @qvac/sdk</code></li>
             <li><code>npx @qvac/sdk doctor</code></li>
-            <li><code>npm run coach</code></li>
+            <li><code>pnpm demo</code> (or <code>npm run coach</code>)</li>
             <li>Stay on localhost and tap Recheck</li>
           </ol>
           <pre style={codeBlock}>{`pnpm add @qvac/sdk
 npx @qvac/sdk doctor
-npm run coach`}</pre>
+pnpm demo`}</pre>
         </details>
       </Card>
     </Screen>

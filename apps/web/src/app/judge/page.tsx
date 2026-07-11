@@ -35,6 +35,11 @@ export default function JudgePage (): React.JSX.Element {
         <section style={section}>
           <h2 style={h2}>Live health</h2>
           {healthErr && <p style={err}>{healthErr}</p>}
+          {health && health.persistence === 'memory' && (
+            <p style={warn}>
+              persistence is &quot;memory&quot; — shared rooms will not survive cold starts. Set Upstash Redis on Vercel before judging multi-device.
+            </p>
+          )}
           {health && (
             <pre style={pre}>{JSON.stringify(health, null, 2)}</pre>
           )}
@@ -111,6 +116,15 @@ const section: React.CSSProperties = { display: 'flex', flexDirection: 'column',
 const h2: React.CSSProperties = { margin: 0, fontSize: 16, fontWeight: 700 }
 const dim: React.CSSProperties = { margin: 0, fontSize: 13, lineHeight: 1.45, color: 'var(--text-secondary, #666)' }
 const err: React.CSSProperties = { margin: 0, color: 'var(--color-error, #ef4444)', fontSize: 13 }
+const warn: React.CSSProperties = {
+  margin: 0,
+  padding: 12,
+  borderRadius: 12,
+  fontSize: 13,
+  lineHeight: 1.4,
+  background: 'color-mix(in srgb, var(--color-warning, #f59e0b) 16%, transparent)',
+  border: '1px solid color-mix(in srgb, var(--color-warning, #f59e0b) 40%, transparent)'
+}
 const pre: React.CSSProperties = {
   margin: 0,
   padding: 12,

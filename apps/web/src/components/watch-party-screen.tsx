@@ -49,6 +49,7 @@ export function WatchPartyScreen (): React.JSX.Element {
   const [capPerWallet, setCapPerWallet] = useState('10')
   const [capEnabled, setCapEnabled] = useState(true)
   const [ethWei, setEthWei] = useState<bigint | null>(null)
+  const [escrowUsdt, setEscrowUsdt] = useState<string | null>(null)
 
   const usdt = tokensFor(CHAIN_ID).find((t) => t.symbol === 'USDt')
 
@@ -71,6 +72,30 @@ export function WatchPartyScreen (): React.JSX.Element {
     return () => { cancelled = true }
   }, [phase, address, party])
 
+  // Live TipPool USDt balance vs verified board totals.
+  useEffect(() => {
+    if (!party?.hostAddress || !usdt) {
+      setEscrowUsdt(null)
+      return
+    }
+    let cancelled = false
+    const tick = async () => {
+      try {
+        const api = getWalletApi()
+        const bal = BigInt(await api.rpc_getTokenBalance(CHAIN_ID as never, party.poolAddress, usdt.address))
+        if (!cancelled) setEscrowUsdt((Number(bal) / 1e6).toFixed(2))
+      } catch {
+        /* ignore */
+      }
+    }
+    void tick()
+    const id = window.setInterval(() => { void tick() }, 8000)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [party?.code, party?.poolAddress, party?.hostAddress, party?.tips.length, usdt])
+
   const applyParty = useCallback((p: WatchParty) => {
     setPartyCache(p)
     setParty(p)
@@ -84,14 +109,17 @@ export function WatchPartyScreen (): React.JSX.Element {
     const room = params.get('room')
 
     const publishLocal = async (local: WatchParty): Promise<WatchParty | null> => {
+      if (!local.hostAddress || !local.escrowDeployTxHash) {
+        return null
+      }
       try {
         return await apiCreateParty({
           nationA: local.nationA,
           nationB: local.nationB,
           poolAddress: local.poolAddress,
           code: local.code,
-          ...(local.hostAddress ? { hostAddress: local.hostAddress } : {}),
-          ...(local.escrowDeployTxHash ? { escrowDeployTxHash: local.escrowDeployTxHash } : {}),
+          hostAddress: local.hostAddress,
+          escrowDeployTxHash: local.escrowDeployTxHash,
           ...(local.capPerWallet ? { capPerWallet: local.capPerWallet } : {})
         })
       } catch {
@@ -330,24 +358,24 @@ export function WatchPartyScreen (): React.JSX.Element {
       setError('Only the room host can settle this match.')
       return
     }
+    if (!party.hostAddress) {
+      setError('This room predates TipPool escrow. Create a new shared room.')
+      return
+    }
     setBusy(true)
     setError(null)
     try {
-      let settleTxHash: string | undefined
-      // Escrow rooms: host calls TipPool.settle on-chain, then board verifies Settled.
-      if (party.hostAddress) {
-        const api = getWalletApi()
-        settleTxHash = await api.account_sendTransaction(
-          CHAIN_ID as never,
-          accountIndex,
-          { to: party.poolAddress, value: 0n, data: encodeTipPoolSettle(winnerNationId) }
-        ) as string
-        await new Promise((r) => setTimeout(r, 2000))
-      }
+      const api = getWalletApi()
+      const settleTxHash = await api.account_sendTransaction(
+        CHAIN_ID as never,
+        accountIndex,
+        { to: party.poolAddress, value: 0n, data: encodeTipPoolSettle(winnerNationId) }
+      ) as string
+      await new Promise((r) => setTimeout(r, 2000))
       const settled = await apiSettleParty(party.code, {
         winnerNationId,
         from: address,
-        ...(settleTxHash ? { settleTxHash } : {})
+        settleTxHash
       })
       applyParty(settled)
     } catch (e) {
@@ -491,6 +519,8 @@ export function WatchPartyScreen (): React.JSX.Element {
   const winnerInfo = party.winnerNationId ? getNation(party.winnerNationId) : undefined
   const tipsLocked = isSettled
   const isEscrow = Boolean(party.hostAddress)
+  const boardTotal = totalA + totalB
+  const leadId = totalA === totalB ? null : (totalA > totalB ? party.nationA : party.nationB)
 
   return (
     <main style={softPage}>
@@ -528,7 +558,16 @@ export function WatchPartyScreen (): React.JSX.Element {
           </div>
           {isSettled && winnerInfo && (
             <p style={{ margin: '12px 0 0', fontSize: 14, color: 'var(--color-primary)', fontWeight: 700 }}>
-              {winnerInfo.name} wins · pool {(totalA + totalB).toFixed(2)} USDt
+              {winnerInfo.name} wins · board {boardTotal.toFixed(2)} USDt
+              {party.settledAmountUsdt ? ` · escrow paid ${party.settledAmountUsdt}` : ''}
+            </p>
+          )}
+          {isEscrow && !isSettled && (
+            <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--text-secondary)' }}>
+              Escrow on-chain: {escrowUsdt ?? '…'} USDt · Board verified: {boardTotal.toFixed(2)} USDt
+              {escrowUsdt !== null && Math.abs(Number.parseFloat(escrowUsdt) - boardTotal) < 0.011
+                ? ' · matched'
+                : ''}
             </p>
           )}
         </div>
@@ -607,13 +646,26 @@ export function WatchPartyScreen (): React.JSX.Element {
           <Card padding="md" variant="elevated" style={softCardStyle}>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Settle match</h3>
             <p style={{ ...softDim, fontSize: 13 }}>
-              Host only. {isEscrow ? 'Calls TipPool.settle on-chain, then locks the board on every device.' : 'Pick the winner to lock tipping on every device.'}
+              Host only. Calls TipPool.settle on-chain, then locks the board.
+              {leadId && (
+                <> Suggested: <strong>{getNation(leadId)?.name}</strong> leads on verified tips.</>
+              )}
             </p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button disabled={busy} onClick={() => void settleMatch(party.nationA)} style={{ flex: 1, ...softPillBtn, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <Button
+                disabled={busy}
+                variant={leadId === party.nationA ? 'primary' : 'secondary'}
+                onClick={() => void settleMatch(party.nationA)}
+                style={{ flex: 1, ...softPillBtn, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
                 <NationFlag nation={nationAInfo} size={16} /> {nationAInfo?.name} wins
               </Button>
-              <Button disabled={busy} onClick={() => void settleMatch(party.nationB)} style={{ flex: 1, ...softPillBtn, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <Button
+                disabled={busy}
+                variant={leadId === party.nationB ? 'primary' : 'secondary'}
+                onClick={() => void settleMatch(party.nationB)}
+                style={{ flex: 1, ...softPillBtn, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
                 <NationFlag nation={nationBInfo} size={16} /> {nationBInfo?.name} wins
               </Button>
             </div>

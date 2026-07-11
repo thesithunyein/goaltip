@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ThemePicker, BrandPicker, isValidHexPrimary, Button } from '@wdk-starter/wdk-ui'
+import { ThemePicker, isValidHexPrimary, Button } from '@wdk-starter/wdk-ui'
 import { Modal } from './modal'
-import { useAppearance, TEMPLATE_BRAND } from './appearance-provider'
+import { useAppearance } from './appearance-provider'
 
 /**
  * In-app Appearance settings. Light defaults to Soft Light; Dark maps to Soft Dark.
@@ -12,7 +12,7 @@ import { useAppearance, TEMPLATE_BRAND } from './appearance-provider'
 export function AppearanceDialog () {
   const {
     theme, setTheme, customPrimary, setCustomPrimary,
-    brand, setBrand, setOpen, resetSoftLight
+    setOpen, resetSoftLight
   } = useAppearance()
 
   const [hexDraft, setHexDraft] = useState(customPrimary ?? '')
@@ -63,11 +63,7 @@ export function AppearanceDialog () {
               <button onClick={() => setCustomPrimary(null)} style={resetLink}>Reset</button>
             )}
           </div>
-          <span style={hintStyle}>Light = Soft Light (default). Dark = Soft Dark (readable). Surfaces stay GoalTip-branded.</span>
-        </section>
-
-        <section>
-          <BrandPicker value={brand} onChange={setBrand} defaults={TEMPLATE_BRAND} />
+          <span style={hintStyle}>Light = Soft Light (default). Dark = Soft Dark (readable). Brand mark stays GoalTip.</span>
         </section>
       </div>
     </Modal>

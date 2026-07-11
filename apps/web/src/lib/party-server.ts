@@ -205,7 +205,7 @@ export async function appendSharedTip (code: string, tip: TipRecord): Promise<Wa
  */
 export async function settleSharedParty (
   code: string,
-  opts: { winnerNationId: string, from: string, settleTxHash?: string }
+  opts: { winnerNationId: string, from: string, settleTxHash?: string, settledAmountUsdt?: string }
 ): Promise<WatchParty | null> {
   const party = await getSharedParty(code)
   if (!party) return null
@@ -225,12 +225,14 @@ export async function settleSharedParty (
   }
 
   const settleTxHash = opts.settleTxHash?.trim().toLowerCase() || undefined
+  const settledAmountUsdt = opts.settledAmountUsdt?.trim() || undefined
 
   const next: WatchParty = {
     ...party,
     winnerNationId: winner,
     settledAt: new Date().toISOString(),
-    ...(settleTxHash ? { settleTxHash } : {})
+    ...(settleTxHash ? { settleTxHash } : {}),
+    ...(settledAmountUsdt ? { settledAmountUsdt } : {})
   }
   await saveSharedParty(next)
   return next
