@@ -7,7 +7,7 @@
 **Self-custodial USDt tipping for football watch parties.**  
 Keys stay in a Web Worker. Tips go into an on-chain TipPool. The board only accepts what Sepolia proves.
 
-[**Live**](https://goaltip-web.vercel.app) · [**Judge**](https://goaltip-web.vercel.app/judge) · [**Health**](https://goaltip-web.vercel.app/api/health) · [**Demo video**](https://youtu.be/u8otedpp1mI) · [**JUDGE.md**](./JUDGE.md)
+[**Live**](https://goaltip-web.vercel.app) · [**Judge**](https://goaltip-web.vercel.app/judge) · [**Health**](https://goaltip-web.vercel.app/api/health) · [**Demo video**](https://youtu.be/lo1RfxivWJY) · [**JUDGE.md**](./JUDGE.md)
 
 **Tracks:** [WDK](https://wdk.tether.io) · [QVAC](https://qvac.tether.io) (local) · [Pears](https://docs.pears.com) (Hyperswarm, local)  
 Built for the [Tether Developers Cup](https://dorahacks.io/hackathon/tether-developers-cup).

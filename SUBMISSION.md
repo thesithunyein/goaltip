@@ -22,8 +22,8 @@ https://goaltip-web.vercel.app
 https://goaltip-web.vercel.app/judge
 
 ## Demo video
-https://youtu.be/u8otedpp1mI
-<!-- REPLACE with new ≤3min TipPool.tip + Verified (Transfer+Tip) + settle (+ optional QVAC/Pears) video before final lock -->
+https://youtu.be/lo1RfxivWJY
+
 ## Earlier work
 Forked and extended [wdk-wallet-template](https://github.com/plinkdev1/wdk-wallet-template) (MIT). All GoalTip-specific features (shared watch parties, TipPool escrow + tip(nationId), football UI, QVAC coach, Pears Hyperswarm sidecar, Sepolia tipping, spend limits, on-chain tip verification, match settle) built during the Tether Developers Cup.
 
