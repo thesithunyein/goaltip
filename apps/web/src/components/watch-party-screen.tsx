@@ -141,7 +141,7 @@ export function WatchPartyScreen (): React.JSX.Element {
         if (fresh) {
           try {
             const synced = await apiGetParty(code)
-            if (!cancelled) applyParty(synced)
+            if (!cancelled && synced) applyParty(synced)
           } catch { /* ignore */ }
         }
       })()
