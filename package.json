@@ -18,6 +18,7 @@
     "test": "pnpm -r --filter=\"./packages/**\" --filter=\"./apps/**\" test",
     "lint": "pnpm -F @wdk-starter/web lint",
     "coach": "node coach/server.mjs",
+    "pears": "node pears/server.mjs",
     "demo": "node scripts/dev-demo.mjs",
     "coach:warmup": "node scripts/coach-warmup.mjs",
     "embed:tippool": "node scripts/embed-tip-pool.mjs"

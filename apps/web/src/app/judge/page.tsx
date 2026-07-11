@@ -28,8 +28,8 @@ export default function JudgePage (): React.JSX.Element {
         <p style={eyebrow}>Tether Developers Cup · Judge</p>
         <h1 style={h1}>GoalTip</h1>
         <p style={lead}>
-          Self-custodial USDt watch-party tipping on Tether WDK — TipPool escrow, verified tips, on-chain settle.
-          Optional QVAC coach runs locally on-device.
+          Self-custodial USDt watch-party tipping on Tether WDK — TipPool.tip tags nations on-chain,
+          verified Transfer + Tip event, on-chain settle. Optional QVAC + Pears run locally.
         </p>
 
         <section style={section}>
@@ -50,12 +50,20 @@ export default function JudgePage (): React.JSX.Element {
         </section>
 
         <section style={section}>
+          <h2 style={h2}>Tracks</h2>
+          <p style={dim}>
+            <strong>WDK</strong> (TipPool in Worker) · <strong>QVAC</strong> (local coach) · <strong>Pears</strong> (Hyperswarm sidecar).
+            Multi-track demo: <code>pnpm add @qvac/sdk hyperswarm && pnpm demo</code>
+          </p>
+        </section>
+
+        <section style={section}>
           <h2 style={h2}>3-minute flow</h2>
           <ol style={ol}>
             <li>Open <a href="/">app</a> → unlock / create wallet (Web Worker)</li>
             <li>Party → Create shared room (deploys TipPool; enable spend limit) → Copy invite</li>
             <li>Second browser/phone: open invite → same board</li>
-            <li>Tip 1 USDt → <strong>Verified</strong> → explorer (Transfer into TipPool)</li>
+            <li>Tip 1 USDt via TipPool.tip → <strong>Verified</strong> (Transfer + Tip event)</li>
             <li>Try tipping past the cap → blocked before any signature</li>
             <li>Host Settle → TipPool.settle on-chain → winner on both devices</li>
           </ol>
@@ -70,12 +78,11 @@ export default function JudgePage (): React.JSX.Element {
         </section>
 
         <section style={section}>
-          <h2 style={h2}>Optional QVAC (multi-track)</h2>
-          <pre style={pre}>{`pnpm add @qvac/sdk
+          <h2 style={h2}>Optional QVAC + Pears (multi-track)</h2>
+          <pre style={pre}>{`pnpm add @qvac/sdk hyperswarm
 pnpm demo
-# or: npm run coach  (separate terminal)
-# Coach tab → Recheck → ask a match question`}</pre>
-          <p style={dim}>QVAC is on-device only — expected offline on the Vercel URL.</p>
+# Party header → Pears Np · Coach tab → ask a match question`}</pre>
+          <p style={dim}>QVAC and Pears are local-only — expected offline on the Vercel URL.</p>
         </section>
 
         <p style={{ ...dim, marginTop: 8 }}>

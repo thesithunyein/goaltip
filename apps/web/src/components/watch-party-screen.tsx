@@ -23,7 +23,17 @@ import {
   walletTotal,
   type WatchParty
 } from '@/lib/party-store'
-import { encodeTipPoolSettle, partyHostAddress, tipPoolCreationData, waitForDeployedTipPool } from '@/lib/tip-pool'
+import {
+  encodeErc20Approve,
+  encodeTipPoolSettle,
+  encodeTipPoolTip,
+  waitForTxSuccess,
+  getUsdtAllowance,
+  partyHostAddress,
+  tipPoolCreationData,
+  waitForDeployedTipPool
+} from '@/lib/tip-pool'
+import { pearsAnnounce, pearsHealth, pearsJoin, pearsStatus } from '@/lib/pears-client'
 import { BrandHeader } from './brand-header'
 import { NationFlag } from './nation-flag'
 import { Screen } from './screen'
@@ -50,6 +60,7 @@ export function WatchPartyScreen (): React.JSX.Element {
   const [capEnabled, setCapEnabled] = useState(true)
   const [ethWei, setEthWei] = useState<bigint | null>(null)
   const [escrowUsdt, setEscrowUsdt] = useState<string | null>(null)
+  const [pearsPeers, setPearsPeers] = useState<number | null>(null)
 
   const usdt = tokensFor(CHAIN_ID).find((t) => t.symbol === 'USDt')
 
@@ -95,6 +106,34 @@ export function WatchPartyScreen (): React.JSX.Element {
       window.clearInterval(id)
     }
   }, [party?.code, party?.poolAddress, party?.hostAddress, party?.tips.length, usdt])
+
+  // Optional Pears Hyperswarm gossip (local sidecar).
+  useEffect(() => {
+    if (!party?.code) {
+      setPearsPeers(null)
+      return
+    }
+    let cancelled = false
+    void (async () => {
+      const health = await pearsHealth()
+      if (!health.ok || cancelled) {
+        if (!cancelled) setPearsPeers(null)
+        return
+      }
+      await pearsJoin(party.code)
+      const st = await pearsStatus(party.code)
+      if (!cancelled) setPearsPeers(st?.peers ?? 0)
+    })()
+    const id = window.setInterval(() => {
+      void pearsStatus(party.code).then((st) => {
+        if (!cancelled && st) setPearsPeers(st.peers)
+      })
+    }, 5000)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [party?.code])
 
   const applyParty = useCallback((p: WatchParty) => {
     setPartyCache(p)
@@ -315,11 +354,31 @@ export function WatchPartyScreen (): React.JSX.Element {
         setError(`Not enough test USDt (balance: ${(Number(usdtBalance) / 1e6).toFixed(2)}). Mint free USDT from the Aave Sepolia faucet — link in the card below.`)
         return
       }
-      const hash = await api.account_sendTransaction(
-        CHAIN_ID as never,
-        accountIndex,
-        { to: usdt.address, value: 0n, data: encodeErc20Transfer(party.poolAddress, amountBase) }
-      )
+
+      let hash: string
+      if (party.hostAddress) {
+        // TipPool.tip(nationId, amount) — nation tagged on-chain (approve once if needed).
+        const allowance = await getUsdtAllowance(address, party.poolAddress)
+        if (allowance < amountBase) {
+          const approveHash = await api.account_sendTransaction(
+            CHAIN_ID as never,
+            accountIndex,
+            { to: usdt.address, value: 0n, data: encodeErc20Approve(party.poolAddress) }
+          )
+          await waitForTxSuccess(approveHash as string, { label: 'USDt approve' })
+        }
+        hash = await api.account_sendTransaction(
+          CHAIN_ID as never,
+          accountIndex,
+          { to: party.poolAddress, value: 0n, data: encodeTipPoolTip(nationId, amountBase) }
+        ) as string
+      } else {
+        hash = await api.account_sendTransaction(
+          CHAIN_ID as never,
+          accountIndex,
+          { to: usdt.address, value: 0n, data: encodeErc20Transfer(party.poolAddress, amountBase) }
+        ) as string
+      }
       const tip = {
         nationId,
         amount: amountStr,
@@ -340,6 +399,12 @@ export function WatchPartyScreen (): React.JSX.Element {
       try {
         const synced = await apiAppendTip(party.code, tip)
         applyParty(synced)
+        void pearsAnnounce(party.code, {
+          nationId: tip.nationId,
+          amount: tip.amount,
+          hash: tip.hash,
+          from: tip.from
+        })
       } catch (syncErr) {
         const msg = syncErr instanceof Error ? syncErr.message : 'shared board sync failed'
         setError(`Tip sent on-chain, but board verification failed: ${msg}. Tap Refresh pool.`)
@@ -529,7 +594,7 @@ export function WatchPartyScreen (): React.JSX.Element {
 
         <div style={{ textAlign: 'center', padding: '6px 0 2px' }}>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6 }}>
-            Room {party.code} · Sepolia{isEscrow ? ' · TipPool' : ''}{party.capPerWallet ? ` · Cap ${party.capPerWallet}` : ''}{isSettled ? ' · Settled' : ''}
+            Room {party.code} · Sepolia{isEscrow ? ' · TipPool' : ''}{party.capPerWallet ? ` · Cap ${party.capPerWallet}` : ''}{isSettled ? ' · Settled' : ''}{pearsPeers !== null ? ` · Pears ${pearsPeers}p` : ''}
           </div>
           {isEscrow && chain.explorer && (
             <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--text-secondary)' }}>

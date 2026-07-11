@@ -82,4 +82,64 @@ describe('verifyTipTransaction', () => {
       amount: '1'
     })).rejects.toThrow(/does not match/)
   })
+
+  it('requires Tip event when nationId is set', async () => {
+    const TIP_TOPIC =
+      '0x920ca1f1b85e92c4d97ae7d5f8d094fb8392fb69c4b6db8bb3af3b8f5ff0f32b'
+    const nationTopic =
+      '0x6d6d000000000000000000000000000000000000000000000000000000000000'
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: {
+          status: '0x1',
+          logs: [
+            {
+              address: SEPOLIA_USDT,
+              topics: [TRANSFER_TOPIC, padAddress(FROM), padAddress(POOL)],
+              data: amountHex(1_000_000n)
+            },
+            {
+              address: POOL,
+              topics: [TIP_TOPIC, padAddress(FROM), nationTopic],
+              data: amountHex(1_000_000n)
+            }
+          ]
+        }
+      })
+    }))
+
+    await expect(verifyTipTransaction({
+      hash: HASH,
+      from: FROM,
+      poolAddress: POOL,
+      amount: '1',
+      nationId: 'mm'
+    })).resolves.toBeUndefined()
+  })
+
+  it('rejects missing Tip event when nationId is set', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: {
+          status: '0x1',
+          logs: [{
+            address: SEPOLIA_USDT,
+            topics: [TRANSFER_TOPIC, padAddress(FROM), padAddress(POOL)],
+            data: amountHex(1_000_000n)
+          }]
+        }
+      })
+    }))
+
+    await expect(verifyTipTransaction({
+      hash: HASH,
+      from: FROM,
+      poolAddress: POOL,
+      amount: '1',
+      nationId: 'mm'
+    })).rejects.toThrow(/Tip event/)
+  })
 })

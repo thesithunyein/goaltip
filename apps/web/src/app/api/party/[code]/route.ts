@@ -23,10 +23,11 @@ export async function GET (
       return NextResponse.json({
         ok: true,
         persistence: redis ? 'redis' : 'memory',
-        tipVerification: 'sepolia-erc20-transfer',
+        tipVerification: 'sepolia-erc20-transfer+tip-event',
         escrow: 'tippool-per-room',
         settle: 'on-chain-tippool+board',
-        qvac: 'local-optional'
+        qvac: 'local-optional',
+        pears: 'local-optional'
       })
     }
     const party = await getSharedParty(code)

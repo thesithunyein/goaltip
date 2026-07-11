@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { encodeTipPoolSettle, nationIdToBytes32, partyHostAddress } from './tip-pool'
+import { encodeTipPoolSettle, encodeTipPoolTip, nationIdToBytes32, partyHostAddress } from './tip-pool'
 
 describe('tip-pool helpers', () => {
   it('packs nation ids into bytes32', () => {
@@ -15,6 +15,12 @@ describe('tip-pool helpers', () => {
     const data = encodeTipPoolSettle('mm')
     expect(data.startsWith('0x987757dd')).toBe(true)
     expect(data.length).toBe(2 + 8 + 64)
+  })
+
+  it('encodes tip(bytes32,uint256) calldata', () => {
+    const data = encodeTipPoolTip('mm', 1_000_000n)
+    expect(data.startsWith('0x43b37ddf')).toBe(true)
+    expect(data.length).toBe(2 + 8 + 64 + 64)
   })
 
   it('resolves host from hostAddress or legacy poolAddress', () => {

@@ -57,7 +57,9 @@ export async function POST (
       hash,
       from,
       poolAddress: party.poolAddress,
-      amount
+      amount,
+      // Escrow TipPool.tip() rooms must also match on-chain Tip(nationId).
+      ...(party.hostAddress ? { nationId } : {})
     })
 
     const tip: TipRecord = {

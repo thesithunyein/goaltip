@@ -1,10 +1,13 @@
 /**
- * TipPool helpers — deploy per-room escrow, encode settle, wait for contract address.
+ * TipPool helpers — deploy per-room escrow, encode tip/settle, wait for contract address.
  */
 
-import { SETTLE_SELECTOR, TIP_POOL_CREATION_BYTECODE } from './tip-pool-bytecode'
+import {
+  APPROVE_SELECTOR, SETTLE_SELECTOR, TIP_POOL_USDT, TIP_SELECTOR, TIP_POOL_CREATION_BYTECODE
+} from './tip-pool-bytecode'
 
 const DEFAULT_SEPOLIA_RPC = 'https://ethereum-sepolia-rpc.publicnode.com'
+const MAX_UINT256 = (1n << 256n) - 1n
 
 export function tipPoolCreationData (): string {
   return TIP_POOL_CREATION_BYTECODE
@@ -14,7 +17,7 @@ export function tipPoolCreationData (): string {
 export function nationIdToBytes32 (nationId: string): string {
   const raw = nationId.trim().toLowerCase()
   if (!raw || raw.length > 31) {
-    throw new Error('Invalid nation id for TipPool settle.')
+    throw new Error('Invalid nation id for TipPool.')
   }
   let hex = ''
   for (let i = 0; i < raw.length; i++) {
@@ -23,9 +26,27 @@ export function nationIdToBytes32 (nationId: string): string {
   return `0x${hex.padEnd(64, '0')}`
 }
 
+function padAddress (addr: string): string {
+  return addr.toLowerCase().replace(/^0x/, '').padStart(64, '0')
+}
+
+function padUint (n: bigint): string {
+  return n.toString(16).padStart(64, '0')
+}
+
 /** ABI encode TipPool.settle(bytes32). */
 export function encodeTipPoolSettle (nationId: string): string {
   return `${SETTLE_SELECTOR}${nationIdToBytes32(nationId).slice(2)}`
+}
+
+/** ABI encode TipPool.tip(bytes32,uint256). */
+export function encodeTipPoolTip (nationId: string, amountBase: bigint): string {
+  return `${TIP_SELECTOR}${nationIdToBytes32(nationId).slice(2)}${padUint(amountBase)}`
+}
+
+/** ABI encode ERC-20 approve(spender, amount). */
+export function encodeErc20Approve (spender: string, amountBase: bigint = MAX_UINT256): string {
+  return `${APPROVE_SELECTOR}${padAddress(spender)}${padUint(amountBase)}`
 }
 
 function sepoliaRpc (): string {
@@ -48,10 +69,43 @@ async function rpcCall <T>(method: string, params: unknown[]): Promise<T> {
   return data.result as T
 }
 
+/** USDt allowance(owner, TipPool). */
+export async function getUsdtAllowance (owner: string, spender: string): Promise<bigint> {
+  // allowance(address,address) selector 0xdd62ed3e
+  const data = `0xdd62ed3e${padAddress(owner)}${padAddress(spender)}`
+  const result = await rpcCall<string>('eth_call', [{ to: TIP_POOL_USDT, data }, 'latest'])
+  return BigInt(result || '0x0')
+}
+
 type Receipt = {
   status?: string | null
   contractAddress?: string | null
 } | null
+
+/**
+ * Poll until a tx has a successful receipt (status 0x1).
+ */
+export async function waitForTxSuccess (
+  txHash: string,
+  opts?: { attempts?: number, delayMs?: number, label?: string }
+): Promise<void> {
+  const attempts = opts?.attempts ?? 20
+  const delayMs = opts?.delayMs ?? 1200
+  const label = opts?.label ?? 'Transaction'
+  for (let i = 0; i < attempts; i++) {
+    const receipt = await rpcCall<Receipt>('eth_getTransactionReceipt', [txHash])
+    if (receipt) {
+      const status = receipt.status
+      const ok = status === '0x1' || status === '1'
+      if (!ok && status != null) {
+        throw new Error(`${label} reverted on Sepolia.`)
+      }
+      if (ok) return
+    }
+    await new Promise((r) => setTimeout(r, delayMs))
+  }
+  throw new Error(`${label} is slow to confirm — check Sepolia explorer and retry.`)
+}
 
 /**
  * Poll until the deploy tx has a contractAddress (or fail).

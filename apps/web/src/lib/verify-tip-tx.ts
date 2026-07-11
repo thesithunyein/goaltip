@@ -4,12 +4,19 @@
  * of the claimed USDt amount from the tipper to the room pool address.
  */
 
-/** Aave v3 Sepolia test USDT (6 decimals) — same as tokens.ts. */
-export const SEPOLIA_USDT = '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0'
+import { TIP_POOL_USDT } from './tip-pool-bytecode'
+import { nationIdToBytes32 } from './tip-pool'
+
+/** Aave v3 Sepolia test USDT (same as TipPool.USDT). */
+export const SEPOLIA_USDT = TIP_POOL_USDT
 
 /** keccak256("Transfer(address,address,uint256)") */
 const TRANSFER_TOPIC =
   '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+
+/** keccak256("Tip(address,bytes32,uint256)") — TipPool tip() event */
+const TIP_TOPIC =
+  '0x920ca1f1b85e92c4d97ae7d5f8d094fb8392fb69c4b6db8bb3af3b8f5ff0f32b'
 
 const DEFAULT_SEPOLIA_RPC = 'https://ethereum-sepolia-rpc.publicnode.com'
 
@@ -85,12 +92,14 @@ async function getReceipt (hash: string, attempts = 10, delayMs = 900): Promise<
 /**
  * Verifies that `hash` is a successful Sepolia USDt transfer from `from`
  * to `poolAddress` for exactly `amount` (human units, 6 decimals).
+ * When `nationId` is set, also requires TipPool Tip(from, nationId, amount).
  */
 export async function verifyTipTransaction (opts: {
   hash: string
   from: string
   poolAddress: string
   amount: string
+  nationId?: string
   tokenAddress?: string
   decimals?: number
 }): Promise<void> {
@@ -138,5 +147,27 @@ export async function verifyTipTransaction (opts: {
     throw new TipVerificationError(
       'On-chain Transfer does not match this tip (token, from, pool, or amount). Tip rejected.'
     )
+  }
+
+  if (opts.nationId?.trim()) {
+    const nationTopic = nationIdToBytes32(opts.nationId).toLowerCase()
+    const tipLog = logs.find((log) => {
+      if (!log.address || normalizeAddress(log.address) !== pool) return false
+      const topics = log.topics ?? []
+      if ((topics[0] ?? '').toLowerCase() !== TIP_TOPIC) return false
+      if (!topics[1] || topicToAddress(topics[1]) !== from) return false
+      if (!topics[2] || topics[2].toLowerCase() !== nationTopic) return false
+      const raw = (log.data ?? '0x0').replace(/^0x/, '') || '0'
+      try {
+        return BigInt(`0x${raw}`) === expected
+      } catch {
+        return false
+      }
+    })
+    if (!tipLog) {
+      throw new TipVerificationError(
+        'On-chain Tip event does not match this tip (nation or amount). Tip rejected.'
+      )
+    }
   }
 }
