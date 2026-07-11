@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Card, StatusPill } from '@wdk-starter/wdk-ui'
 import { useWallet, type TxRecord } from '@/wallet/wallet-provider'
 import { formatAmount, getChain } from '@/wallet/chains'
+import { softCardStyle, softDim } from '@/lib/soft-ui'
 import { TxDetail } from './tx-detail'
 
 function short (addr: string) {
@@ -15,20 +16,17 @@ export function Activity () {
   const [selected, setSelected] = useState<TxRecord | null>(null)
 
   return (
-    <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <h3 style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary, #b3a79f)' }}>Activity</h3>
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {transactions.length === 0
         ? (
-          <Card padding="md">
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary, #b3a79f)' }}>
-              No transactions yet. Transactions you send appear here with live status. Full historical
-              history is provided by the <strong>WDK Indexer API</strong> — see the README for wiring the
-              indexer adapter.
+          <Card padding="md" variant="elevated" style={softCardStyle}>
+            <p style={softDim}>
+              No transactions yet. Sends appear here with live status.
             </p>
           </Card>
           )
         : (
-          <Card padding="none">
+          <Card padding="none" variant="elevated" style={{ ...softCardStyle, gap: 0, overflow: 'hidden' }}>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {transactions.map((tx) => {
                 const chain = getChain(tx.chainId)
@@ -43,16 +41,16 @@ export function Activity () {
                     title="View transaction details"
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 14 }}>Sent to {short(tx.to)}</span>
-                      <span style={{ fontSize: 12, color: 'var(--text-secondary, #b3a79f)' }}>
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>Sent to {short(tx.to)}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                         {chain.name} · {new Date(tx.ts).toLocaleTimeString()}
                       </span>
                     </div>
                     <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 14 }}>-{formatAmount(BigInt(tx.amount), chain.decimals)} {tx.symbol}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700 }}>-{formatAmount(BigInt(tx.amount), chain.decimals)} {tx.symbol}</span>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
                         <StatusPill status={tx.status} size="sm" />
-                        <span style={{ fontSize: 12, color: 'var(--text-secondary, #b3a79f)' }}>details ›</span>
+                        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>details ›</span>
                       </span>
                     </div>
                   </li>

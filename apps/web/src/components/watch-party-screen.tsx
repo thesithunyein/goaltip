@@ -26,6 +26,7 @@ import {
 import { BrandHeader } from './brand-header'
 import { NationFlag } from './nation-flag'
 import { Screen } from './screen'
+import { softCardStyle, softContainer, softDim, softH2, softPage, softPillBtn } from '@/lib/soft-ui'
 
 const CHAIN_ID = 'sepolia-testnet'
 const TIP_PRESETS = ['1', '5', '10'] as const
@@ -305,29 +306,35 @@ export function WatchPartyScreen (): React.JSX.Element {
   if (phase !== 'unlocked') {
     return (
       <Screen title="Watch Party">
-        <Card padding="lg"><p style={dim}>Unlock your wallet to join the watch party.</p></Card>
+        <Card padding="lg" variant="elevated" style={softCardStyle}><p style={softDim}>Unlock your wallet to join the watch party.</p></Card>
       </Screen>
     )
   }
 
   if (!party) {
     return (
-      <main style={page}>
-        <div style={container}>
+      <main style={softPage}>
+        <div style={softContainer}>
           <BrandHeader />
-          <Card padding="md" className="goaltip-soft-card" style={{ display: 'flex', flexDirection: 'column', gap: 14, borderRadius: 24, boxShadow: '0 4px 20px rgba(17,24,39,0.05)' }}>
-            <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ textAlign: 'center', padding: '4px 0 2px' }}>
+            <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 4 }}>Watch party</div>
+            <h1 className="goaltip-party-hero" style={{ margin: 0, fontSize: 30, fontWeight: 750, letterSpacing: -0.6 }}>
+              Tip your nation
+            </h1>
+          </div>
+          <Card padding="md" variant="elevated" style={softCardStyle}>
+            <div style={{ display: 'flex', gap: 8, padding: 4, borderRadius: 999, background: 'var(--bg-elevated-2)' }}>
               <Button
-                variant={mode === 'create' ? 'primary' : 'outline'}
+                variant={mode === 'create' ? 'primary' : 'ghost'}
                 onClick={() => { setMode('create'); setError(null) }}
-                style={{ flex: 1, minHeight: 44 }}
+                style={{ flex: 1, ...softPillBtn }}
               >
                 Create
               </Button>
               <Button
-                variant={mode === 'join' ? 'primary' : 'outline'}
+                variant={mode === 'join' ? 'primary' : 'ghost'}
                 onClick={() => { setMode('join'); setError(null) }}
-                style={{ flex: 1, minHeight: 44 }}
+                style={{ flex: 1, ...softPillBtn }}
               >
                 Join
               </Button>
@@ -335,8 +342,8 @@ export function WatchPartyScreen (): React.JSX.Element {
 
             {mode === 'create' ? (
               <>
-                <h2 style={h2}>Start a watch party</h2>
-                <p style={dim}>
+                <h2 style={softH2}>Start a watch party</h2>
+                <p style={softDim}>
                   Pick tonight&apos;s match, create a shared tipping room, and send friends the invite link.
                   Tips are self-custodial USDT on Sepolia via WDK — every device sees the same board.
                 </p>
@@ -354,7 +361,7 @@ export function WatchPartyScreen (): React.JSX.Element {
                       type="checkbox"
                       checked={capEnabled}
                       onChange={(e) => setCapEnabled(e.target.checked)}
-                      style={{ width: 18, height: 18, accentColor: 'var(--color-primary, var(--wdk-orange, #f4642f))' }}
+                      style={{ width: 18, height: 18, accentColor: 'var(--color-primary, #f4642f)' }}
                     />
                     <span style={label}>Spend limit per wallet (server-enforced before signing)</span>
                   </span>
@@ -365,25 +372,25 @@ export function WatchPartyScreen (): React.JSX.Element {
                         onChange={(e) => setCapPerWallet(e.target.value)}
                         placeholder="10"
                         inputMode="decimal"
-                        style={{ flex: '0 0 100px', minHeight: 44 }}
+                        style={{ flex: '0 0 100px', minHeight: 44, borderRadius: 14 }}
                       />
-                      <span style={dim}>USDt max per person, this match</span>
+                      <span style={softDim}>USDt max per person</span>
                     </div>
                   )}
                 </label>
                 <Button
                   onClick={() => void startParty()}
                   disabled={!address || nationA === nationB || busy}
-                  style={{ width: '100%', minHeight: 48 }}
+                  style={{ width: '100%', ...softPillBtn, minHeight: 48 }}
                 >
                   {busy ? 'Creating…' : 'Create shared room'}
                 </Button>
               </>
             ) : (
               <>
-                <h2 style={h2}>Join a watch party</h2>
-                <p style={dim}>
-                  Enter the room code from a friend&apos;s invite. Old local-only rooms (from before shared boards) will not work — the host must Create a new shared room.
+                <h2 style={softH2}>Join a watch party</h2>
+                <p style={softDim}>
+                  Enter the room code from a friend&apos;s invite. Old local-only rooms will not work — the host must Create a new shared room.
                 </p>
                 <label style={field}>
                   <span style={label}>Room code</span>
@@ -391,13 +398,13 @@ export function WatchPartyScreen (): React.JSX.Element {
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                     placeholder="e.g. 9UFZ1Y"
-                    style={{ textTransform: 'uppercase', letterSpacing: 2 }}
+                    style={{ textTransform: 'uppercase', letterSpacing: 2, borderRadius: 14, minHeight: 44 }}
                   />
                 </label>
                 <Button
                   onClick={() => void joinParty()}
                   disabled={busy || normalizeRoomCode(joinCode).length < 4}
-                  style={{ width: '100%', minHeight: 48 }}
+                  style={{ width: '100%', ...softPillBtn, minHeight: 48 }}
                 >
                   {busy ? 'Joining…' : 'Join room'}
                 </Button>
@@ -424,48 +431,50 @@ export function WatchPartyScreen (): React.JSX.Element {
   const tipsLocked = isSettled
 
   return (
-    <main style={page}>
-      <div style={container}>
+    <main style={softPage}>
+      <div style={softContainer}>
         <BrandHeader />
-        <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <h1 className="goaltip-party-hero" style={{ margin: 0, fontSize: 30, fontWeight: 750, letterSpacing: -0.6, lineHeight: 1.1, fontFamily: 'var(--font-display, inherit)' }}>GoalTip</h1>
-          <p style={dim}>
-            Self-custodial USDt tipping for football watch parties. WDK keeps signing inside the browser worklet.
-            Shared rooms sync tip boards across devices. Tips are verified on-chain before they land on the board.
-          </p>
-        </Card>
-        <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <span style={dim}>Room {party.code}</span>
-            <span style={{ fontSize: 12, color: 'var(--color-primary, var(--wdk-orange, #f4642f))', whiteSpace: 'nowrap' }}>
-              Shared · Sepolia{party.capPerWallet ? ` · Capped ${party.capPerWallet} USDt` : ''}{isSettled ? ' · Settled' : ''}
-            </span>
+
+        <div style={{ textAlign: 'center', padding: '6px 0 2px' }}>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6 }}>
+            Room {party.code} · Sepolia{party.capPerWallet ? ` · Cap ${party.capPerWallet}` : ''}{isSettled ? ' · Settled' : ''}
           </div>
           <div style={matchRow}>
             <NationBadge nation={nationAInfo} total={totalA} winner={party.winnerNationId === party.nationA} />
-            <span style={{ fontSize: 18, color: 'var(--text-secondary, var(--text-dim, #b3a79f))', flexShrink: 0 }}>vs</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-tertiary)', flexShrink: 0 }}>vs</span>
             <NationBadge nation={nationBInfo} total={totalB} winner={party.winnerNationId === party.nationB} />
           </div>
           {isSettled && winnerInfo && (
-            <p style={{ margin: 0, fontSize: 14, color: 'var(--color-primary, var(--wdk-orange, #f4642f))', fontWeight: 600 }}>
-              Match settled — {winnerInfo.name} wins. Tips locked. Pool received {(totalA + totalB).toFixed(2)} USDt.
+            <p style={{ margin: '12px 0 0', fontSize: 14, color: 'var(--color-primary)', fontWeight: 700 }}>
+              {winnerInfo.name} wins · pool {(totalA + totalB).toFixed(2)} USDt
             </p>
           )}
-          <p style={{ ...dim, fontSize: 12, margin: 0, wordBreak: 'break-all' }}>
-            Pool: {party.poolAddress.slice(0, 8)}…{party.poolAddress.slice(-6)}
-          </p>
-          <Button variant="secondary" onClick={() => void copyInvite()} style={{ width: '100%', minHeight: 44 }}>
-            {copied ? 'Copied invite link' : 'Copy invite link'}
-          </Button>
-        </Card>
+        </div>
 
-        <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 16 }}>{tipsLocked ? 'Tipping locked' : 'Tip your nation (USDt)'}</h3>
-          {!usdt && <p style={errorStyle}>USDt is not configured for Sepolia. Open the Wallet tab and use native test ETH send as a fallback demo.</p>}
+        <div className="goaltip-action-pill" style={{ margin: '2px 4px 0' }}>
+          <button type="button" onClick={() => void copyInvite()}>{copied ? 'Copied' : 'Copy invite'}</button>
+          <button type="button" className="goaltip-plus" onClick={() => void refreshParty()} disabled={syncing} aria-label="Refresh pool">↻</button>
+          <button
+            type="button"
+            onClick={() => {
+              clearParty()
+              setParty(null)
+              const url = new URL(window.location.href)
+              url.searchParams.delete('room')
+              window.history.replaceState({}, '', url.pathname)
+            }}
+          >
+            Leave
+          </button>
+        </div>
+
+        <Card padding="md" variant="elevated" style={softCardStyle}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{tipsLocked ? 'Tipping locked' : 'Tip your nation'}</h3>
+          {!usdt && <p style={errorStyle}>USDt is not configured for Sepolia.</p>}
           {party.capPerWallet && !tipsLocked && (
-            <p style={{ ...dim, fontSize: 12, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span aria-hidden style={{ color: 'var(--color-primary, var(--wdk-orange, #f4642f))' }}>●</span>
-              Spend limit {party.capPerWallet} USDt/wallet — you have tipped {myTipped.toFixed(2)}, {myRemaining !== null ? myRemaining.toFixed(2) : '—'} left. Enforced by the party server before your wallet can sign over the cap.
+            <p style={{ ...softDim, fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span aria-hidden style={{ color: 'var(--color-primary)' }}>●</span>
+              Cap {party.capPerWallet} USDt/wallet — tipped {myTipped.toFixed(2)}, {myRemaining !== null ? myRemaining.toFixed(2) : '—'} left
             </p>
           )}
           {!tipsLocked && (
@@ -475,7 +484,7 @@ export function WatchPartyScreen (): React.JSX.Element {
                   const n = getNation(id)
                   if (!n) return null
                   return (
-                    <div key={id} style={{ flex: '1 1 140px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div key={id} className="goaltip-soft-card" style={{ flex: '1 1 140px', minWidth: 0, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                         <NationFlag nation={n} size={22} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{n.name}</span>
                       </strong>
@@ -487,7 +496,7 @@ export function WatchPartyScreen (): React.JSX.Element {
                             variant="secondary"
                             disabled={busy || !usdt || overCap}
                             onClick={() => void tipNation(id, amt)}
-                            style={{ width: '100%', minHeight: 44 }}
+                            style={{ width: '100%', ...softPillBtn }}
                             title={overCap ? 'Would exceed this room\'s spend limit' : undefined}
                           >
                             {busy && selectedNation === id ? '…' : `Tip ${amt} USDt`}
@@ -499,19 +508,11 @@ export function WatchPartyScreen (): React.JSX.Element {
                 })}
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'stretch' }}>
-                <Input value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} placeholder="Custom amount" inputMode="decimal" style={{ flex: '1 1 100px', minWidth: 0, minHeight: 44 }} />
-                <Button
-                  disabled={busy || !usdt || customAmount.trim() === ''}
-                  onClick={() => void tipNation(party.nationA, customAmount)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, flex: '1 1 auto' }}
-                >
+                <Input value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} placeholder="Custom" inputMode="decimal" style={{ flex: '1 1 100px', minWidth: 0, minHeight: 44, borderRadius: 14 }} />
+                <Button disabled={busy || !usdt || customAmount.trim() === ''} onClick={() => void tipNation(party.nationA, customAmount)} style={{ ...softPillBtn, display: 'inline-flex', alignItems: 'center', gap: 6, flex: '1 1 auto' }}>
                   <NationFlag nation={nationAInfo} size={16} /> Tip
                 </Button>
-                <Button
-                  disabled={busy || !usdt || customAmount.trim() === ''}
-                  onClick={() => void tipNation(party.nationB, customAmount)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, flex: '1 1 auto' }}
-                >
+                <Button disabled={busy || !usdt || customAmount.trim() === ''} onClick={() => void tipNation(party.nationB, customAmount)} style={{ ...softPillBtn, display: 'inline-flex', alignItems: 'center', gap: 6, flex: '1 1 auto' }}>
                   <NationFlag nation={nationBInfo} size={16} /> Tip
                 </Button>
               </div>
@@ -521,57 +522,43 @@ export function WatchPartyScreen (): React.JSX.Element {
         </Card>
 
         {isHost && !isSettled && (
-          <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <h3 style={{ margin: 0, fontSize: 16 }}>Settle match</h3>
-            <p style={{ ...dim, fontSize: 13, margin: 0 }}>
-              Host only. Pick the winner to lock tipping and show the final board on every device.
-            </p>
+          <Card padding="md" variant="elevated" style={softCardStyle}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Settle match</h3>
+            <p style={{ ...softDim, fontSize: 13 }}>Host only. Pick the winner to lock tipping on every device.</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button
-                disabled={busy}
-                onClick={() => void settleMatch(party.nationA)}
-                style={{ flex: 1, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-              >
+              <Button disabled={busy} onClick={() => void settleMatch(party.nationA)} style={{ flex: 1, ...softPillBtn, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                 <NationFlag nation={nationAInfo} size={16} /> {nationAInfo?.name} wins
               </Button>
-              <Button
-                disabled={busy}
-                onClick={() => void settleMatch(party.nationB)}
-                style={{ flex: 1, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-              >
+              <Button disabled={busy} onClick={() => void settleMatch(party.nationB)} style={{ flex: 1, ...softPillBtn, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                 <NationFlag nation={nationBInfo} size={16} /> {nationBInfo?.name} wins
               </Button>
             </div>
           </Card>
         )}
 
-        <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <h3 style={{ margin: 0, fontSize: 14 }}>Need test funds? (free, 1 min)</h3>
-          <p style={{ ...dim, fontSize: 12 }}>
-            1. <a href="https://www.alchemy.com/faucets/ethereum-sepolia" target="_blank" rel="noreferrer">Sepolia ETH faucet</a> — gas for transactions<br />
-            2. <a href="https://app.aave.com/faucet/" target="_blank" rel="noreferrer">Aave faucet</a> (enable Testnet Mode in settings) — mint test USDT<br />
-            3. Send both to your wallet address in the <strong>Wallet</strong> tab, then tip.
+        <Card padding="md" variant="elevated" style={{ ...softCardStyle, gap: 8 }}>
+          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>Need test funds?</h3>
+          <p style={{ ...softDim, fontSize: 12 }}>
+            1. <a href="https://www.alchemy.com/faucets/ethereum-sepolia" target="_blank" rel="noreferrer">Sepolia ETH faucet</a><br />
+            2. <a href="https://app.aave.com/faucet/" target="_blank" rel="noreferrer">Aave faucet</a> (Testnet Mode) — mint USDT<br />
+            3. Tip from the <strong>Party</strong> tab
           </p>
         </Card>
 
         {party.tips.length > 0 && (
-          <Card padding="md">
-            <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>Recent tips (shared)</h3>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <Card padding="md" variant="elevated" style={softCardStyle}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Recent tips</h3>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
               {party.tips.slice(0, 8).map((t) => {
                 const n = getNation(t.nationId)
                 return (
                   <li key={t.hash} style={tipRow}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
                       <NationFlag nation={n} size={16} />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {n?.name} · {t.amount} {t.symbol}
-                      </span>
-                      {t.verified ? (
-                        <span style={verifiedBadge} title="Verified on-chain Transfer to this room pool">Verified</span>
-                      ) : (
-                        <span style={pendingBadge} title="Waiting for on-chain verification">Pending</span>
-                      )}
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{n?.name} · {t.amount} {t.symbol}</span>
+                      {t.verified
+                        ? <span style={verifiedBadge}>Verified</span>
+                        : <span style={pendingBadge}>Pending</span>}
                     </span>
                     {chain.explorer && (
                       <a href={`${chain.explorer}/tx/${t.hash}`} target="_blank" rel="noreferrer" style={{ fontSize: 12, flexShrink: 0, padding: '6px 0 6px 8px' }}>
@@ -584,19 +571,6 @@ export function WatchPartyScreen (): React.JSX.Element {
             </ul>
           </Card>
         )}
-
-        <Button variant="outline" onClick={() => void refreshParty()} disabled={syncing} style={{ width: '100%', minHeight: 44 }}>
-          {syncing ? 'Refreshing…' : 'Refresh pool'}
-        </Button>
-        <Button variant="outline" onClick={() => {
-          clearParty()
-          setParty(null)
-          const url = new URL(window.location.href)
-          url.searchParams.delete('room')
-          window.history.replaceState({}, '', url.pathname)
-        }} style={{ width: '100%', minHeight: 44, marginBottom: 8 }}>
-          Leave room
-        </Button>
       </div>
     </main>
   )
@@ -616,29 +590,22 @@ function NationBadge ({ nation, total, winner }: { nation?: Nation, total: numbe
   if (!nation) return null
   return (
     <div style={{ textAlign: 'center', flex: 1, minWidth: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
-        <NationFlag nation={nation} size={36} />
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+        <NationFlag nation={nation} size={40} />
       </div>
-      <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <div style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {nation.name}{winner ? ' · Win' : ''}
       </div>
-      <div style={{ fontSize: 13, color: 'var(--color-primary, var(--wdk-orange, #f4642f))' }}>{total} USDt</div>
+      <div style={{ fontSize: 22, fontWeight: 750, letterSpacing: -0.4, color: 'var(--color-primary)', marginTop: 2 }}>
+        {total.toFixed(2)} <span style={{ fontSize: 13, fontWeight: 600 }}>USDt</span>
+      </div>
     </div>
   )
 }
 
-const page: React.CSSProperties = {
-  minHeight: '100%',
-  padding: '16px 12px 24px',
-  background: 'transparent',
-  color: 'var(--text-primary, var(--text))'
-}
-const container: React.CSSProperties = { width: '100%', maxWidth: 460, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }
-const h2: React.CSSProperties = { margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: -0.4, color: 'var(--text-primary, var(--text))' }
-const dim: React.CSSProperties = { margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }
 const field: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6 }
 const label: React.CSSProperties = { fontSize: 13, color: 'var(--text-secondary)' }
-const matchRow: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }
+const matchRow: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 8 }
 const errorStyle: React.CSSProperties = { margin: 0, color: 'var(--color-error, #ef4444)', fontSize: 13, lineHeight: 1.4 }
 const tipRow: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 13, padding: '12px 0', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }
 const verifiedBadge: React.CSSProperties = {

@@ -118,7 +118,7 @@ export function UnlockScreen(props: UnlockScreenProps): JSX.Element {
         justifyContent: 'center',
         fontFamily: 'var(--font-body)',
         color: 'var(--text-primary)',
-        backgroundColor: 'var(--bg-base)',
+        backgroundColor: 'transparent',
       }}
     >
       <div>

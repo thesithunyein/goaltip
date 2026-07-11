@@ -53,14 +53,18 @@ function SettingsTab (): React.JSX.Element {
   const { address, accountIndex, lock } = useWallet()
   const { setOpen: setAppearanceOpen } = useAppearance()
   return (
-    <Screen title="Settings">
-      <Card padding="lg" variant="elevated" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <Screen title="Settings" subtitle="Wallet & appearance">
+      <Card padding="lg" variant="elevated" style={{
+        display: 'flex', flexDirection: 'column', gap: 14, borderRadius: 24,
+        boxShadow: '0 4px 20px rgba(17,24,39,0.05)',
+        border: '1px solid var(--border-subtle)'
+      }}>
         <Row label="Account" value={`Account ${accountIndex + 1}`} />
         {address && <Row label="Address" value={`${address.slice(0, 6)}…${address.slice(-4)}`} mono />}
-        <Button variant="secondary" onClick={() => setAppearanceOpen(true)} style={{ width: '100%' }}>Appearance</Button>
-        <Button variant="outline" onClick={() => void lock()} style={{ width: '100%' }}>Lock wallet</Button>
+        <Button variant="secondary" onClick={() => setAppearanceOpen(true)} style={{ width: '100%', borderRadius: 999, minHeight: 44 }}>Appearance</Button>
+        <Button variant="outline" onClick={() => void lock()} style={{ width: '100%', borderRadius: 999, minHeight: 44 }}>Lock wallet</Button>
       </Card>
-      <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary, #b3a79f)' }}>
+      <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary)' }}>
         GoalTip · self-custodial · keys in Web Worker · built on Tether WDK
       </p>
     </Screen>
@@ -69,9 +73,9 @@ function SettingsTab (): React.JSX.Element {
 
 function Row ({ label, value, mono = false }: { label: string, value: string, mono?: boolean }): React.JSX.Element {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-      <span style={{ color: 'var(--text-secondary, #b3a79f)' }}>{label}</span>
-      <span style={mono ? { fontFamily: 'ui-monospace, monospace' } : undefined}>{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, padding: '4px 0' }}>
+      <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
+      <span style={mono ? { fontFamily: 'ui-monospace, monospace', fontWeight: 600 } : { fontWeight: 600 }}>{value}</span>
     </div>
   )
 }

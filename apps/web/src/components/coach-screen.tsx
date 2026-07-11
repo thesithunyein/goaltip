@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Input } from '@wdk-starter/wdk-ui'
 import { getNation, NATIONS } from '@/lib/nations'
+import { softCardStyle, softDim, softPillBtn } from '@/lib/soft-ui'
 import { Screen } from './screen'
-
-// Native <select> cannot show images; use name + ISO so Windows Chrome is readable.
 
 const COACH_URL = 'http://127.0.0.1:3847'
 
@@ -72,23 +71,16 @@ export function CoachScreen (): React.JSX.Element {
   const statusColor =
     online === true ? 'var(--color-success, #22c55e)' :
     online === false ? 'var(--color-warning, #f59e0b)' :
-    'var(--text-secondary, var(--text-dim, #b3a79f))'
+    'var(--text-secondary)'
 
   return (
-    <Screen title="AI Coach">
-      <Card padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <Screen title="AI Coach" subtitle="On-device QVAC — no cloud, no API keys">
+      <Card padding="lg" variant="elevated" style={softCardStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-          <p style={{ ...dim, margin: 0, flex: 1 }}>
-            100% local AI via QVAC. No cloud, no API keys. Data never leaves your machine.
-          </p>
+          <p style={{ ...softDim, flex: 1 }}>Ask who to tip for tonight&apos;s match.</p>
           <span style={{
-            fontSize: 11,
-            fontWeight: 600,
-            padding: '4px 8px',
-            borderRadius: 999,
-            border: `1px solid ${statusColor}`,
-            color: statusColor,
-            whiteSpace: 'nowrap'
+            fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 999,
+            border: `1px solid ${statusColor}`, color: statusColor, whiteSpace: 'nowrap'
           }}>
             {statusLabel}
           </span>
@@ -97,9 +89,8 @@ export function CoachScreen (): React.JSX.Element {
         {online === false && (
           <div style={offlineBox}>
             <strong style={{ fontSize: 13 }}>Why offline on the live site?</strong>
-            <p style={{ ...dim, fontSize: 12, margin: '6px 0 0' }}>
-              QVAC runs on your device only. The Vercel deployment correctly cannot reach your localhost.
-              For a live answer, run the coach server on this machine (steps below), then ask again.
+            <p style={{ ...softDim, fontSize: 12, margin: '6px 0 0' }}>
+              QVAC runs on your device only. Vercel cannot reach localhost. Run the coach locally, then Recheck.
             </p>
           </div>
         )}
@@ -108,20 +99,16 @@ export function CoachScreen (): React.JSX.Element {
           <select value={nationA} onChange={(e) => setNationA(e.target.value)} style={selectStyle}>
             {NATIONS.map((n) => <option key={n.id} value={n.id}>{n.name} ({n.iso.toUpperCase()})</option>)}
           </select>
-          <span style={{ alignSelf: 'center', color: 'var(--text-secondary, var(--text-dim))' }}>vs</span>
+          <span style={{ alignSelf: 'center', color: 'var(--text-secondary)', fontWeight: 700 }}>vs</span>
           <select value={nationB} onChange={(e) => setNationB(e.target.value)} style={selectStyle}>
             {NATIONS.map((n) => <option key={n.id} value={n.id}>{n.name} ({n.iso.toUpperCase()})</option>)}
           </select>
         </div>
-        <Input
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask the coach (optional)…"
-        />
-        <Button onClick={() => void askCoach()} disabled={busy} style={{ width: '100%' }}>
+        <Input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Ask the coach (optional)…" style={{ borderRadius: 14, minHeight: 44 }} />
+        <Button onClick={() => void askCoach()} disabled={busy} style={{ width: '100%', ...softPillBtn, minHeight: 48 }}>
           {busy ? 'Thinking locally…' : 'Ask local coach'}
         </Button>
-        <Button variant="outline" onClick={() => void checkCoach()} style={{ width: '100%' }}>
+        <Button variant="outline" onClick={() => void checkCoach()} style={{ width: '100%', ...softPillBtn }}>
           Recheck coach status
         </Button>
         {error && <p style={errorStyle}>{error}</p>}
@@ -135,45 +122,40 @@ export function CoachScreen (): React.JSX.Element {
         <details
           open={setupOpen || online === false}
           onToggle={(e) => setSetupOpen((e.target as HTMLDetailsElement).open)}
-          style={{ fontSize: 13, color: 'var(--text-dim)' }}
+          style={{ fontSize: 13, color: 'var(--text-secondary)' }}
         >
           <summary style={{ cursor: 'pointer' }}>How to run the local QVAC coach</summary>
           <ol style={{ margin: '10px 0 0', paddingLeft: 18, lineHeight: 1.6 }}>
-            <li>In the repo root: <code>pnpm add @qvac/sdk</code></li>
-            <li>Check your machine: <code>npx @qvac/sdk doctor</code></li>
-            <li>Start the server: <code>npm run coach</code></li>
-            <li>Keep this tab open on <code>localhost:3000</code> (or the live site) and tap Recheck</li>
+            <li><code>pnpm add @qvac/sdk</code></li>
+            <li><code>npx @qvac/sdk doctor</code></li>
+            <li><code>npm run coach</code></li>
+            <li>Stay on localhost and tap Recheck</li>
           </ol>
           <pre style={codeBlock}>{`pnpm add @qvac/sdk
 npx @qvac/sdk doctor
-npm run coach
-# Model: LLAMA 3.2 1B (on-device). First load may take a few minutes.`}</pre>
+npm run coach`}</pre>
         </details>
       </Card>
     </Screen>
   )
 }
 
-const dim: React.CSSProperties = { margin: 0, color: 'var(--text-secondary, var(--text-dim, #b3a79f))', fontSize: 14, lineHeight: 1.5 }
 const errorStyle: React.CSSProperties = { margin: 0, color: 'var(--color-error, #ef4444)', fontSize: 13 }
 const answerBox: React.CSSProperties = {
-  padding: 14, borderRadius: 16, background: 'var(--bg-elevated-2)',
-  border: '1px solid var(--border-subtle)', fontSize: 14,
-  color: 'var(--text-primary)'
+  padding: 14, borderRadius: 18, background: 'var(--bg-elevated-2)',
+  border: '1px solid var(--border-subtle)', fontSize: 14, color: 'var(--text-primary)'
 }
 const offlineBox: React.CSSProperties = {
-  padding: 14, borderRadius: 16, background: 'color-mix(in srgb, var(--color-warning, #f59e0b) 12%, transparent)',
+  padding: 14, borderRadius: 18,
+  background: 'color-mix(in srgb, var(--color-warning, #f59e0b) 12%, transparent)',
   border: '1px solid color-mix(in srgb, var(--color-warning, #f59e0b) 40%, transparent)'
 }
 const selectStyle: React.CSSProperties = {
   flex: 1, padding: '12px 10px', borderRadius: 14, minHeight: 44, minWidth: 0,
-  border: '1px solid var(--border-default)',
-  background: 'var(--bg-elevated-2)',
+  border: '1px solid var(--border-default)', background: 'var(--bg-elevated-2)',
   color: 'var(--text-primary)', fontSize: 16
 }
 const codeBlock: React.CSSProperties = {
   margin: '8px 0 0', padding: 12, borderRadius: 14,
-  background: 'var(--bg-elevated-3)',
-  color: 'var(--text-primary)',
-  overflow: 'auto', fontSize: 12
+  background: 'var(--bg-elevated-3)', color: 'var(--text-primary)', overflow: 'auto', fontSize: 12
 }
