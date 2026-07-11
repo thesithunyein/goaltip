@@ -16,8 +16,8 @@
 
 ## Optional QVAC (local AI — multi-track)
 ```bash
-pnpm add @qvac/sdk && npm run coach
-# Coach tab → Recheck → ask a match question (on-device, no cloud)
+pnpm add @qvac/sdk && pnpm demo
+# Coach tab auto-reads active Party tip totals → Recheck → ask
 ```
 
 ## Faucets
