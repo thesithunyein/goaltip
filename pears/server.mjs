@@ -2,15 +2,17 @@
  * GoalTip Pears sidecar — Hyperswarm tip gossip for watch-party rooms.
  * Pears track: room tip announcements use Hyperswarm (not WebRTC).
  *
- * Start: pnpm add hyperswarm && npm run pears
+ * Start: cd pears && npm install && npm run pears (from repo root)
  * Web UI talks to http://127.0.0.1:3848 (offline on Vercel by design).
  */
 import http from 'node:http'
 import crypto from 'node:crypto'
 import { createRequire } from 'node:module'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
 
-const PORT = 3848
 const require = createRequire(import.meta.url)
+const pearsRoot = path.dirname(fileURLToPath(import.meta.url))
 
 /** @type {Map<string, { tips: object[], peers: number, swarm?: any }>} */
 const rooms = new Map()
@@ -24,9 +26,9 @@ async function ensureHyperswarm () {
     return (await import('hyperswarm')).default
   } catch {
     try {
-      return require('hyperswarm')
+      return require(require.resolve('hyperswarm', { paths: [pearsRoot] }))
     } catch {
-      throw new Error('Install Hyperswarm first: pnpm add hyperswarm')
+      throw new Error('Install Hyperswarm first: cd pears && npm install')
     }
   }
 }
@@ -137,10 +139,25 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
+  const tipsMatch = req.url?.match(/^\/tips\/([A-Za-z0-9]+)$/)
+  if (req.method === 'GET' && tipsMatch) {
+    const code = tipsMatch[1].toUpperCase()
+    const room = rooms.get(code)
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({
+      ok: true,
+      code,
+      peers: room?.peers ?? 0,
+      tips: room?.tips ?? []
+    }))
+    return
+  }
+
   res.writeHead(404)
   res.end('Not found')
 })
 
+const PORT = Number(process.env.PEARS_PORT || 3848)
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`GoalTip Pears (Hyperswarm) sidecar on http://127.0.0.1:${PORT}`)
 })

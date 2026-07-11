@@ -1,0 +1,8 @@
+{
+  "name": "goaltip-pears",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "hyperswarm": "^4.12.0"
+  }
+}

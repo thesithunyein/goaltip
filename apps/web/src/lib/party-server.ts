@@ -78,6 +78,28 @@ async function redisCommand (command: unknown[]): Promise<unknown> {
   return data.result
 }
 
+/** Live persistence probe for /api/health (env alone is not enough). */
+export async function probePersistence (): Promise<{
+  persistence: 'redis-ok' | 'redis-error' | 'memory'
+  redisError?: string
+}> {
+  if (!redisConfigured()) {
+    return { persistence: 'memory' }
+  }
+  try {
+    const pong = await redisCommand(['PING'])
+    if (pong === 'PONG' || pong === 'pong' || pong === true) {
+      return { persistence: 'redis-ok' }
+    }
+    return { persistence: 'redis-error', redisError: `Unexpected PING result: ${String(pong)}` }
+  } catch (e) {
+    return {
+      persistence: 'redis-error',
+      redisError: e instanceof Error ? e.message : 'Redis PING failed'
+    }
+  }
+}
+
 function keyFor (code: string): string {
   return KEY_PREFIX + normalizeRoomCode(code)
 }

@@ -40,12 +40,17 @@ export default function JudgePage (): React.JSX.Element {
               persistence is &quot;memory&quot; — shared rooms will not survive cold starts. Set Upstash Redis on Vercel before judging multi-device.
             </p>
           )}
+          {health && health.persistence === 'redis-error' && (
+            <p style={warn}>
+              Redis env is set but PING failed{typeof health.redisError === 'string' ? `: ${health.redisError}` : ''}.
+              Fix Upstash credentials before multi-device demos.
+            </p>
+          )}
           {health && (
             <pre style={pre}>{JSON.stringify(health, null, 2)}</pre>
           )}
           <p style={dim}>
-            Expect <code>persistence: &quot;redis&quot;</code>, <code>escrow: &quot;tippool-per-room&quot;</code>,{' '}
-            <code>settle: &quot;on-chain-tippool+board&quot;</code>.
+            Expect <code>persistence: &quot;redis-ok&quot;</code> on live (Redis PING). Locally <code>memory</code> is fine.
           </p>
         </section>
 
@@ -53,7 +58,7 @@ export default function JudgePage (): React.JSX.Element {
           <h2 style={h2}>Tracks</h2>
           <p style={dim}>
             <strong>WDK</strong> (TipPool in Worker) · <strong>QVAC</strong> (local coach) · <strong>Pears</strong> (Hyperswarm sidecar).
-            Multi-track demo: <code>pnpm add @qvac/sdk hyperswarm && pnpm demo</code>
+            Multi-track demo: <code>pnpm add @qvac/sdk && pnpm demo</code> (hyperswarm included)
           </p>
         </section>
 
@@ -79,7 +84,7 @@ export default function JudgePage (): React.JSX.Element {
 
         <section style={section}>
           <h2 style={h2}>Optional QVAC + Pears (multi-track)</h2>
-          <pre style={pre}>{`pnpm add @qvac/sdk hyperswarm
+          <pre style={pre}>{`pnpm add @qvac/sdk
 pnpm demo
 # Party header → Pears Np · Coach tab → ask a match question`}</pre>
           <p style={dim}>QVAC and Pears are local-only — expected offline on the Vercel URL.</p>

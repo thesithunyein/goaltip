@@ -42,10 +42,12 @@ pnpm install && pnpm dev
 # Party → Create shared room (deploys TipPool; enable spend limit)
 # Second browser: Join with ?room=CODE
 # Tip via TipPool.tip → Verified (Transfer + Tip) → explorer → over-cap → host Settle
-# Optional triple-track: pnpm add @qvac/sdk hyperswarm && pnpm demo
+# Optional triple-track:
+#   cd pears && npm install && cd ..
+#   pnpm add @qvac/sdk && pnpm demo
 ```
 
-Health: `GET /api/health` → `persistence: redis`, `escrow: tippool-per-room`, `settle: on-chain-tippool+board`, `tipVerification: sepolia-erc20-transfer+tip-event`
+Health: `GET /api/health` → `persistence: redis-ok`, `escrow: tippool-per-room`, `settle: on-chain-tippool+board`, `deployVerification: sepolia-receipt`, `tipVerification: sepolia-erc20-transfer+tip-event`
 
 ## Final submission checklist
 1. Deploy this build to Vercel; confirm Redis health

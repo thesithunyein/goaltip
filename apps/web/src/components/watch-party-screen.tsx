@@ -33,7 +33,7 @@ import {
   tipPoolCreationData,
   waitForDeployedTipPool
 } from '@/lib/tip-pool'
-import { pearsAnnounce, pearsHealth, pearsJoin, pearsStatus } from '@/lib/pears-client'
+import { pearsAnnounce, pearsHealth, pearsJoin, pearsStatus, pearsTips } from '@/lib/pears-client'
 import { BrandHeader } from './brand-header'
 import { NationFlag } from './nation-flag'
 import { Screen } from './screen'
@@ -107,38 +107,50 @@ export function WatchPartyScreen (): React.JSX.Element {
     }
   }, [party?.code, party?.poolAddress, party?.hostAddress, party?.tips.length, usdt])
 
-  // Optional Pears Hyperswarm gossip (local sidecar).
+  const applyParty = useCallback((p: WatchParty) => {
+    setPartyCache(p)
+    setParty(p)
+  }, [])
+
+  // Optional Pears Hyperswarm gossip (local sidecar) — refresh board when gossip arrives.
   useEffect(() => {
     if (!party?.code) {
       setPearsPeers(null)
       return
     }
     let cancelled = false
+    const code = party.code
     void (async () => {
       const health = await pearsHealth()
       if (!health.ok || cancelled) {
         if (!cancelled) setPearsPeers(null)
         return
       }
-      await pearsJoin(party.code)
-      const st = await pearsStatus(party.code)
+      await pearsJoin(code)
+      const st = await pearsStatus(code)
       if (!cancelled) setPearsPeers(st?.peers ?? 0)
     })()
     const id = window.setInterval(() => {
-      void pearsStatus(party.code).then((st) => {
+      void (async () => {
+        const st = await pearsStatus(code)
         if (!cancelled && st) setPearsPeers(st.peers)
-      })
-    }, 5000)
+        const gossip = await pearsTips(code)
+        if (cancelled || !gossip?.tips?.length) return
+        const known = new Set((getParty()?.tips ?? []).map((t) => t.hash.toLowerCase()))
+        const fresh = gossip.tips.some((t) => t.hash && !known.has(t.hash.toLowerCase()))
+        if (fresh) {
+          try {
+            const synced = await apiGetParty(code)
+            if (!cancelled) applyParty(synced)
+          } catch { /* ignore */ }
+        }
+      })()
+    }, 4000)
     return () => {
       cancelled = true
       window.clearInterval(id)
     }
-  }, [party?.code])
-
-  const applyParty = useCallback((p: WatchParty) => {
-    setPartyCache(p)
-    setParty(p)
-  }, [])
+  }, [party?.code, applyParty])
 
   // Hydrate from local cache, then ?room=CODE, then refresh from API.
   // Old local-only rooms (pre-shared) are republished to the shared board.
@@ -394,8 +406,7 @@ export function WatchPartyScreen (): React.JSX.Element {
         tips: [tip, ...party.tips.filter((t) => t.hash.toLowerCase() !== tip.hash.toLowerCase())]
       })
       setParty(local)
-      // Brief wait so Sepolia usually has a receipt before the verify poll starts.
-      await new Promise((r) => setTimeout(r, 2000))
+      await waitForTxSuccess(hash, { label: 'Tip' })
       try {
         const synced = await apiAppendTip(party.code, tip)
         applyParty(synced)
@@ -407,7 +418,20 @@ export function WatchPartyScreen (): React.JSX.Element {
         })
       } catch (syncErr) {
         const msg = syncErr instanceof Error ? syncErr.message : 'shared board sync failed'
-        setError(`Tip sent on-chain, but board verification failed: ${msg}. Tap Refresh pool.`)
+        // One retry — Sepolia/indexer lag.
+        await new Promise((r) => setTimeout(r, 2000))
+        try {
+          const synced = await apiAppendTip(party.code, tip)
+          applyParty(synced)
+          void pearsAnnounce(party.code, {
+            nationId: tip.nationId,
+            amount: tip.amount,
+            hash: tip.hash,
+            from: tip.from
+          })
+        } catch {
+          setError(`Tip sent on-chain, but board verification failed: ${msg}. Tap Refresh pool.`)
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Tip failed.')
@@ -436,7 +460,7 @@ export function WatchPartyScreen (): React.JSX.Element {
         accountIndex,
         { to: party.poolAddress, value: 0n, data: encodeTipPoolSettle(winnerNationId) }
       ) as string
-      await new Promise((r) => setTimeout(r, 2000))
+      await waitForTxSuccess(settleTxHash, { label: 'TipPool settle' })
       const settled = await apiSettleParty(party.code, {
         winnerNationId,
         from: address,

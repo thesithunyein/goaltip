@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSharedParty } from '@/lib/party-server'
+import { getSharedParty, probePersistence } from '@/lib/party-server'
 import { normalizeRoomCode } from '@/lib/party-types'
 
 export const runtime = 'nodejs'
@@ -17,15 +17,15 @@ export async function GET (
     }
     // Reserved path segment — use /api/party/health or /api/health instead.
     if (code === 'HEALTH') {
-      const redis = Boolean(
-        process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-      )
+      const { persistence, redisError } = await probePersistence()
       return NextResponse.json({
-        ok: true,
-        persistence: redis ? 'redis' : 'memory',
+        ok: persistence !== 'redis-error',
+        persistence,
+        ...(redisError ? { redisError } : {}),
         tipVerification: 'sepolia-erc20-transfer+tip-event',
         escrow: 'tippool-per-room',
         settle: 'on-chain-tippool+board',
+        deployVerification: 'sepolia-receipt',
         qvac: 'local-optional',
         pears: 'local-optional'
       })

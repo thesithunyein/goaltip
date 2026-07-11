@@ -10,6 +10,8 @@ build/
 *.tsbuildinfo
 contracts/cache/
 contracts/out/
+contracts/lib/
+pears/node_modules/
 
 # Env & secrets
 .env
