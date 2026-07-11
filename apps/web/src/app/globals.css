@@ -2,9 +2,14 @@
   --wdk-orange: #f4642f;
   --wdk-dark: #161312;
   --wdk-cream: #f7eee8;
+  --goaltip-shadow: 0 4px 20px rgba(17, 24, 39, 0.06);
+  --goaltip-shadow-strong: 0 8px 28px rgba(17, 24, 39, 0.10);
+  --goaltip-pill-bg: #111827;
+  --goaltip-pill-fg: #ffffff;
+  --goaltip-plus-fg: #111827;
 
   /*
-   * GoalTip Soft Light defaults (overridden by WdkThemeProvider at runtime).
+   * Soft Light defaults (overridden by WdkThemeProvider at runtime).
    */
   --bg: var(--bg-base, #f2f3f5);
   --surface: var(--bg-elevated-1, #ffffff);
@@ -13,6 +18,31 @@
   --text: var(--text-primary, #111827);
   --text-dim: var(--text-secondary, rgba(17, 24, 39, 0.62));
   --accent: var(--color-primary, #f4642f);
+}
+
+html[data-theme="dark"] {
+  --goaltip-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+  --goaltip-shadow-strong: 0 10px 32px rgba(0, 0, 0, 0.55);
+  /* Elevated charcoal pill so actions stay visible on dark canvas */
+  --goaltip-pill-bg: var(--bg-elevated-3, #4a413a);
+  --goaltip-pill-fg: var(--text-primary, #faf7f2);
+  --goaltip-plus-fg: #1c1917;
+  /* Keep app aliases in sync with live theme tokens (fixes dim/invisible copy) */
+  --bg: var(--bg-base);
+  --surface: var(--bg-elevated-1);
+  --surface-2: var(--bg-elevated-2);
+  --border: var(--border-default);
+  --text: var(--text-primary);
+  --text-dim: var(--text-secondary);
+}
+
+html[data-theme="light"] {
+  --bg: var(--bg-base);
+  --surface: var(--bg-elevated-1);
+  --surface-2: var(--bg-elevated-2);
+  --border: var(--border-default);
+  --text: var(--text-primary);
+  --text-dim: var(--text-secondary);
 }
 
 * {
@@ -44,9 +74,21 @@ a {
 select,
 input,
 textarea {
-  color-scheme: light;
+  color-scheme: light dark;
   font-size: 16px;
   max-width: 100%;
+}
+
+html[data-theme="light"] select,
+html[data-theme="light"] input,
+html[data-theme="light"] textarea {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] select,
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea {
+  color-scheme: dark;
 }
 
 img {
@@ -54,7 +96,6 @@ img {
   height: auto;
 }
 
-/* Soft floating-style bottom nav */
 .goaltip-tabbar {
   padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
   background: transparent;
@@ -62,19 +103,28 @@ img {
 
 .goaltip-tabbar nav {
   border-radius: 22px !important;
-  border: 1px solid var(--border-subtle, rgba(17, 24, 39, 0.06)) !important;
-  border-top: 1px solid var(--border-subtle, rgba(17, 24, 39, 0.06)) !important;
-  background: var(--bg-elevated-1, #ffffff) !important;
-  box-shadow: 0 8px 28px rgba(17, 24, 39, 0.08);
+  border: 1px solid var(--border-subtle) !important;
+  border-top: 1px solid var(--border-subtle) !important;
+  background: var(--bg-elevated-1) !important;
+  box-shadow: var(--goaltip-shadow-strong);
   overflow: hidden;
   position: relative !important;
 }
 
+.goaltip-tabbar button[role="tab"] {
+  color: var(--text-secondary) !important;
+}
+
+.goaltip-tabbar button[role="tab"][aria-selected="true"] {
+  color: var(--color-primary) !important;
+}
+
 .goaltip-soft-card {
-  background: var(--bg-elevated-1, #ffffff);
-  border: 1px solid var(--border-subtle, rgba(17, 24, 39, 0.06));
+  background: var(--bg-elevated-1);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl, 24px);
-  box-shadow: 0 4px 20px rgba(17, 24, 39, 0.05);
+  box-shadow: var(--goaltip-shadow);
+  color: var(--text-primary);
 }
 
 .goaltip-action-pill {
@@ -83,8 +133,9 @@ img {
   gap: 4px;
   padding: 6px;
   border-radius: 999px;
-  background: #111827;
-  color: #fff;
+  background: var(--goaltip-pill-bg);
+  color: var(--goaltip-pill-fg);
+  border: 1px solid var(--border-subtle);
 }
 
 .goaltip-action-pill button {
@@ -93,10 +144,15 @@ img {
   border: none;
   border-radius: 999px;
   background: transparent;
-  color: #fff;
+  color: inherit;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.goaltip-action-pill button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .goaltip-action-pill .goaltip-plus {
@@ -108,7 +164,7 @@ img {
   cursor: pointer;
   font-size: 22px;
   font-weight: 500;
-  color: #111827;
+  color: var(--goaltip-plus-fg);
   background: linear-gradient(135deg, #f4642f 0%, #ffc9a8 45%, #c4d4ff 100%);
   box-shadow: 0 2px 10px rgba(244, 100, 47, 0.35);
 }

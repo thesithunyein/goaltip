@@ -4,20 +4,15 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import {
   WdkThemeProvider, BrandProvider,
   useThemePicker, useBrandPicker, useCustomPrimary,
-  goaltipSoftLightTheme, clearStoredThemePrefs,
+  goaltipSoftLightTheme, goaltipSoftDarkTheme, clearStoredThemePrefs,
   type WdkTheme, type BrandConfig
 } from '@wdk-starter/wdk-ui'
 
 /** Cache-busted so browser tab + header always pick up the latest mark. */
 export const GOALTIP_MARK_SRC = '/goaltip-mark.svg?v=20260709b'
 
-const SOFT_LIGHT_MIGRATION_KEY = 'goaltip-soft-light-v2'
+const SOFT_LIGHT_MIGRATION_KEY = 'goaltip-soft-light-v5'
 
-/**
- * The template's out-of-the-box brand. A fork rebrands either by editing this
- * constant (build-time default) or live via the in-app Appearance panel
- * (runtime, persisted to localStorage). Assets live in apps/web/public/.
- */
 export const TEMPLATE_BRAND: BrandConfig = {
   name: 'GoalTip',
   markSrc: GOALTIP_MARK_SRC,
@@ -26,43 +21,43 @@ export const TEMPLATE_BRAND: BrandConfig = {
   wordmarkAlt: 'GoalTip'
 }
 
-/**
- * Keep Soft Light surfaces when the Appearance picker sets light mode.
- * ThemePicker's composeTheme swaps in a generic light palette — that wiped
- * GoalTip Soft Light and made Party/Settings look off vs Wallet.
- */
-export function withSoftLightSurfaces (theme: WdkTheme, primaryOverride?: string | null): WdkTheme {
-  if (theme.mode !== 'light') return theme
-  const primary = (primaryOverride ?? theme.colors.primary).toUpperCase()
+function withPrimary (base: WdkTheme, primaryOverride?: string | null): WdkTheme {
+  if (!primaryOverride) return base
+  const primary = primaryOverride.toUpperCase()
   const isBrandOrange = primary === '#F4642F'
   return {
-    ...goaltipSoftLightTheme,
+    ...base,
     colors: {
-      ...goaltipSoftLightTheme.colors,
-      primary: primaryOverride ?? theme.colors.primary,
-      primaryHover: isBrandOrange ? goaltipSoftLightTheme.colors.primaryHover : (primaryOverride ?? theme.colors.primary),
-      primaryActive: isBrandOrange ? goaltipSoftLightTheme.colors.primaryActive : (primaryOverride ?? theme.colors.primary)
-    },
+      ...base.colors,
+      primary: primaryOverride,
+      primaryHover: isBrandOrange ? base.colors.primaryHover : primaryOverride,
+      primaryActive: isBrandOrange ? base.colors.primaryActive : primaryOverride
+    }
+  }
+}
+
+/**
+ * Map Appearance picker mode onto GoalTip Soft Light / Soft Dark so both
+ * modes stay readable and consistent with Wallet.
+ */
+export function withGoalTipSurfaces (theme: WdkTheme, primaryOverride?: string | null): WdkTheme {
+  const base = theme.mode === 'dark' ? goaltipSoftDarkTheme : goaltipSoftLightTheme
+  return {
+    ...withPrimary(base, primaryOverride),
     radius: theme.radius,
-    fonts: goaltipSoftLightTheme.fonts,
-    motion: goaltipSoftLightTheme.motion,
-    glass: 'off',
-    mode: 'light'
+    mode: theme.mode === 'dark' ? 'dark' : 'light'
   }
 }
 
 interface AppearanceValue {
   theme: WdkTheme
   setTheme: (t: WdkTheme) => void
-  /** Arbitrary hex primary override (#RRGGBB) or null to use the swatch. */
   customPrimary: string | null
   setCustomPrimary: (hex: string | null) => void
   brand: BrandConfig
   setBrand: (b: BrandConfig) => void
-  /** Whether the Appearance settings panel is open. */
   open: boolean
   setOpen: (o: boolean) => void
-  /** Restore Soft Light + GoalTip brand (demo-safe default). */
   resetSoftLight: () => void
 }
 
@@ -75,7 +70,7 @@ export function AppearanceProvider ({ children }: { children: React.ReactNode })
   const [open, setOpen] = useState(false)
 
   const setTheme = useCallback((next: WdkTheme) => {
-    setThemeRaw(next.mode === 'light' ? withSoftLightSurfaces(next, null) : next)
+    setThemeRaw(withGoalTipSurfaces(next, null))
   }, [setThemeRaw])
 
   const resetSoftLight = useCallback(() => {
@@ -88,7 +83,6 @@ export function AppearanceProvider ({ children }: { children: React.ReactNode })
     } catch { /* ignore */ }
   }, [setThemeRaw, setCustomPrimary, setBrand])
 
-  // Drop stale Appearance-panel logos (old WDK mark / cached SVG without ?v=).
   useEffect(() => {
     const src = brand.markSrc ?? ''
     if (!src.includes('goaltip-mark.svg') || src !== GOALTIP_MARK_SRC) {
@@ -97,7 +91,6 @@ export function AppearanceProvider ({ children }: { children: React.ReactNode })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Force Soft Light once so judges / demo devices don't keep an old dark pref.
   useEffect(() => {
     try {
       if (window.localStorage.getItem(SOFT_LIGHT_MIGRATION_KEY) === '1') return
@@ -108,19 +101,10 @@ export function AppearanceProvider ({ children }: { children: React.ReactNode })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const effectiveTheme = useMemo(() => {
-    if (theme.mode === 'light') return withSoftLightSurfaces(theme, customPrimary)
-    if (!customPrimary) return theme
-    return {
-      ...theme,
-      colors: {
-        ...theme.colors,
-        primary: customPrimary,
-        primaryHover: customPrimary,
-        primaryActive: customPrimary
-      }
-    }
-  }, [theme, customPrimary])
+  const effectiveTheme = useMemo(
+    () => withGoalTipSurfaces(theme, customPrimary),
+    [theme, customPrimary]
+  )
 
   const value = useMemo<AppearanceValue>(() => ({
     theme: effectiveTheme,

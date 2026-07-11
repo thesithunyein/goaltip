@@ -230,11 +230,56 @@ export const goaltipSoftLightTheme: WdkTheme = {
   mode:   'light',
 };
 
+/**
+ * GoalTip Soft Dark — readable dark companion to Soft Light.
+ * Warm charcoal with clear elevation steps + high-contrast cream text.
+ */
+export const goaltipSoftDarkTheme: WdkTheme = {
+  colors: {
+    primary:       '#F4642F',
+    primaryHover:  '#FF7A4A',
+    primaryActive: '#E94816',
+
+    bgBase:      '#161312',
+    bgElevated1: '#24201C',
+    bgElevated2: '#332C28',
+    bgElevated3: '#4A413A',
+
+    textPrimary:   '#FAF7F2',
+    textSecondary: 'rgba(250, 247, 242, 0.78)',
+    textTertiary:  'rgba(250, 247, 242, 0.58)',
+
+    borderSubtle:   'rgba(250, 247, 242, 0.12)',
+    borderDefault:  'rgba(250, 247, 242, 0.20)',
+    borderEmphasis: 'rgba(250, 247, 242, 0.32)',
+
+    success: '#34D399',
+    warning: '#FBBF24',
+    error:   '#F87171',
+    info:    '#60A5FA',
+  },
+  fonts: {
+    display: '"Bricolage Grotesque Variable", "Bricolage Grotesque", Recoleta, "Cooper BT", Georgia, serif',
+    body:    '"Geist Variable", Geist, system-ui, sans-serif',
+    mono:    '"Geist Mono Variable", "Geist Mono", "JetBrains Mono", ui-monospace, monospace',
+  },
+  radius: {
+    sm: '8px',
+    md: '12px',
+    lg: '16px',
+    xl: '24px',
+  },
+  motion: 'standard',
+  glass:  'off',
+  mode:   'dark',
+};
+
 export const defaultThemes = {
   wdkWarm:            wdkWarmTheme,
   coolDark:           coolDarkTheme,
   institutionalLight: institutionalLightTheme,
   goaltipSoftLight:   goaltipSoftLightTheme,
+  goaltipSoftDark:    goaltipSoftDarkTheme,
 } as const;
 
 /** Alias for the canonical default - what WdkThemeProvider falls back to. */

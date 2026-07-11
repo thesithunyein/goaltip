@@ -31,8 +31,8 @@ export function TabBar({ tabs, active, onChange, sticky = true, ...rest }: TabBa
     alignItems: 'stretch',
     gap: 2,
     width: '100%',
-    background: 'var(--surface, var(--bg-elevated, #1a1614))',
-    borderTop: '1px solid var(--border, #332c28)',
+    background: 'var(--bg-elevated-1, var(--surface, #24201C))',
+    borderTop: '1px solid var(--border-subtle, var(--border, rgba(250,247,242,0.12)))',
     ...(sticky ? { position: 'sticky', bottom: 0, zIndex: 10 } : {}),
   };
   return (
@@ -54,7 +54,9 @@ export function TabBar({ tabs, active, onChange, sticky = true, ...rest }: TabBa
           fontSize: 11,
           fontWeight: selected ? 600 : 500,
           lineHeight: 1,
-          color: selected ? 'var(--accent, var(--wdk-orange, #F4642F))' : 'var(--text-secondary, #b3a79f)',
+          color: selected
+            ? 'var(--color-primary, var(--accent, #F4642F))'
+            : 'var(--text-secondary, rgba(250, 247, 242, 0.78))',
         };
         return (
           <button

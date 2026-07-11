@@ -31,7 +31,7 @@ export function WalletShell ({ initialTab = 'party' }: { initialTab?: TabId } = 
   const { open: appearanceOpen } = useAppearance()
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg-base, #f2f3f5)', color: 'var(--text-primary)' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ width: '100%', maxWidth: 460, minWidth: 0 }}>
           {tab === 'party' && <WatchPartyScreen />}
@@ -56,8 +56,9 @@ function SettingsTab (): React.JSX.Element {
     <Screen title="Settings" subtitle="Wallet & appearance">
       <Card padding="lg" variant="elevated" style={{
         display: 'flex', flexDirection: 'column', gap: 14, borderRadius: 24,
-        boxShadow: '0 4px 20px rgba(17,24,39,0.05)',
-        border: '1px solid var(--border-subtle)'
+        boxShadow: 'var(--goaltip-shadow)',
+        border: '1px solid var(--border-subtle)',
+        background: 'var(--bg-elevated-1)'
       }}>
         <Row label="Account" value={`Account ${accountIndex + 1}`} />
         {address && <Row label="Address" value={`${address.slice(0, 6)}…${address.slice(-4)}`} mono />}

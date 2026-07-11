@@ -1,4 +1,4 @@
-/** Shared Soft Light styles — keep Party/Coach/Activity/Settings matching Wallet. */
+/** Shared Soft UI styles — theme-token driven for light + dark. */
 
 import type { CSSProperties } from 'react'
 
@@ -23,9 +23,10 @@ export const softCardStyle: CSSProperties = {
   flexDirection: 'column',
   gap: 14,
   borderRadius: 24,
-  boxShadow: '0 4px 20px rgba(17,24,39,0.05)',
-  border: '1px solid var(--border-subtle, rgba(17,24,39,0.06))',
-  background: 'var(--bg-elevated-1, #fff)'
+  boxShadow: 'var(--goaltip-shadow)',
+  border: '1px solid var(--border-subtle)',
+  background: 'var(--bg-elevated-1)',
+  color: 'var(--text-primary)'
 }
 
 export const softDim: CSSProperties = {

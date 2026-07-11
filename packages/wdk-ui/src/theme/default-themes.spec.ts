@@ -4,6 +4,7 @@ import {
   coolDarkTheme,
   institutionalLightTheme,
   goaltipSoftLightTheme,
+  goaltipSoftDarkTheme,
   defaultThemes,
   defaultTheme,
 } from './default-themes.js';
@@ -85,10 +86,11 @@ describe('default-themes', () => {
       expect(defaultThemes.coolDark).toBe(coolDarkTheme);
       expect(defaultThemes.institutionalLight).toBe(institutionalLightTheme);
       expect(defaultThemes.goaltipSoftLight).toBe(goaltipSoftLightTheme);
+      expect(defaultThemes.goaltipSoftDark).toBe(goaltipSoftDarkTheme);
     });
 
     it('all presets satisfy the WdkTheme contract (required fields present)', () => {
-      const themes: readonly WdkTheme[] = [wdkWarmTheme, coolDarkTheme, institutionalLightTheme, goaltipSoftLightTheme];
+      const themes: readonly WdkTheme[] = [wdkWarmTheme, coolDarkTheme, institutionalLightTheme, goaltipSoftLightTheme, goaltipSoftDarkTheme];
       for (const t of themes) {
         // colors - required
         expect(t.colors.primary).toBeTruthy();

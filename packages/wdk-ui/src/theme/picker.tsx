@@ -140,15 +140,16 @@ export function composeTheme(
   mode: WdkMode
 ): WdkTheme {
   const palette = mode === 'light' ? LIGHT_PALETTE : DARK_PALETTE;
-  // Drop any carried-over border colors. The base theme's borders are tuned for
-  // ITS mode (e.g. a dark base ships cream borders); reusing them in the other
-  // mode makes them invisible (cream-on-white → edgeless buttons). Omitting them
-  // lets css-variables.ts re-derive mode-appropriate borders from the new
-  // textPrimary. Fixes the edgeless light-mode buttons.
+  // Drop mode-tuned derived colors from the previous theme. Soft Light carries
+  // dark-grey textSecondary/borders; keeping them after a dark switch makes
+  // subtitles + inactive tabs invisible on a dark canvas. Omitting them lets
+  // css-variables.ts re-derive from the new textPrimary.
   const baseColors = { ...base.colors };
   delete baseColors.borderSubtle;
   delete baseColors.borderDefault;
   delete baseColors.borderEmphasis;
+  delete baseColors.textSecondary;
+  delete baseColors.textTertiary;
   return {
     ...base,
     colors: {

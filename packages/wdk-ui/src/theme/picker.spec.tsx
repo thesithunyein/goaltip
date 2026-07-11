@@ -183,6 +183,8 @@ describe('ThemePicker component', () => {
         primary: '#000000',
         bgBase: '#FFFFFF', bgElevated1: '#FFFFFF', bgElevated2: '#FFFFFF', bgElevated3: '#FFFFFF',
         textPrimary: '#000000',
+        textSecondary: 'rgba(17, 24, 39, 0.62)',
+        textTertiary: 'rgba(17, 24, 39, 0.42)',
         success: '#22C55E', warning: '#EAB308', error: '#EF4444', info: '#3B82F6',
       },
       fonts: { display: 'sans', body: 'sans', mono: 'mono' },
@@ -195,6 +197,9 @@ describe('ThemePicker component', () => {
     expect(result.colors.bgElevated1).toBe('#171717');
     expect(result.colors.textPrimary).toBe('#FAFAFA');
     expect(result.colors.primary).toBe('#FF0000');
+    // Must not keep light-mode dark-grey secondary (invisible on dark canvas)
+    expect(result.colors.textSecondary).toBeUndefined();
+    expect(result.colors.textTertiary).toBeUndefined();
   });
 
   it('B0c.mode-fix: primary color always wins over the mode palette', () => {

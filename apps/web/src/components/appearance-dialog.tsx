@@ -6,8 +6,8 @@ import { Modal } from './modal'
 import { useAppearance, TEMPLATE_BRAND } from './appearance-provider'
 
 /**
- * In-app Appearance settings. Soft Light surfaces stay locked in light mode
- * so Wallet / Party / Settings stay visually consistent for the Cup demo.
+ * In-app Appearance settings. Light defaults to Soft Light; Dark maps to Soft Dark.
+ * Surfaces stay GoalTip-branded so Wallet / Party / Settings stay consistent.
  */
 export function AppearanceDialog () {
   const {
@@ -63,7 +63,7 @@ export function AppearanceDialog () {
               <button onClick={() => setCustomPrimary(null)} style={resetLink}>Reset</button>
             )}
           </div>
-          <span style={hintStyle}>Overrides the swatch above. Light mode keeps Soft Light surfaces.</span>
+          <span style={hintStyle}>Light = Soft Light (default). Dark = Soft Dark (readable). Surfaces stay GoalTip-branded.</span>
         </section>
 
         <section>

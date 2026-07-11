@@ -30,7 +30,7 @@ export function Modal ({ title, onClose, children }: { title: string, onClose: (
 const overlay: React.CSSProperties = {
   position: 'fixed',
   inset: 0,
-  background: 'rgba(17,24,39,0.35)',
+  background: 'color-mix(in srgb, var(--bg-base) 55%, transparent)',
   backdropFilter: 'blur(4px)',
   display: 'flex',
   alignItems: 'flex-end',
@@ -45,11 +45,12 @@ const panel: React.CSSProperties = {
   maxHeight: '88dvh',
   display: 'flex',
   flexDirection: 'column',
-  background: 'var(--bg-elevated-1, #fff)',
+  background: 'var(--bg-elevated-1)',
+  color: 'var(--text-primary)',
   border: '1px solid var(--border-subtle)',
   borderRadius: 24,
   overflow: 'hidden',
-  boxShadow: '0 16px 48px rgba(17,24,39,0.18)'
+  boxShadow: 'var(--goaltip-shadow-strong)'
 }
 
 const header: React.CSSProperties = {

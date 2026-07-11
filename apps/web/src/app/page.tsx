@@ -16,7 +16,7 @@ function Centered ({ children }: { children: React.ReactNode }) {
       justifyContent: 'center',
       padding: 16,
       boxSizing: 'border-box',
-      background: 'var(--bg-base, var(--bg))',
+      background: 'var(--bg-base)',
       color: 'var(--text-secondary, #b3a79f)'
     }}>
       {children}

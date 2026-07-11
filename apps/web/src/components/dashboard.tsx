@@ -133,7 +133,7 @@ const addrChip: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: 8,
-  background: 'var(--bg-elevated-1, #fff)',
+  background: 'var(--bg-elevated-1)',
   border: '1px solid var(--border-subtle)',
   borderRadius: 999,
   padding: '8px 14px',
@@ -141,7 +141,7 @@ const addrChip: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 500,
   cursor: 'pointer',
-  boxShadow: '0 2px 10px rgba(17,24,39,0.04)',
+  boxShadow: 'var(--goaltip-shadow)',
   fontFamily: 'ui-monospace, monospace'
 }
 
@@ -150,11 +150,11 @@ const iconBtn: React.CSSProperties = {
   height: 40,
   borderRadius: 999,
   border: '1px solid var(--border-subtle)',
-  background: 'var(--bg-elevated-1, #fff)',
+  background: 'var(--bg-elevated-1)',
   cursor: 'pointer',
   fontSize: 16,
   color: 'var(--text-primary)',
-  boxShadow: '0 2px 8px rgba(17,24,39,0.04)'
+  boxShadow: 'var(--goaltip-shadow)'
 }
 
 const stepBtn: React.CSSProperties = {

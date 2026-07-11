@@ -18,8 +18,8 @@ export function BrandHeader () {
           height={40}
           style={{
             borderRadius: 14,
-            boxShadow: '0 4px 14px rgba(17,24,39,0.08)',
-            background: 'var(--bg-elevated-1, #fff)'
+            background: 'var(--bg-elevated-1)',
+            boxShadow: 'var(--goaltip-shadow)'
           }}
         />
       )}

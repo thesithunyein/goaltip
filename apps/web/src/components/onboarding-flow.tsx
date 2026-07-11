@@ -124,7 +124,7 @@ function Shell ({ children }: { children: React.ReactNode }) {
       justifyContent: 'center',
       padding: '24px 16px',
       gap: 20,
-      background: 'var(--bg-base, #f2f3f5)',
+      background: 'var(--bg-base)',
       color: 'var(--text-primary)'
     }}>
       <BrandHeader />
@@ -138,7 +138,7 @@ const cardStyle: React.CSSProperties = {
   flexDirection: 'column',
   gap: 16,
   borderRadius: 24,
-  boxShadow: '0 8px 28px rgba(17,24,39,0.06)'
+  boxShadow: 'var(--goaltip-shadow-strong)'
 }
 const h2: React.CSSProperties = { margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: -0.4 }
 const dim: React.CSSProperties = { margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }

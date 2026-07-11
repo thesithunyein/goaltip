@@ -18,7 +18,7 @@ export function UnlockView () {
       justifyContent: 'center',
       padding: '20px 16px',
       gap: 20,
-      background: 'var(--bg-base, #f2f3f5)',
+      background: 'var(--bg-base)',
       color: 'var(--text-primary)',
       boxSizing: 'border-box'
     }}>
