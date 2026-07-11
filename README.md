@@ -4,14 +4,13 @@
 
 # GoalTip
 
-**Self-custodial USDT tipping for football watch parties.**
-Fans back a nation, tip live in USDt, and watch a **shared** pool grow — while their keys never leave the browser.
+**Self-custodial USDt tipping for football watch parties.**  
+Keys stay in a Web Worker. Tips go into an on-chain TipPool. The board only accepts what Sepolia proves.
 
-[**Live demo**](https://goaltip-web.vercel.app) · [**Judge page**](https://goaltip-web.vercel.app/judge) · [**Demo video**](https://youtu.be/u8otedpp1mI) · [Architecture](#architecture) · [Quick start](#quick-start)
+[**Live**](https://goaltip-web.vercel.app) · [**Judge**](https://goaltip-web.vercel.app/judge) · [**Health**](https://goaltip-web.vercel.app/api/health) · [**Demo video**](https://youtu.be/u8otedpp1mI) · [**JUDGE.md**](./JUDGE.md)
 
-Built with [Tether WDK](https://wdk.tether.io) for the [Tether Developers Cup](https://dorahacks.io/hackathon/tether-developers-cup) — **WDK : Wallets** + optional [QVAC](https://qvac.tether.io) coach + optional [Pears](https://docs.pears.com) Hyperswarm tip gossip.
-
-<img src="https://raw.githubusercontent.com/thesithunyein/goaltip/main/docs/screenshot-wallet.png" alt="GoalTip self-custodial wallet — Sepolia ETH + USDt balance" width="720" />
+**Tracks:** [WDK](https://wdk.tether.io) · [QVAC](https://qvac.tether.io) (local) · [Pears](https://docs.pears.com) (Hyperswarm, local)  
+Built for the [Tether Developers Cup](https://dorahacks.io/hackathon/tether-developers-cup).
 
 </div>
 
@@ -19,36 +18,53 @@ Built with [Tether WDK](https://wdk.tether.io) for the [Tether Developers Cup](h
 
 ## Why GoalTip
 
-Every match night, fans in group chats say *"loser buys drinks"* — and then nobody settles up. GoalTip makes that moment real:
+Match night: someone says *loser buys drinks* — and nobody pays. GoalTip makes that moment real without a custodian.
 
-- **Create a shared watch party** — deploys a TipPool escrow on Sepolia
-- **Invite friends** with a room code or link — every device sees the same tip board
-- **Tip your nation** in USDt via `TipPool.tip(nationId)` — signed locally with WDK
-- **Verify on-chain** — party API checks Transfer into TipPool **and** the Tip event (nation + amount)
-- **Settle the match** — host calls TipPool.settle on-chain; tips lock on every device
-- **Stay self-custodial** — GoalTip never touches your keys. Ever.
+1. **Create a room** → host deploys a TipPool escrow (deploy receipt verified)
+2. **Invite friends** → same live tip board on every device
+3. **Tip a nation** → `TipPool.tip(nationId, amount)` signed in the WDK Web Worker
+4. **Board verifies** → Sepolia Transfer **and** Tip event (nation + amount)
+5. **Host settles** → `TipPool.settle` on-chain; escrow paid out; board locks
 
-No signup, no custodian. Your wallet is generated in your browser, encrypted with your password, and signs everything locally. The shared board only stores tip *metadata* (nation, amount, tx hash) — never keys.
+No signup. No custodian. The shared API stores tip *metadata* only — never keys.
+
+## For judges (≤3 minutes)
+
+| | |
+|---|---|
+| App | https://goaltip-web.vercel.app |
+| Judge page | https://goaltip-web.vercel.app/judge |
+| Health | Expect `persistence: "redis-ok"`, `escrow: "tippool-per-room"`, `settle: "on-chain-tippool+board"`, `deployVerification: "sepolia-receipt"`, `tipVerification: "sepolia-erc20-transfer+tip-event"` |
+| Flow | Unlock → Party → Create (TipPool) → tip → **Verified** → over-cap blocked → Settle |
+| Faucets | [Sepolia ETH](https://www.alchemy.com/faucets/ethereum-sepolia) · [Aave Sepolia USDT](https://app.aave.com/faucet/) (Testnet Mode) |
+| Docs | [JUDGE.md](./JUDGE.md) · [DEMO_SCRIPT.md](./docs/DEMO_SCRIPT.md) · [SUBMISSION.md](./SUBMISSION.md) |
+
+**Multi-track (localhost):** QVAC + Pears are offline on Vercel by design.
+
+```bash
+pnpm install
+cd pears && npm install && cd ..
+pnpm add @qvac/sdk          # optional coach
+pnpm demo                   # web + coach + dual Pears peers (:3848 / :3849)
+```
 
 ## Highlights
 
 | | |
 |---|---|
-| Football-native | Nation-vs-nation tipping pools built around the watch-party moment |
-| True self-custody | BIP-39/BIP-44 wallet lives in a Web Worker; private keys never reach the DOM or any server |
-| Shared rooms | Create / join by code; invite link `?room=CODE`; live tip board sync across devices |
-| TipPool escrow | Host deploys TipPool at room create; tips go to the contract, not an EOA |
-| On-chain nation tips | `TipPool.tip(nationId, amount)` — API requires Transfer + Tip event |
-| Spend limits | Host sets per-wallet USDt cap; blocked client-side before signing + enforced server-side |
-| Match settle | Host TipPool.settle on-chain; Settled event verified; board locks everywhere |
-| Real on-chain USDt | ERC-20 transfers on Sepolia — every tip links to Etherscan |
-| Local AI coach | Optional QVAC-powered match analyst (LLAMA 3.2 1B), on-device, no cloud |
-| Pears tip gossip | Optional Hyperswarm sidecar announces verified tips peer-to-peer |
-| Installable PWA | Works on mobile, installs to the home screen |
+| True self-custody | BIP-39 / BIP-44 vault in a Web Worker — keys never hit the DOM or server |
+| TipPool escrow | Per-room deploy via WDK; room create checks Sepolia deploy receipt |
+| On-chain nation tips | `tip(nationId, amount)` emits Tip; API requires Transfer + Tip |
+| Spend limits | Cap checked before signing + enforced server-side |
+| On-chain settle | Host `settle(winner)`; Settled event verified; board locks everywhere |
+| Shared rooms | Invite `?room=CODE`; Redis-backed on live |
+| QVAC coach | Optional on-device LLAMA 3.2 1B — reads live Party totals |
+| Pears gossip | Optional Hyperswarm tip announcements (not WebRTC) |
+| PWA | Installable on mobile |
 
 ## Quick start
 
-Requirements: **Node 20+**, **pnpm 10**
+**Node 20+**, **pnpm 10**
 
 ```bash
 git clone https://github.com/thesithunyein/goaltip.git
@@ -57,196 +73,218 @@ pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:3000` — create a wallet, open the **Party** tab, create or join a room, and tip.
+Open http://localhost:3000 → unlock wallet → **Party**.
 
-Or skip setup: **https://goaltip-web.vercel.app**
+Live: https://goaltip-web.vercel.app
 
-### Shared rooms on Vercel (recommended)
-
-For multi-device demos that survive serverless cold starts, add free [Upstash Redis](https://upstash.com) credentials in the Vercel project (Root Directory `apps/web`):
+### Redis on Vercel (multi-device)
 
 ```
 UPSTASH_REDIS_REST_URL=...
 UPSTASH_REDIS_REST_TOKEN=...
 ```
 
-See [apps/web/.env.example](./apps/web/.env.example). Without Redis, rooms use in-memory storage (fine for local `pnpm dev`; on Vercel, prefer Upstash).
-
-## Try the full flow in 3 minutes
-
-1. **Create a wallet** — recovery phrase is generated inside a Web Worker
-2. **Create a shared room** — pick nations (e.g. Myanmar vs Brazil), enable spend limit, copy the invite link
-3. **Join on a second device** — open the link or enter the room code
-4. **Fund your wallet** (free testnet tokens):
-   - Gas: [Alchemy Sepolia ETH faucet](https://www.alchemy.com/faucets/ethereum-sepolia)
-   - USDt: [Aave faucet](https://app.aave.com/faucet/) — enable **Testnet Mode**, Sepolia market, mint USDT
-5. **Tip from both devices** — board shows **Verified** after on-chain check; open `explorer` links
-6. **Try over the spend cap** — blocked before any signature is requested
-7. **Host settles** — pick the winner; tips lock on every device
-8. **Optional:** run the local QVAC coach (below)
-
-The test USDt contract is [`0xaA8E…33D0`](https://sepolia.etherscan.io/address/0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0) (6 decimals).
+See [apps/web/.env.example](./apps/web/.env.example). Health reports `redis-ok` only after a live PING — not just env presence.
 
 ## Architecture
 
-The security boundary is the Web Worker. The UI requests actions; the worker owns the seed, derives keys, and signs. Shared rooms sync tip metadata only.
-
 ```mermaid
 flowchart TB
-    subgraph Browser["Browser (Next.js on Vercel)"]
-        UI["UI: Party · Wallet · Coach · Activity · Settings"]
-        subgraph Worker["Web Worker — WDK worklet"]
-            Vault["Encrypted vault"]
-            Keys["BIP-39 / BIP-44"]
-            Signer["Signing"]
-        end
-        Cache["localStorage cache"]
+    subgraph Browser["Browser"]
+        UI["UI: Party · Wallet · Coach"]
+        Worker["WDK Web Worker<br/>vault · BIP-44 · sign"]
     end
 
-    API["API /api/party<br/>tip metadata only"]
-    Redis["Upstash Redis optional"]
-    RPC["Sepolia public RPC"]
-    Chain["USDt ERC-20 transfers"]
-    QVAC["Optional local QVAC<br/>LLAMA 3.2 1B"]
+    API["/api/party<br/>metadata only"]
+    Redis["Upstash Redis"]
+    TipPool["TipPool escrow<br/>deploy · tip · settle"]
+    USDT["Sepolia test USDt"]
+    QVAC["QVAC localhost"]
+    Pears["Pears Hyperswarm :3848"]
 
-    UI -- "Comlink" --> Worker
-    Worker -- "signed tx" --> RPC
-    RPC --> Chain
-    UI -- "create / join / tips" --> API
+    UI -- Comlink --> Worker
+    Worker --> TipPool
+    Worker --> USDT
+    UI --> API
     API --> Redis
-    UI --- Cache
-    UI -- "localhost only" --> QVAC
+    API -. verify Transfer + Tip .-> TipPool
+    UI -. optional .-> QVAC
+    UI -. optional .-> Pears
 ```
 
-Key properties:
-
-- **Keys never leave the worker.** The UI receives addresses and signed txs only.
-- **Shared board is metadata-only.** Room code, nations, pool address, tip amounts + tx hashes. No private keys, no seed, no passwords.
-- **Tips are ERC-20 transfers** to the party pool address, encoded client-side and signed in the worker.
-- **QVAC is local-first.** The live site correctly shows the coach offline; run `npm run coach` on your machine for on-device answers.
+- **Keys never leave the worker.** UI gets addresses and signed txs only.
+- **Board is metadata-only.** Room, nations, pool, tip amounts + hashes.
+- **Escrow is TipPool.** Preferred path: `tip()` then `settle()` — both verified on-chain.
+- **QVAC / Pears are local.** Live site correctly shows them offline.
 
 ## Project structure
 
 ```
 goaltip/
-├── apps/web/                          # Next.js app (Vercel)
-│   ├── public/
-│   │   ├── goaltip-mark.svg           # Favicon, PWA, in-app mark
-│   │   └── sw.js                      # Service worker
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── api/party/             # Shared room API
-│   │   │   │   ├── route.ts           # POST create room
-│   │   │   │   └── [code]/
-│   │   │   │       ├── route.ts       # GET room
-│   │   │   │       └── tips/route.ts  # POST tip metadata
-│   │   │   ├── layout.tsx             # Metadata + icons
-│   │   │   ├── manifest.ts            # PWA manifest
-│   │   │   ├── page.tsx
-│   │   │   └── providers.tsx
-│   │   ├── components/
-│   │   │   ├── watch-party-screen.tsx # Create / join / tip / invite
-│   │   │   ├── coach-screen.tsx       # Optional QVAC coach UI
-│   │   │   ├── wallet-shell.tsx       # Tabs: Party Wallet Coach…
-│   │   │   ├── brand-header.tsx
-│   │   │   ├── nation-flag.tsx        # Flag images (Windows-safe)
-│   │   │   ├── dashboard.tsx
-│   │   │   ├── onboarding-flow.tsx
-│   │   │   └── …
-│   │   ├── lib/
-│   │   │   ├── nations.ts
-│   │   │   ├── party-types.ts
-│   │   │   ├── party-store.ts         # Client cache + API helpers
-│   │   │   └── party-server.ts        # Upstash Redis / memory store
-│   │   └── wallet/
-│   │       ├── chains.ts              # Default: Sepolia
-│   │       ├── tokens.ts              # Sepolia test USDt
-│   │       ├── erc20.ts
-│   │       ├── wallet-client.ts
-│   │       ├── wallet-provider.tsx
-│   │       └── worker.ts
-│   ├── vercel.json
-│   └── .env.example
+├── apps/
+│   └── web/                              # Next.js app (Vercel Root Directory)
+│       ├── public/
+│       │   ├── goaltip-mark.svg          # Favicon / PWA mark
+│       │   └── sw.js                     # Service worker
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── page.tsx              # App shell
+│       │   │   ├── layout.tsx            # Metadata + fonts
+│       │   │   ├── manifest.ts           # PWA
+│       │   │   ├── providers.tsx
+│       │   │   ├── judge/page.tsx        # In-app judge entry
+│       │   │   └── api/
+│       │   │       ├── health/route.ts   # Live probe (Redis PING)
+│       │   │       └── party/
+│       │   │           ├── route.ts      # POST create room (+ deploy verify)
+│       │   │           ├── health/route.ts
+│       │   │           └── [code]/
+│       │   │               ├── route.ts  # GET room
+│       │   │               ├── tips/route.ts    # POST tip (Transfer + Tip)
+│       │   │               └── settle/route.ts  # POST settle (Settled event)
+│       │   ├── components/
+│       │   │   ├── watch-party-screen.tsx   # Create / join / tip / settle
+│       │   │   ├── coach-screen.tsx         # Optional QVAC UI
+│       │   │   ├── wallet-shell.tsx         # Tabs: Party · Wallet · Coach · …
+│       │   │   ├── brand-header.tsx
+│       │   │   ├── unlock-view.tsx
+│       │   │   ├── onboarding-flow.tsx
+│       │   │   ├── dashboard.tsx
+│       │   │   ├── activity.tsx
+│       │   │   └── …
+│       │   ├── lib/
+│       │   │   ├── tip-pool.ts              # encode tip/settle/approve, wait txs
+│       │   │   ├── tip-pool-bytecode.ts     # embedded TipPool creation bytecode
+│       │   │   ├── verify-tip-tx.ts         # Transfer + Tip event
+│       │   │   ├── verify-settle-tx.ts      # Settled event
+│       │   │   ├── verify-deploy-tx.ts      # deploy receipt gate
+│       │   │   ├── party-server.ts          # Redis / memory rooms
+│       │   │   ├── party-store.ts           # client cache + API helpers
+│       │   │   ├── party-types.ts
+│       │   │   ├── pears-client.ts          # local Hyperswarm sidecar client
+│       │   │   ├── nations.ts
+│       │   │   └── soft-ui.ts
+│       │   └── wallet/
+│       │       ├── worker.ts                # WDK worklet entry
+│       │       ├── wallet-provider.tsx
+│       │       ├── wallet-client.ts
+│       │       ├── chains.ts                # default: Sepolia
+│       │       ├── tokens.ts                # Sepolia test USDt
+│       │       └── erc20.ts
+│       ├── vercel.json
+│       └── .env.example
+│
 ├── packages/
-│   ├── wdk-web-core/                  # WDK worklet: vault, derive, sign, RPC
+│   ├── wdk-web-core/                     # WDK: vault, BIP-44, sign, RPC, chains
 │   │   └── src/
 │   │       ├── worker/wallet-worker.ts
-│   │       ├── chains/                # ethereum, sepolia, plasma, …
 │   │       ├── vault/
+│   │       ├── chains/                   # ethereum, sepolia, plasma, …
 │   │       └── adapters/
-│   └── wdk-ui/                        # Theme, brand, wallet UI primitives
+│   └── wdk-ui/                           # Theme + wallet UI primitives
+│
+├── contracts/                            # TipPool escrow (Foundry)
+│   ├── src/TipPool.sol                   # tip(nationId) + settle
+│   ├── test/TipPool.t.sol
+│   ├── foundry.toml
+│   └── README.md
+│
 ├── coach/
-│   └── server.mjs                     # Optional local QVAC inference
+│   └── server.mjs                        # Optional QVAC sidecar (:3847)
+│
+├── pears/
+│   ├── server.mjs                        # Hyperswarm tip gossip (:3848 / :3849)
+│   └── package.json                      # hyperswarm dependency
+│
+├── scripts/
+│   ├── dev-demo.mjs                      # pnpm demo — web + coach + dual Pears
+│   ├── coach-warmup.mjs
+│   ├── embed-tip-pool.mjs                # forge build → tip-pool-bytecode.ts
+│   └── gen-test-mnemonic.mjs
+│
 ├── docs/
-│   ├── goaltip-mark.svg
-│   ├── screenshot-wallet.png
-│   ├── DEMO_SCRIPT.md
+│   ├── DEMO_SCRIPT.md                    # ≤3min spoken script
+│   ├── RECORDING_CHECKLIST.md
 │   ├── ARCHITECTURE.md
-│   └── …
-├── .github/workflows/                 # CI
-├── SUBMISSION.md                      # DoraHacks copy-paste
+│   └── goaltip-mark.svg
+│
+├── .github/workflows/                    # CI
+├── brand/ · media/                       # Brand assets (template kit)
+│
+├── JUDGE.md                              # Judge one-pager
+├── SUBMISSION.md                         # DoraHacks copy-paste
 ├── README.md
-└── LICENSE                            # MIT
+├── package.json                          # pnpm workspace · demo / pears / coach
+├── pnpm-workspace.yaml
+└── LICENSE                               # MIT
 ```
 
-## Author
+### What lives where (Cup map)
 
-Built by [**thesithunyein**](https://github.com/thesithunyein) (Sithu Nyein) for the Tether Developers Cup 2026.
+| Layer | Path | Job |
+|-------|------|-----|
+| Product UI | `apps/web/src/components/` | Party, wallet, coach, unlock |
+| On-chain helpers | `apps/web/src/lib/tip-pool*.ts` | Deploy / tip / settle calldata |
+| Verification | `apps/web/src/lib/verify-*.ts` | Deploy receipt, Transfer+Tip, Settled |
+| Room API | `apps/web/src/app/api/party/` | Create / tips / settle / health |
+| Keys | `packages/wdk-web-core` + `apps/web/src/wallet/` | Self-custody in Web Worker |
+| Escrow contract | `contracts/src/TipPool.sol` | Per-room USDt pool |
+| QVAC | `coach/server.mjs` | Local on-device AI |
+| Pears | `pears/server.mjs` | Local Hyperswarm gossip |
 
-## Optional: local AI coach (QVAC)
+## Optional: QVAC + Pears
 
 ```bash
-npx @qvac/sdk doctor
+# QVAC coach
 pnpm add @qvac/sdk
-npm run coach
-pnpm dev
+npm run coach                 # or: pnpm demo
+
+# Pears Hyperswarm
+cd pears && npm install && cd ..
+npm run pears                 # or: pnpm demo (starts :3848 + :3849)
 ```
 
-Model: `LLAMA_3_2_1B_INST_Q4_0`. Coach tab shows an Online/Offline badge and setup steps when offline.
+Coach tab = on-device match analyst. Party header shows **Pears Np** when peers connect.
 
-## Testing & CI
+## Testing
 
 ```bash
-pnpm -F @wdk-starter/web typecheck
 pnpm -F @wdk-starter/web test
+pnpm -F @wdk-starter/web typecheck
+cd contracts && forge test    # after: forge install foundry-rs/forge-std
 pnpm build
 ```
 
-## Deploy your own
+## Deploy
 
-1. Import the repo in [Vercel](https://vercel.com)
-2. Set **Root Directory** to `apps/web`
-3. Add Upstash env vars (recommended)
-4. Deploy (`apps/web/vercel.json` has install/build commands)
+1. Import repo on [Vercel](https://vercel.com) — Root Directory `apps/web`
+2. Add Upstash Redis env vars
+3. Deploy (`apps/web/vercel.json`)
 
 ## External services
 
-- **Tether WDK** — custody, derivation, signing
-- **Tether QVAC SDK** (optional) — local AI
-- **Sepolia public RPC** — broadcast (no key material)
-- **Aave v3 Sepolia test USDT** — mintable demo token
-- **Upstash Redis** (optional) — shared room persistence
-- **Vercel** — hosting + API routes
+| Service | Role |
+|---------|------|
+| Tether WDK | Custody, derivation, signing |
+| Sepolia RPC | Broadcast + receipt verify (no keys) |
+| Aave v3 Sepolia USDT | Test tips (`0xaA8E…33D0`, 6 decimals) |
+| Upstash Redis | Shared rooms on live |
+| Vercel | Hosting + party API |
+| QVAC SDK | Local AI only |
+| Hyperswarm | Local Pears gossip only |
 
-Started from the open-source `wdk-wallet-template` (MIT). All GoalTip product work (watch parties, tipping, branding, coach, docs, demo) by [thesithunyein](https://github.com/thesithunyein).
+Forked from `wdk-wallet-template` (MIT). GoalTip product work (parties, TipPool, football UI, coach, Pears, docs) by [thesithunyein](https://github.com/thesithunyein).
 
-## Roadmap
+## Author
 
-- **TipPool escrow** — shipped (per-room deploy, `tip(nationId)`, on-chain settle)
-- **Pears tip gossip** — optional local Hyperswarm sidecar (`pnpm add hyperswarm && npm run pears`)
-- **Match data feeds** from real fixtures
-- **Mainnet USDt on Plasma** — one `DEFAULT_CHAIN_ID` flip away
-
-## Judge
-
-After deploy: https://goaltip-web.vercel.app/judge
+[**thesithunyein**](https://github.com/thesithunyein) (Sithu Nyein) — Tether Developers Cup 2026.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+MIT — [LICENSE](./LICENSE).
 
 ---
 
 <div align="center">
-<sub>Built by <a href="https://github.com/thesithunyein">thesithunyein</a> in Myanmar for the Tether Developers Cup 2026</sub>
+<sub>Built in Myanmar for the Tether Developers Cup 2026</sub>
 </div>
