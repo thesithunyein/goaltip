@@ -15,6 +15,30 @@ export class SpendCapExceededError extends Error {
   }
 }
 
+/** Thrown when the room is settled and no longer accepts tips. */
+export class PartySettledError extends Error {
+  constructor () {
+    super('This match is settled — tipping is locked.')
+    this.name = 'PartySettledError'
+  }
+}
+
+/** Thrown when a tip hash is already on the shared board. */
+export class DuplicateTipError extends Error {
+  constructor (hash: string) {
+    super(`Tip ${hash.slice(0, 10)}… is already on the shared board.`)
+    this.name = 'DuplicateTipError'
+  }
+}
+
+/** Thrown when a non-host tries to settle. */
+export class SettleForbiddenError extends Error {
+  constructor () {
+    super('Only the room host (pool wallet) can settle this match.')
+    this.name = 'SettleForbiddenError'
+  }
+}
+
 const KEY_PREFIX = 'goaltip:party:'
 const TTL_SECONDS = 60 * 60 * 24 * 7 // 7 days
 
@@ -144,6 +168,15 @@ export async function appendSharedTip (code: string, tip: TipRecord): Promise<Wa
   const party = await getSharedParty(code)
   if (!party) return null
 
+  if (party.settledAt) {
+    throw new PartySettledError()
+  }
+
+  const hashLower = tip.hash.toLowerCase()
+  if (party.tips.some((t) => t.hash.toLowerCase() === hashLower)) {
+    throw new DuplicateTipError(tip.hash)
+  }
+
   if (party.capPerWallet && tip.from) {
     const cap = Number.parseFloat(party.capPerWallet)
     const already = walletTotal(party, tip.from)
@@ -154,9 +187,44 @@ export async function appendSharedTip (code: string, tip: TipRecord): Promise<Wa
     }
   }
 
+  const verifiedTip: TipRecord = { ...tip, verified: true }
   const next: WatchParty = {
     ...party,
-    tips: upsertTips(party.tips, tip)
+    tips: upsertTips(party.tips, verifiedTip)
+  }
+  await saveSharedParty(next)
+  return next
+}
+
+/**
+ * Host settles the match: locks tips and records the winning nation.
+ * Only the pool wallet (host) may settle.
+ */
+export async function settleSharedParty (
+  code: string,
+  opts: { winnerNationId: string, from: string }
+): Promise<WatchParty | null> {
+  const party = await getSharedParty(code)
+  if (!party) return null
+
+  if (party.settledAt) {
+    return party
+  }
+
+  const from = opts.from.trim().toLowerCase()
+  if (from !== party.poolAddress.toLowerCase()) {
+    throw new SettleForbiddenError()
+  }
+
+  const winner = opts.winnerNationId.trim().toLowerCase()
+  if (winner !== party.nationA && winner !== party.nationB) {
+    throw new Error('Winner must be one of the two nations in this room.')
+  }
+
+  const next: WatchParty = {
+    ...party,
+    winnerNationId: winner,
+    settledAt: new Date().toISOString()
   }
   await saveSharedParty(next)
   return next

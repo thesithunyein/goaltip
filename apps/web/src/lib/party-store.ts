@@ -110,6 +110,39 @@ export async function apiAppendTip (code: string, tip: TipRecord): Promise<Watch
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(tip)
   })
-  if (!res.ok) throw new Error(await res.text() || 'Failed to sync tip')
+  if (!res.ok) {
+    let message = 'Failed to sync tip'
+    try {
+      const data = await res.json() as { error?: string }
+      if (data.error) message = data.error
+    } catch {
+      const text = await res.text().catch(() => '')
+      if (text) message = text
+    }
+    throw new Error(message)
+  }
+  return await res.json() as WatchParty
+}
+
+export async function apiSettleParty (
+  code: string,
+  body: { winnerNationId: string, from: string }
+): Promise<WatchParty> {
+  const res = await fetch(`/api/party/${encodeURIComponent(normalizeRoomCode(code))}/settle`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  if (!res.ok) {
+    let message = 'Failed to settle match'
+    try {
+      const data = await res.json() as { error?: string }
+      if (data.error) message = data.error
+    } catch {
+      const text = await res.text().catch(() => '')
+      if (text) message = text
+    }
+    throw new Error(message)
+  }
   return await res.json() as WatchParty
 }

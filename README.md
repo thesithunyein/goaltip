@@ -24,7 +24,8 @@ Every match night, fans in group chats say *"loser buys drinks"* — and then no
 - **Create a shared watch party** for tonight's match (any two nations)
 - **Invite friends** with a room code or link — every device sees the same tip board
 - **Tip your nation** in USDt — 1, 5, 10, or any amount — signed locally with WDK
-- **Verify on-chain** — every tip links to Sepolia Etherscan
+- **Verify on-chain** — the party API checks the Sepolia ERC-20 Transfer before the tip is accepted
+- **Settle the match** — host locks tips and shows the winner on every device
 - **Stay self-custodial** — GoalTip never touches your keys. Ever.
 
 No signup, no custodian. Your wallet is generated in your browser, encrypted with your password, and signs everything locally. The shared board only stores tip *metadata* (nation, amount, tx hash) — never keys.
@@ -36,6 +37,9 @@ No signup, no custodian. Your wallet is generated in your browser, encrypted wit
 | Football-native | Nation-vs-nation tipping pools built around the watch-party moment |
 | True self-custody | BIP-39/BIP-44 wallet lives in a Web Worker; private keys never reach the DOM or any server |
 | Shared rooms | Create / join by code; invite link `?room=CODE`; live tip board sync across devices |
+| On-chain verified tips | Server checks Sepolia ERC-20 Transfer (from, pool, amount) before the board accepts a tip |
+| Spend limits | Host sets per-wallet USDt cap; blocked client-side before signing + enforced server-side |
+| Match settle | Host picks the winner; tips lock; every device shows final totals |
 | Real on-chain USDt | ERC-20 transfers on Sepolia — every tip links to Etherscan |
 | Local AI coach | Optional QVAC-powered match analyst (LLAMA 3.2 1B), on-device, no cloud |
 | Installable PWA | Works on mobile, installs to the home screen |
@@ -69,13 +73,15 @@ See [apps/web/.env.example](./apps/web/.env.example). Without Redis, rooms use i
 ## Try the full flow in 3 minutes
 
 1. **Create a wallet** — recovery phrase is generated inside a Web Worker
-2. **Create a shared room** — pick nations (e.g. Myanmar vs Brazil), copy the invite link
+2. **Create a shared room** — pick nations (e.g. Myanmar vs Brazil), enable spend limit, copy the invite link
 3. **Join on a second device** — open the link or enter the room code
 4. **Fund your wallet** (free testnet tokens):
    - Gas: [Alchemy Sepolia ETH faucet](https://www.alchemy.com/faucets/ethereum-sepolia)
    - USDt: [Aave faucet](https://app.aave.com/faucet/) — enable **Testnet Mode**, Sepolia market, mint USDT
-5. **Tip from both devices** — boards update for everyone; open `explorer` links
-6. **Optional:** run the local QVAC coach (below)
+5. **Tip from both devices** — board shows **Verified** after on-chain check; open `explorer` links
+6. **Try over the spend cap** — blocked before any signature is requested
+7. **Host settles** — pick the winner; tips lock on every device
+8. **Optional:** run the local QVAC coach (below)
 
 The test USDt contract is [`0xaA8E…33D0`](https://sepolia.etherscan.io/address/0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0) (6 decimals).
 

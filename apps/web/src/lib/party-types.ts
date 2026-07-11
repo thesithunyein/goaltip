@@ -8,6 +8,8 @@ export interface TipRecord {
   readonly ts: number
   /** Sender wallet address — used to enforce the per-wallet spend cap. */
   readonly from?: string
+  /** True only after the party API verified the Sepolia ERC-20 Transfer. */
+  readonly verified?: boolean
 }
 
 export interface WatchParty {
@@ -23,6 +25,10 @@ export interface WatchParty {
    * in this room, for the whole match. Enforced server-side on every tip.
    */
   readonly capPerWallet?: string
+  /** Winning nation id after the host settles the match. */
+  readonly winnerNationId?: string
+  /** ISO timestamp when the host settled (tips lock after this). */
+  readonly settledAt?: string
 }
 
 export function nationTotals (party: WatchParty): Map<string, number> {

@@ -12,6 +12,7 @@ import {
   apiAppendTip,
   apiCreateParty,
   apiGetParty,
+  apiSettleParty,
   clearParty,
   getParty,
   inviteUrl,
@@ -218,6 +219,10 @@ export function WatchPartyScreen (): React.JSX.Element {
 
   const tipNation = useCallback(async (nationId: string, amountStr: string) => {
     if (!party || !usdt || phase !== 'unlocked' || !address) return
+    if (party.settledAt) {
+      setError('This match is settled — tipping is locked.')
+      return
+    }
     setBusy(true)
     setError(null)
     setSelectedNation(nationId)
@@ -253,19 +258,23 @@ export function WatchPartyScreen (): React.JSX.Element {
         symbol: 'USDt' as const,
         hash: hash as string,
         ts: Date.now(),
-        from: address
+        from: address,
+        verified: false as const
       }
-      // Optimistic local update, then sync to shared board.
+      // Optimistic local update, then sync to shared board (server verifies on-chain).
       const local = setPartyCache({
         ...party,
         tips: [tip, ...party.tips.filter((t) => t.hash.toLowerCase() !== tip.hash.toLowerCase())]
       })
       setParty(local)
+      // Brief wait so Sepolia usually has a receipt before the verify poll starts.
+      await new Promise((r) => setTimeout(r, 2000))
       try {
         const synced = await apiAppendTip(party.code, tip)
         applyParty(synced)
-      } catch {
-        setError('Tip sent on-chain, but shared board sync failed. Tap Refresh pool.')
+      } catch (syncErr) {
+        const msg = syncErr instanceof Error ? syncErr.message : 'shared board sync failed'
+        setError(`Tip sent on-chain, but board verification failed: ${msg}. Tap Refresh pool.`)
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Tip failed.')
@@ -274,6 +283,24 @@ export function WatchPartyScreen (): React.JSX.Element {
       setSelectedNation(null)
     }
   }, [party, usdt, phase, accountIndex, address, applyParty])
+
+  const settleMatch = useCallback(async (winnerNationId: string) => {
+    if (!party || !address) return
+    if (address.toLowerCase() !== party.poolAddress.toLowerCase()) {
+      setError('Only the room host can settle this match.')
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      const settled = await apiSettleParty(party.code, { winnerNationId, from: address })
+      applyParty(settled)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Settle failed.')
+    } finally {
+      setBusy(false)
+    }
+  }, [party, address, applyParty])
 
   if (phase !== 'unlocked') {
     return (
@@ -329,7 +356,7 @@ export function WatchPartyScreen (): React.JSX.Element {
                       onChange={(e) => setCapEnabled(e.target.checked)}
                       style={{ width: 18, height: 18, accentColor: 'var(--color-primary, var(--wdk-orange, #f4642f))' }}
                     />
-                    <span style={label}>Spend limit per wallet (WDK-enforced)</span>
+                    <span style={label}>Spend limit per wallet (server-enforced before signing)</span>
                   </span>
                   {capEnabled && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -391,6 +418,10 @@ export function WatchPartyScreen (): React.JSX.Element {
   const chain = getChain(CHAIN_ID)
   const myRemaining = address ? remainingCap(party, address) : null
   const myTipped = address ? walletTotal(party, address) : 0
+  const isHost = Boolean(address && address.toLowerCase() === party.poolAddress.toLowerCase())
+  const isSettled = Boolean(party.settledAt)
+  const winnerInfo = party.winnerNationId ? getNation(party.winnerNationId) : undefined
+  const tipsLocked = isSettled
 
   return (
     <main style={page}>
@@ -400,21 +431,26 @@ export function WatchPartyScreen (): React.JSX.Element {
           <h1 className="goaltip-party-hero" style={{ margin: 0, fontSize: 28, letterSpacing: -0.5, lineHeight: 1.15 }}>GoalTip</h1>
           <p style={dim}>
             Self-custodial USDt tipping for football watch parties. WDK keeps signing inside the browser worklet.
-            Shared rooms sync tip boards across devices.
+            Shared rooms sync tip boards across devices. Tips are verified on-chain before they land on the board.
           </p>
         </Card>
         <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <span style={dim}>Room {party.code}</span>
             <span style={{ fontSize: 12, color: 'var(--color-primary, var(--wdk-orange, #f4642f))', whiteSpace: 'nowrap' }}>
-              Shared · Sepolia{party.capPerWallet ? ` · Capped ${party.capPerWallet} USDt` : ''}
+              Shared · Sepolia{party.capPerWallet ? ` · Capped ${party.capPerWallet} USDt` : ''}{isSettled ? ' · Settled' : ''}
             </span>
           </div>
           <div style={matchRow}>
-            <NationBadge nation={nationAInfo} total={totalA} />
+            <NationBadge nation={nationAInfo} total={totalA} winner={party.winnerNationId === party.nationA} />
             <span style={{ fontSize: 18, color: 'var(--text-secondary, var(--text-dim, #b3a79f))', flexShrink: 0 }}>vs</span>
-            <NationBadge nation={nationBInfo} total={totalB} />
+            <NationBadge nation={nationBInfo} total={totalB} winner={party.winnerNationId === party.nationB} />
           </div>
+          {isSettled && winnerInfo && (
+            <p style={{ margin: 0, fontSize: 14, color: 'var(--color-primary, var(--wdk-orange, #f4642f))', fontWeight: 600 }}>
+              Match settled — {winnerInfo.name} wins. Tips locked. Pool received {(totalA + totalB).toFixed(2)} USDt.
+            </p>
+          )}
           <p style={{ ...dim, fontSize: 12, margin: 0, wordBreak: 'break-all' }}>
             Pool: {party.poolAddress.slice(0, 8)}…{party.poolAddress.slice(-6)}
           </p>
@@ -424,61 +460,90 @@ export function WatchPartyScreen (): React.JSX.Element {
         </Card>
 
         <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 16 }}>Tip your nation (USDt)</h3>
+          <h3 style={{ margin: 0, fontSize: 16 }}>{tipsLocked ? 'Tipping locked' : 'Tip your nation (USDt)'}</h3>
           {!usdt && <p style={errorStyle}>USDt is not configured for Sepolia. Open the Wallet tab and use native test ETH send as a fallback demo.</p>}
-          {party.capPerWallet && (
+          {party.capPerWallet && !tipsLocked && (
             <p style={{ ...dim, fontSize: 12, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
               <span aria-hidden style={{ color: 'var(--color-primary, var(--wdk-orange, #f4642f))' }}>●</span>
               Spend limit {party.capPerWallet} USDt/wallet — you have tipped {myTipped.toFixed(2)}, {myRemaining !== null ? myRemaining.toFixed(2) : '—'} left. Enforced by the party server before your wallet can sign over the cap.
             </p>
           )}
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {[party.nationA, party.nationB].map((id) => {
-              const n = getNation(id)
-              if (!n) return null
-              return (
-                <div key={id} style={{ flex: '1 1 140px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                    <NationFlag nation={n} size={22} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{n.name}</span>
-                  </strong>
-                  {TIP_PRESETS.map((amt) => {
-                    const overCap = myRemaining !== null && Number.parseFloat(amt) > myRemaining + 1e-9
-                    return (
-                      <Button
-                        key={amt}
-                        variant="secondary"
-                        disabled={busy || !usdt || overCap}
-                        onClick={() => void tipNation(id, amt)}
-                        style={{ width: '100%', minHeight: 44 }}
-                        title={overCap ? 'Would exceed this room\'s spend limit' : undefined}
-                      >
-                        {busy && selectedNation === id ? '…' : `Tip ${amt} USDt`}
-                      </Button>
-                    )
-                  })}
-                </div>
-              )
-            })}
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'stretch' }}>
-            <Input value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} placeholder="Custom amount" inputMode="decimal" style={{ flex: '1 1 100px', minWidth: 0, minHeight: 44 }} />
-            <Button
-              disabled={busy || !usdt || customAmount.trim() === ''}
-              onClick={() => void tipNation(party.nationA, customAmount)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, flex: '1 1 auto' }}
-            >
-              <NationFlag nation={nationAInfo} size={16} /> Tip
-            </Button>
-            <Button
-              disabled={busy || !usdt || customAmount.trim() === ''}
-              onClick={() => void tipNation(party.nationB, customAmount)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, flex: '1 1 auto' }}
-            >
-              <NationFlag nation={nationBInfo} size={16} /> Tip
-            </Button>
-          </div>
+          {!tipsLocked && (
+            <>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {[party.nationA, party.nationB].map((id) => {
+                  const n = getNation(id)
+                  if (!n) return null
+                  return (
+                    <div key={id} style={{ flex: '1 1 140px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                        <NationFlag nation={n} size={22} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{n.name}</span>
+                      </strong>
+                      {TIP_PRESETS.map((amt) => {
+                        const overCap = myRemaining !== null && Number.parseFloat(amt) > myRemaining + 1e-9
+                        return (
+                          <Button
+                            key={amt}
+                            variant="secondary"
+                            disabled={busy || !usdt || overCap}
+                            onClick={() => void tipNation(id, amt)}
+                            style={{ width: '100%', minHeight: 44 }}
+                            title={overCap ? 'Would exceed this room\'s spend limit' : undefined}
+                          >
+                            {busy && selectedNation === id ? '…' : `Tip ${amt} USDt`}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'stretch' }}>
+                <Input value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} placeholder="Custom amount" inputMode="decimal" style={{ flex: '1 1 100px', minWidth: 0, minHeight: 44 }} />
+                <Button
+                  disabled={busy || !usdt || customAmount.trim() === ''}
+                  onClick={() => void tipNation(party.nationA, customAmount)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, flex: '1 1 auto' }}
+                >
+                  <NationFlag nation={nationAInfo} size={16} /> Tip
+                </Button>
+                <Button
+                  disabled={busy || !usdt || customAmount.trim() === ''}
+                  onClick={() => void tipNation(party.nationB, customAmount)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, flex: '1 1 auto' }}
+                >
+                  <NationFlag nation={nationBInfo} size={16} /> Tip
+                </Button>
+              </div>
+            </>
+          )}
           {error && <p style={errorStyle}>{error}</p>}
         </Card>
+
+        {isHost && !isSettled && (
+          <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <h3 style={{ margin: 0, fontSize: 16 }}>Settle match</h3>
+            <p style={{ ...dim, fontSize: 13, margin: 0 }}>
+              Host only. Pick the winner to lock tipping and show the final board on every device.
+            </p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Button
+                disabled={busy}
+                onClick={() => void settleMatch(party.nationA)}
+                style={{ flex: 1, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                <NationFlag nation={nationAInfo} size={16} /> {nationAInfo?.name} wins
+              </Button>
+              <Button
+                disabled={busy}
+                onClick={() => void settleMatch(party.nationB)}
+                style={{ flex: 1, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                <NationFlag nation={nationBInfo} size={16} /> {nationBInfo?.name} wins
+              </Button>
+            </div>
+          </Card>
+        )}
 
         <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <h3 style={{ margin: 0, fontSize: 14 }}>Need test funds? (free, 1 min)</h3>
@@ -498,7 +563,15 @@ export function WatchPartyScreen (): React.JSX.Element {
                 return (
                   <li key={t.hash} style={tipRow}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
-                      <NationFlag nation={n} size={16} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{n?.name} · {t.amount} {t.symbol}</span>
+                      <NationFlag nation={n} size={16} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {n?.name} · {t.amount} {t.symbol}
+                      </span>
+                      {t.verified ? (
+                        <span style={verifiedBadge} title="Verified on-chain Transfer to this room pool">Verified</span>
+                      ) : (
+                        <span style={pendingBadge} title="Waiting for on-chain verification">Pending</span>
+                      )}
                     </span>
                     {chain.explorer && (
                       <a href={`${chain.explorer}/tx/${t.hash}`} target="_blank" rel="noreferrer" style={{ fontSize: 12, flexShrink: 0, padding: '6px 0 6px 8px' }}>
@@ -539,14 +612,16 @@ function NationSelect ({ value, onChange, exclude }: { value: string, onChange: 
   )
 }
 
-function NationBadge ({ nation, total }: { nation?: Nation, total: number }) {
+function NationBadge ({ nation, total, winner }: { nation?: Nation, total: number, winner?: boolean }) {
   if (!nation) return null
   return (
     <div style={{ textAlign: 'center', flex: 1, minWidth: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
         <NationFlag nation={nation} size={36} />
       </div>
-      <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nation.name}</div>
+      <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {nation.name}{winner ? ' · Win' : ''}
+      </div>
       <div style={{ fontSize: 13, color: 'var(--color-primary, var(--wdk-orange, #f4642f))' }}>{total} USDt</div>
     </div>
   )
@@ -566,6 +641,22 @@ const label: React.CSSProperties = { fontSize: 13, color: 'var(--text-secondary,
 const matchRow: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }
 const errorStyle: React.CSSProperties = { margin: 0, color: 'var(--color-error, #ef4444)', fontSize: 13, lineHeight: 1.4 }
 const tipRow: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 13, padding: '10px 0', borderBottom: '1px solid var(--border-default, var(--border, #332c28))', color: 'var(--text-primary, var(--text))' }
+const verifiedBadge: React.CSSProperties = {
+  flexShrink: 0,
+  fontSize: 10,
+  fontWeight: 600,
+  letterSpacing: 0.3,
+  textTransform: 'uppercase',
+  color: 'var(--color-primary, var(--wdk-orange, #f4642f))',
+  border: '1px solid color-mix(in srgb, var(--color-primary, #f4642f) 45%, transparent)',
+  borderRadius: 4,
+  padding: '2px 6px'
+}
+const pendingBadge: React.CSSProperties = {
+  ...verifiedBadge,
+  color: 'var(--text-secondary, #b3a79f)',
+  borderColor: 'var(--border-default, #332c28)'
+}
 const selectStyle: React.CSSProperties = {
   width: '100%',
   padding: '12px', borderRadius: 8,
