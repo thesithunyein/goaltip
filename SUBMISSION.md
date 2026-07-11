@@ -42,7 +42,7 @@ pnpm install && pnpm dev
 
 Faucets: Sepolia ETH + Aave test USDT (links in README.md).
 Production shared rooms: set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` on Vercel.
-Health probe: `GET /api/party/health` → `{ persistence: "redis" | "memory" }`.
+Health probe: `GET /api/health` → `{ persistence: "redis" | "memory" }`.
 
 ## New demo script (~100s)
 See [docs/DEMO_SCRIPT.md](./docs/DEMO_SCRIPT.md) — two devices, Verified tip, spend-limit block, settle, explorer proof.

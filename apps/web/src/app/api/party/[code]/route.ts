@@ -15,6 +15,18 @@ export async function GET (
     if (!code) {
       return NextResponse.json({ error: 'Invalid room code' }, { status: 400 })
     }
+    // Reserved path segment — use /api/party/health or /api/health instead.
+    if (code === 'HEALTH') {
+      const redis = Boolean(
+        process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+      )
+      return NextResponse.json({
+        ok: true,
+        persistence: redis ? 'redis' : 'memory',
+        tipVerification: 'sepolia-erc20-transfer',
+        settle: true
+      })
+    }
     const party = await getSharedParty(code)
     if (!party) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 })

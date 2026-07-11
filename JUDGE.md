@@ -2,7 +2,8 @@
 
 ## Live
 - App: https://goaltip-web.vercel.app
-- Health: https://goaltip-web.vercel.app/api/party/health  
+- Health: https://goaltip-web.vercel.app/api/health  
+  (also `/api/party/health`)  
   Expect `{ "persistence": "redis", "tipVerification": "sepolia-erc20-transfer", "settle": true }`
 
 ## 3-minute flow

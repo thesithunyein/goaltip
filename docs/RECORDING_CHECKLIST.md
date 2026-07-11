@@ -3,7 +3,7 @@
 Do this **after** Phase 1 is live on Vercel — not before.
 
 1. [ ] `git push` / Vercel deploy finished
-2. [ ] Open https://goaltip-web.vercel.app/api/party/health → `"persistence":"redis"`  
+2. [ ] Open https://goaltip-web.vercel.app/api/health → `"persistence":"redis"`  
        If `"memory"`, add Upstash env vars on Vercel and redeploy
 3. [ ] Two browsers: create capped room → join via invite on device B
 4. [ ] Tip 1 USDt → **Verified** appears → explorer matches hash
