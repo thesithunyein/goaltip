@@ -7,7 +7,7 @@
 **Self-custodial USDT tipping for football watch parties.**
 Fans back a nation, tip live in USDt, and watch a **shared** pool grow — while their keys never leave the browser.
 
-[**Live demo**](https://goaltip-web.vercel.app) · [**Demo video**](https://youtu.be/u8otedpp1mI) · [Architecture](#architecture) · [Quick start](#quick-start)
+[**Live demo**](https://goaltip-web.vercel.app) · [**Judge page**](https://goaltip-web.vercel.app/judge) · [**Demo video**](https://youtu.be/u8otedpp1mI) · [Architecture](#architecture) · [Quick start](#quick-start)
 
 Built with [Tether WDK](https://wdk.tether.io) for the [Tether Developers Cup](https://dorahacks.io/hackathon/tether-developers-cup) — **WDK : Wallets** + optional [QVAC](https://qvac.tether.io) local-AI coach.
 
@@ -231,10 +231,14 @@ Started from the open-source `wdk-wallet-template` (MIT). All GoalTip product wo
 
 ## Roadmap
 
-- **P2P party sync** via Hyperswarm (Pears) so rooms need no central store
-- **Smart-contract pool** with winner-nation claim logic
+- **TipPool escrow** — shipped (per-room deploy + on-chain settle)
+- **P2P party sync** via Hyperswarm (Pears) — optional future, Redis works for Cup
 - **Match data feeds** from real fixtures
 - **Mainnet USDt on Plasma** — one `DEFAULT_CHAIN_ID` flip away
+
+## Judge
+
+After deploy: https://goaltip-web.vercel.app/judge
 
 ## License
 

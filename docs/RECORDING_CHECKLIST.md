@@ -1,12 +1,10 @@
-# Recording checklist (final Cup cut)
+# Recording checklist (final — no more code after this)
 
-1. [ ] Push / Vercel deploy finished
-2. [ ] https://goaltip-web.vercel.app/api/health → `"persistence":"redis"`, `"escrow":"tippool-per-room"`
-3. [ ] Two browsers: Create room (TipPool deploy) with spend cap → Device B joins invite
-4. [ ] Tip 1 USDt → **Verified** → explorer shows Transfer **into TipPool**
-5. [ ] Over-cap tip blocked before signing
-6. [ ] Host **Settle** → TipPool.settle tx → both devices show winner + locked tips
-7. [ ] (Optional multi-track) Local `npm run coach` → Coach answers on camera
-8. [ ] Record ≤3min with [DEMO_SCRIPT.md](./DEMO_SCRIPT.md)
-9. [ ] YouTube unlisted → DoraHacks + SUBMISSION.md + README
-10. [ ] DoraHacks tracks: **WDK** + **QVAC** (if coach is in the video)
+1. [ ] Vercel deploy of latest `main`
+2. [ ] https://goaltip-web.vercel.app/api/health → redis + tippool-per-room
+3. [ ] https://goaltip-web.vercel.app/judge loads health JSON
+4. [ ] Two browsers: Create (TipPool) → Tip Verified → over-cap → Settle
+5. [ ] (Optional QVAC) `pnpm add @qvac/sdk && pnpm demo` → warmup → Coach answers
+6. [ ] Record ≤3min ([DEMO_SCRIPT.md](./DEMO_SCRIPT.md))
+7. [ ] YouTube unlisted → DoraHacks + SUBMISSION.md + README only (video URL)
+8. [ ] DoraHacks tracks: **WDK** + **QVAC** (if coach in video)

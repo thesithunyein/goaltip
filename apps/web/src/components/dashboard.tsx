@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, ChainSelector, NetworkIcon, Skeleton, TokenIcon } from '@wdk-starter/wdk-ui'
+import { ChainSelector, NetworkIcon, Skeleton, TokenIcon } from '@wdk-starter/wdk-ui'
 import { useWallet } from '@/wallet/wallet-provider'
 import { chainOptions, formatAmount, getChain, familyOf } from '@/wallet/chains'
 import type { TokenInfo } from '@/wallet/tokens'
@@ -11,7 +11,6 @@ import { SendDialog } from './send-dialog'
 import { TokenList } from './token-list'
 import { AssetDetail } from './asset-detail'
 import { BuyDialog } from './buy-dialog'
-import { SparkDialog } from './spark-dialog'
 
 const OPTIONS = chainOptions((id) => <NetworkIcon chain={id} size={16} />)
 
@@ -24,7 +23,7 @@ export function Dashboard () {
     chainId, setChainId, accountIndex, setAccountIndex,
     address, addressLoading, balance, balanceLoading, usdValue, refreshBalance
   } = useWallet()
-  const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'asset' | 'buy' | 'spark'>('none')
+  const [dialog, setDialog] = useState<'none' | 'receive' | 'send' | 'asset' | 'buy'>('none')
   const [sendToken, setSendToken] = useState<TokenInfo | null>(null)
   const [copied, setCopied] = useState(false)
   const chain = getChain(chainId)
@@ -86,11 +85,11 @@ export function Dashboard () {
         <div className="goaltip-soft-card" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Watch party tips</div>
-            <div style={{ fontSize: 15, fontWeight: 600, marginTop: 2 }}>Tip nations in USDt</div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginTop: 2 }}>Tip nations into TipPool escrow</div>
           </div>
-          <Button onClick={() => setDialog('spark')} variant="secondary" disabled={!address} style={{ borderRadius: 999, minHeight: 40 }}>
-            Spark
-          </Button>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)', textAlign: 'right', maxWidth: 140 }}>
+            Use the Party tab
+          </span>
         </div>
 
         {familyOf(chainId) === 'evm' && address && (
@@ -114,7 +113,6 @@ export function Dashboard () {
         />
       )}
       {dialog === 'buy' && address && <BuyDialog chainId={chainId} address={address} onClose={() => setDialog('none')} />}
-      {dialog === 'spark' && address && <SparkDialog accountIndex={accountIndex} onClose={() => setDialog('none')} />}
     </main>
   )
 }

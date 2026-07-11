@@ -2,6 +2,7 @@
 
 ## Live
 - App: https://goaltip-web.vercel.app
+- **Judge page:** https://goaltip-web.vercel.app/judge
 - Health: https://goaltip-web.vercel.app/api/health  
   Expect `{ "persistence": "redis", "tipVerification": "sepolia-erc20-transfer", "escrow": "tippool-per-room", "settle": "on-chain-tippool+board" }`
 

@@ -17,16 +17,17 @@ describe('party-types', () => {
     expect(merged[1]?.hash).toBe('0xbbb')
   })
 
-  it('sums nation totals', () => {
+  it('sums nation totals from verified tips only', () => {
     const party: WatchParty = {
       code: 'ABC123',
       nationA: 'mm',
       nationB: 'br',
       poolAddress: '0x' + '11'.repeat(20),
       tips: [
-        { nationId: 'mm', amount: '1', symbol: 'USDt', hash: '0x1', ts: 1 },
-        { nationId: 'mm', amount: '5', symbol: 'USDt', hash: '0x2', ts: 2 },
-        { nationId: 'br', amount: '10', symbol: 'USDt', hash: '0x3', ts: 3 }
+        { nationId: 'mm', amount: '1', symbol: 'USDt', hash: '0x1', ts: 1, verified: true },
+        { nationId: 'mm', amount: '5', symbol: 'USDt', hash: '0x2', ts: 2, verified: true },
+        { nationId: 'br', amount: '10', symbol: 'USDt', hash: '0x3', ts: 3, verified: true },
+        { nationId: 'mm', amount: '99', symbol: 'USDt', hash: '0x4', ts: 4, verified: false }
       ]
     }
     const totals = nationTotals(party)

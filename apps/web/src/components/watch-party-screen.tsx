@@ -48,8 +48,28 @@ export function WatchPartyScreen (): React.JSX.Element {
   const [mode, setMode] = useState<'create' | 'join'>('create')
   const [capPerWallet, setCapPerWallet] = useState('10')
   const [capEnabled, setCapEnabled] = useState(true)
+  const [ethWei, setEthWei] = useState<bigint | null>(null)
 
   const usdt = tokensFor(CHAIN_ID).find((t) => t.symbol === 'USDt')
+
+  // Need Sepolia ETH to deploy TipPool when creating a room.
+  useEffect(() => {
+    if (phase !== 'unlocked' || !address) {
+      setEthWei(null)
+      return
+    }
+    let cancelled = false
+    void (async () => {
+      try {
+        const api = getWalletApi()
+        const bal = BigInt(await api.rpc_getBalance(CHAIN_ID as never, address))
+        if (!cancelled) setEthWei(bal)
+      } catch {
+        if (!cancelled) setEthWei(null)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [phase, address, party])
 
   const applyParty = useCallback((p: WatchParty) => {
     setPartyCache(p)
@@ -151,6 +171,10 @@ export function WatchPartyScreen (): React.JSX.Element {
 
   const startParty = useCallback(async () => {
     if (!address) return
+    if (ethWei !== null && ethWei < 500_000_000_000_000n) {
+      setError('Need a little Sepolia ETH for TipPool deploy gas. Use the Alchemy faucet link below, then try again.')
+      return
+    }
     setBusy(true)
     setError(null)
     try {
@@ -180,7 +204,7 @@ export function WatchPartyScreen (): React.JSX.Element {
     } finally {
       setBusy(false)
     }
-  }, [address, accountIndex, nationA, nationB, capEnabled, capPerWallet, applyParty])
+  }, [address, accountIndex, nationA, nationB, capEnabled, capPerWallet, applyParty, ethWei])
 
   const joinParty = useCallback(async () => {
     const code = normalizeRoomCode(joinCode)
@@ -415,6 +439,13 @@ export function WatchPartyScreen (): React.JSX.Element {
                 >
                   {busy ? 'Deploying TipPool…' : 'Create shared room'}
                 </Button>
+                <p style={{ ...softDim, fontSize: 12 }}>
+                  Needs Sepolia ETH for deploy gas.{' '}
+                  <a href="https://www.alchemy.com/faucets/ethereum-sepolia" target="_blank" rel="noreferrer">Get faucet ETH</a>
+                  {ethWei !== null && ethWei < 500_000_000_000_000n && (
+                    <span style={{ color: 'var(--color-warning, #f59e0b)' }}> · Balance looks low</span>
+                  )}
+                </p>
               </>
             ) : (
               <>
@@ -476,6 +507,12 @@ export function WatchPartyScreen (): React.JSX.Element {
               <a href={`${chain.explorer}/address/${party.poolAddress}`} target="_blank" rel="noreferrer">
                 {party.poolAddress.slice(0, 6)}…{party.poolAddress.slice(-4)}
               </a>
+              {party.escrowDeployTxHash && (
+                <>
+                  {' · '}
+                  <a href={`${chain.explorer}/tx/${party.escrowDeployTxHash}`} target="_blank" rel="noreferrer">deploy ↗</a>
+                </>
+              )}
               {party.settleTxHash && (
                 <>
                   {' · '}

@@ -47,6 +47,8 @@ export interface WatchParty {
 export function nationTotals (party: WatchParty): Map<string, number> {
   const totals = new Map<string, number>()
   for (const t of party.tips) {
+    // Only count board-verified tips so Pending optimistic tips don't inflate the scoreboard.
+    if (t.verified === false) continue
     totals.set(t.nationId, (totals.get(t.nationId) ?? 0) + Number.parseFloat(t.amount))
   }
   return totals

@@ -24,7 +24,9 @@ export async function GET (
         ok: true,
         persistence: redis ? 'redis' : 'memory',
         tipVerification: 'sepolia-erc20-transfer',
-        settle: true
+        escrow: 'tippool-per-room',
+        settle: 'on-chain-tippool+board',
+        qvac: 'local-optional'
       })
     }
     const party = await getSharedParty(code)

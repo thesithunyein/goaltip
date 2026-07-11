@@ -15,13 +15,15 @@ GoalTip lets football fans tip USDt for their nation during watch parties withou
 ## GitHub
 https://github.com/thesithunyein/goaltip
 
-## Demo video
-https://youtu.be/u8otedpp1mI
-<!-- REPLACE with new ≤3min TipPool + Verified + settle (+ optional QVAC) video before final lock -->
-
 ## Live demo
 https://goaltip-web.vercel.app
 
+## Judge page
+https://goaltip-web.vercel.app/judge
+
+## Demo video
+https://youtu.be/u8otedpp1mI
+<!-- REPLACE with new ≤3min TipPool + Verified + settle (+ optional QVAC) video before final lock -->
 ## Earlier work
 Forked and extended [wdk-wallet-template](https://github.com/plinkdev1/wdk-wallet-template) (MIT). All GoalTip-specific features (shared watch parties, TipPool escrow, football UI, QVAC coach, Sepolia tipping, spend limits, on-chain tip verification, match settle) built during the Tether Developers Cup.
 
