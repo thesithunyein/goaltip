@@ -116,13 +116,29 @@ export function OnboardingFlow () {
 
 function Shell ({ children }: { children: React.ReactNode }) {
   return (
-    <main style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 24 }}>
+    <main style={{
+      minHeight: '100dvh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px 16px',
+      gap: 20,
+      background: 'var(--bg-base, #f2f3f5)',
+      color: 'var(--text-primary)'
+    }}>
       <BrandHeader />
       <div style={{ width: '100%', maxWidth: 460 }}>{children}</div>
     </main>
   )
 }
 
-const cardStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 16 }
-const h2: React.CSSProperties = { margin: 0, fontSize: 20 }
-const dim: React.CSSProperties = { margin: 0, color: 'var(--text-secondary, var(--text-dim))', fontSize: 14, lineHeight: 1.5 }
+const cardStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 16,
+  borderRadius: 24,
+  boxShadow: '0 8px 28px rgba(17,24,39,0.06)'
+}
+const h2: React.CSSProperties = { margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: -0.4 }
+const dim: React.CSSProperties = { margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }

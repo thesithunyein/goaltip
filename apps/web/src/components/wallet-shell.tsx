@@ -31,7 +31,7 @@ export function WalletShell ({ initialTab = 'party' }: { initialTab?: TabId } = 
   const { open: appearanceOpen } = useAppearance()
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg-base, var(--bg))', color: 'var(--text-primary, var(--text))' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg-base, #f2f3f5)', color: 'var(--text-primary)' }}>
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ width: '100%', maxWidth: 460, minWidth: 0 }}>
           {tab === 'party' && <WatchPartyScreen />}
@@ -42,7 +42,7 @@ export function WalletShell ({ initialTab = 'party' }: { initialTab?: TabId } = 
         </div>
       </div>
       <div className="goaltip-tabbar">
-        <TabBar tabs={TABS} active={tab} onChange={(id) => setTab(id as TabId)} aria-label="GoalTip" />
+        <TabBar tabs={TABS} active={tab} onChange={(id) => setTab(id as TabId)} sticky={false} aria-label="GoalTip" />
       </div>
       {appearanceOpen && <AppearanceDialog />}
     </div>

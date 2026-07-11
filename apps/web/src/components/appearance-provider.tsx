@@ -4,12 +4,14 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import {
   WdkThemeProvider, BrandProvider,
   useThemePicker, useBrandPicker, useCustomPrimary,
-  composeTheme, defaultTheme,
+  composeTheme, goaltipSoftLightTheme, clearStoredThemePrefs,
   type WdkTheme, type BrandConfig
 } from '@wdk-starter/wdk-ui'
 
 /** Cache-busted so browser tab + header always pick up the latest mark. */
 export const GOALTIP_MARK_SRC = '/goaltip-mark.svg?v=20260709b'
+
+const SOFT_LIGHT_MIGRATION_KEY = 'goaltip-soft-light-v1'
 
 /**
  * The template's out-of-the-box brand. A fork rebrands either by editing this
@@ -40,21 +42,11 @@ interface AppearanceValue {
 const AppearanceContext = createContext<AppearanceValue | null>(null)
 
 /**
- * Runtime appearance layer for the template wallet. Wires wdk-ui's persisted
- * theme + brand picker hooks into live WdkThemeProvider / BrandProvider, and
- * exposes setters so the in-app Appearance panel can re-skin and re-brand the
- * wallet with no code change.
- *
- * - Theme (7 swatches x 4 edge styles x 2 modes) via useThemePicker.
- * - Any-hex primary override via useCustomPrimary (composed over the theme).
- * - Brand identity (name / wordmark / mark) via useBrandPicker.
- *
- * All three persist to localStorage, so a reload keeps the chosen look. Theme
- * CSS variables are injected by WdkThemeProvider in a client-only useEffect and
- * the whole wallet renders after mount, so there is no SSR theme flash.
+ * Runtime appearance layer for GoalTip. Defaults to Soft Light for the Cup demo.
+ * One-time migration clears stale dark theme prefs from earlier builds.
  */
 export function AppearanceProvider ({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useThemePicker(defaultTheme)
+  const [theme, setTheme] = useThemePicker(goaltipSoftLightTheme)
   const [customPrimary, setCustomPrimary] = useCustomPrimary()
   const [brand, setBrand] = useBrandPicker(TEMPLATE_BRAND)
   const [open, setOpen] = useState(false)
@@ -66,6 +58,19 @@ export function AppearanceProvider ({ children }: { children: React.ReactNode })
       setBrand(TEMPLATE_BRAND)
     }
     // Intentionally run once on mount to clear stale localStorage brand.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Force Soft Light once so judges / demo devices don't keep an old dark pref.
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(SOFT_LIGHT_MIGRATION_KEY) === '1') return
+      clearStoredThemePrefs()
+      setTheme(goaltipSoftLightTheme)
+      window.localStorage.setItem(SOFT_LIGHT_MIGRATION_KEY, '1')
+    } catch {
+      setTheme(goaltipSoftLightTheme)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

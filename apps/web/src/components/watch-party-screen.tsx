@@ -315,7 +315,7 @@ export function WatchPartyScreen (): React.JSX.Element {
       <main style={page}>
         <div style={container}>
           <BrandHeader />
-          <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card padding="md" className="goaltip-soft-card" style={{ display: 'flex', flexDirection: 'column', gap: 14, borderRadius: 24, boxShadow: '0 4px 20px rgba(17,24,39,0.05)' }}>
             <div style={{ display: 'flex', gap: 8 }}>
               <Button
                 variant={mode === 'create' ? 'primary' : 'outline'}
@@ -428,7 +428,7 @@ export function WatchPartyScreen (): React.JSX.Element {
       <div style={container}>
         <BrandHeader />
         <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <h1 className="goaltip-party-hero" style={{ margin: 0, fontSize: 28, letterSpacing: -0.5, lineHeight: 1.15 }}>GoalTip</h1>
+          <h1 className="goaltip-party-hero" style={{ margin: 0, fontSize: 30, fontWeight: 750, letterSpacing: -0.6, lineHeight: 1.1, fontFamily: 'var(--font-display, inherit)' }}>GoalTip</h1>
           <p style={dim}>
             Self-custodial USDt tipping for football watch parties. WDK keeps signing inside the browser worklet.
             Shared rooms sync tip boards across devices. Tips are verified on-chain before they land on the board.
@@ -630,38 +630,40 @@ function NationBadge ({ nation, total, winner }: { nation?: Nation, total: numbe
 const page: React.CSSProperties = {
   minHeight: '100%',
   padding: '16px 12px 24px',
-  background: 'var(--bg-base, var(--bg))',
+  background: 'transparent',
   color: 'var(--text-primary, var(--text))'
 }
-const container: React.CSSProperties = { width: '100%', maxWidth: 460, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }
-const h2: React.CSSProperties = { margin: 0, fontSize: 20, color: 'var(--text-primary, var(--text))' }
-const dim: React.CSSProperties = { margin: 0, color: 'var(--text-secondary, var(--text-dim, #b3a79f))', fontSize: 14, lineHeight: 1.5 }
+const container: React.CSSProperties = { width: '100%', maxWidth: 460, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }
+const h2: React.CSSProperties = { margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: -0.4, color: 'var(--text-primary, var(--text))' }
+const dim: React.CSSProperties = { margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }
 const field: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6 }
-const label: React.CSSProperties = { fontSize: 13, color: 'var(--text-secondary, var(--text-dim, #b3a79f))' }
+const label: React.CSSProperties = { fontSize: 13, color: 'var(--text-secondary)' }
 const matchRow: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }
 const errorStyle: React.CSSProperties = { margin: 0, color: 'var(--color-error, #ef4444)', fontSize: 13, lineHeight: 1.4 }
-const tipRow: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 13, padding: '10px 0', borderBottom: '1px solid var(--border-default, var(--border, #332c28))', color: 'var(--text-primary, var(--text))' }
+const tipRow: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 13, padding: '12px 0', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }
 const verifiedBadge: React.CSSProperties = {
   flexShrink: 0,
   fontSize: 10,
-  fontWeight: 600,
+  fontWeight: 700,
   letterSpacing: 0.3,
   textTransform: 'uppercase',
-  color: 'var(--color-primary, var(--wdk-orange, #f4642f))',
-  border: '1px solid color-mix(in srgb, var(--color-primary, #f4642f) 45%, transparent)',
-  borderRadius: 4,
-  padding: '2px 6px'
+  color: 'var(--color-primary, #f4642f)',
+  border: '1px solid color-mix(in srgb, var(--color-primary, #f4642f) 35%, transparent)',
+  borderRadius: 999,
+  padding: '3px 8px',
+  background: 'color-mix(in srgb, var(--color-primary, #f4642f) 8%, transparent)'
 }
 const pendingBadge: React.CSSProperties = {
   ...verifiedBadge,
-  color: 'var(--text-secondary, #b3a79f)',
-  borderColor: 'var(--border-default, #332c28)'
+  color: 'var(--text-secondary)',
+  borderColor: 'var(--border-default)',
+  background: 'var(--bg-elevated-2)'
 }
 const selectStyle: React.CSSProperties = {
   width: '100%',
-  padding: '12px', borderRadius: 8,
-  border: '1px solid var(--border-default, var(--border, #332c28))',
-  background: 'var(--bg-elevated-2, var(--surface-2, #241f1c))',
-  color: 'var(--text-primary, var(--text, #f7eee8))', fontSize: 16,
+  padding: '12px', borderRadius: 14,
+  border: '1px solid var(--border-default)',
+  background: 'var(--bg-elevated-2)',
+  color: 'var(--text-primary)', fontSize: 16,
   minHeight: 44
 }

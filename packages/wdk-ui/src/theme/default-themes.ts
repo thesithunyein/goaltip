@@ -185,10 +185,56 @@ export const institutionalLightTheme: WdkTheme = {
  * The picker UI (w-5) renders these three as the background-mode options
  * per Doc 33 Part III.1 Dimension C (Background mode).
  */
+/**
+ * GoalTip Soft Light — football-product light skin for the Developers Cup demo.
+ * Soft gray canvas + white cards + GoalTip orange. Radius matches EDGE_STYLES "rounded"
+ * so the Appearance picker can rehydrate cleanly.
+ */
+export const goaltipSoftLightTheme: WdkTheme = {
+  colors: {
+    primary:       '#F4642F',
+    primaryHover:  '#E94816',
+    primaryActive: '#C03A0E',
+
+    bgBase:      '#F2F3F5',
+    bgElevated1: '#FFFFFF',
+    bgElevated2: '#EBECEF',
+    bgElevated3: '#E0E2E6',
+
+    textPrimary:   '#111827',
+    textSecondary: 'rgba(17, 24, 39, 0.62)',
+    textTertiary:  'rgba(17, 24, 39, 0.42)',
+
+    borderSubtle:   'rgba(17, 24, 39, 0.06)',
+    borderDefault:  'rgba(17, 24, 39, 0.10)',
+    borderEmphasis: 'rgba(17, 24, 39, 0.16)',
+
+    success: '#10B981',
+    warning: '#F59E0B',
+    error:   '#EF4444',
+    info:    '#3B82F6',
+  },
+  fonts: {
+    display: '"Bricolage Grotesque Variable", "Bricolage Grotesque", Recoleta, "Cooper BT", Georgia, serif',
+    body:    '"Geist Variable", Geist, system-ui, sans-serif',
+    mono:    '"Geist Mono Variable", "Geist Mono", "JetBrains Mono", ui-monospace, monospace',
+  },
+  radius: {
+    sm: '8px',
+    md: '12px',
+    lg: '16px',
+    xl: '24px',
+  },
+  motion: 'standard',
+  glass:  'off',
+  mode:   'light',
+};
+
 export const defaultThemes = {
   wdkWarm:            wdkWarmTheme,
   coolDark:           coolDarkTheme,
   institutionalLight: institutionalLightTheme,
+  goaltipSoftLight:   goaltipSoftLightTheme,
 } as const;
 
 /** Alias for the canonical default - what WdkThemeProvider falls back to. */

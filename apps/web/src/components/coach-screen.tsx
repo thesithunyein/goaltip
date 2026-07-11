@@ -157,23 +157,23 @@ npm run coach
 const dim: React.CSSProperties = { margin: 0, color: 'var(--text-secondary, var(--text-dim, #b3a79f))', fontSize: 14, lineHeight: 1.5 }
 const errorStyle: React.CSSProperties = { margin: 0, color: 'var(--color-error, #ef4444)', fontSize: 13 }
 const answerBox: React.CSSProperties = {
-  padding: 12, borderRadius: 8, background: 'var(--bg-elevated-2, var(--surface-2, #241f1c))',
-  border: '1px solid var(--border-default, var(--border, #332c28))', fontSize: 14,
-  color: 'var(--text-primary, var(--text))'
+  padding: 14, borderRadius: 16, background: 'var(--bg-elevated-2)',
+  border: '1px solid var(--border-subtle)', fontSize: 14,
+  color: 'var(--text-primary)'
 }
 const offlineBox: React.CSSProperties = {
-  padding: 12, borderRadius: 8, background: 'color-mix(in srgb, var(--color-warning, #f59e0b) 12%, transparent)',
+  padding: 14, borderRadius: 16, background: 'color-mix(in srgb, var(--color-warning, #f59e0b) 12%, transparent)',
   border: '1px solid color-mix(in srgb, var(--color-warning, #f59e0b) 40%, transparent)'
 }
 const selectStyle: React.CSSProperties = {
-  flex: 1, padding: '12px 10px', borderRadius: 8, minHeight: 44, minWidth: 0,
-  border: '1px solid var(--border-default, var(--border, #332c28))',
-  background: 'var(--bg-elevated-2, var(--surface-2, #241f1c))',
-  color: 'var(--text-primary, var(--text, #f7eee8))', fontSize: 16
+  flex: 1, padding: '12px 10px', borderRadius: 14, minHeight: 44, minWidth: 0,
+  border: '1px solid var(--border-default)',
+  background: 'var(--bg-elevated-2)',
+  color: 'var(--text-primary)', fontSize: 16
 }
 const codeBlock: React.CSSProperties = {
-  margin: '8px 0 0', padding: 12, borderRadius: 8,
-  background: 'var(--bg-elevated-3, var(--bg-base, #0e0c0b))',
-  color: 'var(--text-primary, var(--text))',
+  margin: '8px 0 0', padding: 12, borderRadius: 14,
+  background: 'var(--bg-elevated-3)',
+  color: 'var(--text-primary)',
   overflow: 'auto', fontSize: 12
 }

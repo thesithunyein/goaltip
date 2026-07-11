@@ -8,7 +8,7 @@ export type {
   WdkMotion, WdkGlass, WdkMode,
 } from './types.js';
 export {
-  wdkWarmTheme, coolDarkTheme, institutionalLightTheme,
+  wdkWarmTheme, coolDarkTheme, institutionalLightTheme, goaltipSoftLightTheme,
   defaultThemes, defaultTheme,
 } from './default-themes.js';
 

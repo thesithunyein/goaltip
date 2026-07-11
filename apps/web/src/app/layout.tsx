@@ -11,11 +11,11 @@ export const metadata: Metadata = {
     shortcut: '/goaltip-mark.svg?v=20260709b',
     apple: '/goaltip-mark.svg?v=20260709b'
   },
-  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'GoalTip' }
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'GoalTip' }
 }
 
 export const viewport: Viewport = {
-  themeColor: '#161312',
+  themeColor: '#F2F3F5',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
