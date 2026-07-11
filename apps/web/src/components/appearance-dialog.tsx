@@ -1,22 +1,20 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ThemePicker, BrandPicker, isValidHexPrimary } from '@wdk-starter/wdk-ui'
+import { ThemePicker, BrandPicker, isValidHexPrimary, Button } from '@wdk-starter/wdk-ui'
 import { Modal } from './modal'
 import { useAppearance, TEMPLATE_BRAND } from './appearance-provider'
 
 /**
- * In-app Appearance settings. Re-skin the wallet (theme swatches / edge style /
- * light-dark mode + an arbitrary hex primary) and re-brand it (display name,
- * wordmark, mark) at runtime — every change persists to localStorage. This is
- * the user-facing surface over wdk-ui's ThemePicker + BrandPicker, shipped so a
- * fork inherits a working customization panel instead of a code-only API.
+ * In-app Appearance settings. Soft Light surfaces stay locked in light mode
+ * so Wallet / Party / Settings stay visually consistent for the Cup demo.
  */
 export function AppearanceDialog () {
-  const { theme, setTheme, customPrimary, setCustomPrimary, brand, setBrand, setOpen } = useAppearance()
+  const {
+    theme, setTheme, customPrimary, setCustomPrimary,
+    brand, setBrand, setOpen, resetSoftLight
+  } = useAppearance()
 
-  // Local draft for the hex text field so partial input ("#F4") doesn't get
-  // rejected mid-type; we only commit a valid #RRGGBB (or clear on empty).
   const [hexDraft, setHexDraft] = useState(customPrimary ?? '')
   useEffect(() => { setHexDraft(customPrimary ?? '') }, [customPrimary])
 
@@ -29,7 +27,15 @@ export function AppearanceDialog () {
 
   return (
     <Modal title="Appearance" onClose={() => setOpen(false)}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <Button
+          variant="secondary"
+          onClick={() => { resetSoftLight(); setHexDraft('') }}
+          style={{ width: '100%', borderRadius: 999, minHeight: 44 }}
+        >
+          Reset Soft Light (demo default)
+        </Button>
+
         <section>
           <ThemePicker value={theme} onChange={setTheme} />
         </section>
@@ -57,7 +63,7 @@ export function AppearanceDialog () {
               <button onClick={() => setCustomPrimary(null)} style={resetLink}>Reset</button>
             )}
           </div>
-          <span style={hintStyle}>Overrides the swatch above with any 16M-color hex.</span>
+          <span style={hintStyle}>Overrides the swatch above. Light mode keeps Soft Light surfaces.</span>
         </section>
 
         <section>
@@ -69,18 +75,18 @@ export function AppearanceDialog () {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 12, fontWeight: 600, color: 'var(--text-secondary, #b3a79f)'
+  fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)'
 }
 const hexInput: React.CSSProperties = {
-  flex: 1, padding: '7px 10px', fontSize: 13,
-  border: '1px solid var(--border-subtle, var(--border))', borderRadius: 'var(--radius-md, 8px)',
-  background: 'var(--bg-elevated-1, transparent)', color: 'var(--text-primary)',
-  fontFamily: 'ui-monospace, monospace', boxSizing: 'border-box'
+  flex: 1, padding: '8px 12px', fontSize: 13, borderRadius: 12,
+  border: '1px solid var(--border-default)',
+  background: 'var(--bg-elevated-2)', color: 'var(--text-primary)',
+  fontFamily: 'ui-monospace, monospace', boxSizing: 'border-box', minHeight: 40
 }
 const resetLink: React.CSSProperties = {
-  background: 'none', border: 'none', color: 'var(--text-secondary, #b3a79f)',
+  background: 'none', border: 'none', color: 'var(--text-secondary)',
   fontSize: 12, cursor: 'pointer', textDecoration: 'underline'
 }
 const hintStyle: React.CSSProperties = {
-  fontSize: 11, color: 'var(--text-secondary, #b3a79f)'
+  fontSize: 11, color: 'var(--text-secondary)'
 }
